@@ -1,0 +1,9 @@
+.env
+env.txt
+*.pyc
+__pycache__/
+*.sqlite
+*.db
+sample_activity_*.json
+venv/
+.venv/

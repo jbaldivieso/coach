@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% block title %}{{ session['name'] }} - {{
+session['date'] }} - Training Coach{% endblock %} {% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+    <ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('view_lifting') }}">Lifting Sessions</a></li>
+        <li class="is-active">
+            <a href="#" aria-current="page">{{ session['name'] }}</a>
+        </li>
+    </ul>
+</nav>
+
+<div class="box">
+    <h1 class="title">{{ session['name'] }}</h1>
+    <h2 class="subtitle">{{ session['date'] }}</h2>
+
+    {% if session['notes'] %}
+    <div class="content">
+        <p><strong>Session Notes:</strong> {{ session['notes'] }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="box">
+    <h3 class="title is-4">Exercises</h3>
+
+    {% for exercise in exercises %}
+    <div class="box is-light mb-4">
+        <h4 class="title is-5">{{ exercise['exercise_name'] }}</h4>
+
+        <div class="columns">
+            <div class="column">
+                <p>
+                    <strong>Weight:</strong>
+                    {% if exercise['weight'] %} {{ exercise['weight'] }} lbs {%
+                    else %}
+                    <span class="tag">Bodyweight</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="column">
+                <p>
+                    <strong>Sets:</strong> {{ exercise['reps_per_set']|length -
+                    2 }} sets
+                </p>
+            </div>
+            <div class="column">
+                <p>
+                    <strong>Reps:</strong>
+                    {% set reps = exercise['reps_per_set']|replace('[',
+                    '')|replace(']', '') %} {{ reps }}
+                </p>
+            </div>
+            {% if exercise['rest_seconds'] %}
+            <div class="column">
+                <p><strong>Rest:</strong> {{ exercise['rest_seconds'] }}s</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if exercise['notes'] %}
+        <div class="content">
+            <p class="has-text-grey"><em>{{ exercise['notes'] }}</em></p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="buttons">
+    <a href="{{ url_for('view_lifting') }}" class="button is-light">
+        <span class="icon"><i class="fas fa-arrow-left"></i></span>
+        <span>Back to Sessions</span>
+    </a>
+    <a
+        href="{{ url_for('edit_lifting', session_id=session['id']) }}"
+        class="button is-warning"
+    >
+        <span class="icon"><i class="fas fa-edit"></i></span>
+        <span>Edit Session</span>
+    </a>
+</div>
+{% endblock %}

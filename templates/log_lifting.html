@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Log Lifting Session - Training Coach{% endblock %}
+
+{% block content %}
+<h1 class="title">Log Lifting Session</h1>
+
+<form method="POST" action="{{ url_for('log_lifting') }}">
+    <div class="box">
+        <h2 class="title is-5">Session Details</h2>
+
+        <div class="field">
+            <label class="label">Date *</label>
+            <div class="control">
+                <input class="input" type="date" name="date" value="{{ today }}" required>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Session Name *</label>
+            <div class="control">
+                <input class="input" type="text" name="name" placeholder="e.g., Upper B, Lower A" required>
+            </div>
+            <p class="help">e.g., "Upper B", "Lower A", "Full Body"</p>
+        </div>
+
+        <div class="field">
+            <label class="label">Session Notes</label>
+            <div class="control">
+                <textarea class="textarea" name="session_notes" rows="2" placeholder="Overall session notes..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="box">
+        <h2 class="title is-5">Exercises</h2>
+
+        <div id="exercises-container">
+            <!-- Exercise template will be cloned here -->
+            <div class="exercise-entry box">
+                <button type="button" class="delete is-pulled-right remove-exercise" style="display: none;"></button>
+
+                <div class="columns">
+                    <div class="column is-half">
+                        <div class="field">
+                            <label class="label">Exercise Name *</label>
+                            <div class="control">
+                                <input class="input" type="text" name="exercise_name[]" placeholder="e.g., Deadlift, Squats" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label">Weight (lbs)</label>
+                            <div class="control">
+                                <input class="input" type="number" name="weight[]" step="0.5" placeholder="185">
+                            </div>
+                            <p class="help">Leave blank for bodyweight</p>
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label">Rest (seconds)</label>
+                            <div class="control">
+                                <input class="input" type="number" name="rest_seconds[]" placeholder="90">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Reps per Set *</label>
+                    <div class="control">
+                        <input class="input" type="text" name="reps[]" placeholder="10, 10, 9, 9" required>
+                    </div>
+                    <p class="help">Enter reps for each set, separated by commas or spaces (e.g., "10 10 9 9" or "10, 10, 9, 9")</p>
+                </div>
+
+                <div class="field">
+                    <label class="label">Exercise Notes</label>
+                    <div class="control">
+                        <input class="input" type="text" name="exercise_notes[]" placeholder="Optional notes...">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="button is-info is-light" id="add-exercise">
+            <span class="icon"><i class="fas fa-plus"></i></span>
+            <span>Add Another Exercise</span>
+        </button>
+    </div>
+
+    <div class="field is-grouped">
+        <div class="control">
+            <button type="submit" class="button is-primary is-medium">
+                <span class="icon"><i class="fas fa-save"></i></span>
+                <span>Save Session</span>
+            </button>
+        </div>
+        <div class="control">
+            <a href="{{ url_for('index') }}" class="button is-light is-medium">Cancel</a>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('exercises-container');
+    const addButton = document.getElementById('add-exercise');
+
+    // Get the first exercise as a template
+    const template = container.querySelector('.exercise-entry').cloneNode(true);
+
+    // Show remove button on existing exercises
+    updateRemoveButtons();
+
+    addButton.addEventListener('click', () => {
+        const newExercise = template.cloneNode(true);
+
+        // Clear all inputs
+        newExercise.querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+        });
+
+        // Add remove functionality
+        const removeBtn = newExercise.querySelector('.remove-exercise');
+        removeBtn.style.display = 'block';
+        removeBtn.addEventListener('click', () => {
+            newExercise.remove();
+            updateRemoveButtons();
+        });
+
+        container.appendChild(newExercise);
+        updateRemoveButtons();
+
+        // Focus on the exercise name field
+        newExercise.querySelector('input[name="exercise_name[]"]').focus();
+    });
+
+    function updateRemoveButtons() {
+        const exercises = container.querySelectorAll('.exercise-entry');
+        exercises.forEach((exercise, index) => {
+            const removeBtn = exercise.querySelector('.remove-exercise');
+            if (exercises.length > 1) {
+                removeBtn.style.display = 'block';
+                if (!removeBtn.hasListener) {
+                    removeBtn.addEventListener('click', () => {
+                        exercise.remove();
+                        updateRemoveButtons();
+                    });
+                    removeBtn.hasListener = true;
+                }
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

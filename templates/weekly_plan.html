@@ -1,0 +1,282 @@
+{% extends "base.html" %} {% block title %}Weekly Plan - Coach{% endblock %} {%
+block extra_css %}
+<style>
+  h1.title {
+    margin-bottom: 0 !important;
+  }
+  h2 {
+    color: #363636;
+  }
+
+  .week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .week-objective {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+  }
+
+  .week-objective h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #363636;
+    margin-bottom: 0.5rem;
+  }
+
+  .week-objective p {
+    color: #4a4a4a;
+    margin-bottom: 0;
+  }
+
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .day-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #363636;
+  }
+
+  .distance-circle {
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .distance-circle:hover {
+    transform: scale(1.1);
+  }
+
+  .distance-circle.planned {
+    background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%);
+  }
+
+  .lifting-badge {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .lifting-badge:hover {
+    transform: scale(1.05);
+  }
+
+  .distance-text {
+    font-size: 0.7rem;
+    color: #7a7a7a;
+    margin-top: 0.25rem;
+  }
+
+  .plan-row-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #7a7a7a;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    background: #fafafa;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Mobile responsiveness */
+  @media screen and (max-width: 768px) {
+    .days-grid {
+      gap: 0.5rem;
+      padding: 1.5rem 0.5rem;
+    }
+
+    .day-cell {
+      gap: 0.25rem;
+    }
+
+    .distance-circle {
+      font-size: 0.7rem;
+      max-width: 70px !important;
+      max-height: 70px !important;
+      min-width: 30px !important;
+      min-height: 30px !important;
+    }
+
+    .lifting-badge {
+      font-size: 0.65rem;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .distance-text {
+      font-size: 0.6rem;
+    }
+  }
+
+  /* Extra small screens */
+  @media screen and (max-width: 430px) {
+    .days-grid {
+      gap: 0.25rem;
+      padding: 0 0.25rem 1rem;
+    }
+
+    .day-cell {
+      gap: 0.2rem;
+    }
+
+    .distance-circle {
+      font-size: 0.6rem;
+      width: var(--size-mobile) !important;
+      height: var(--size-mobile) !important;
+    }
+
+    .lifting-badge {
+      font-size: 0.6rem;
+      padding: 0.3rem 0.5rem;
+    }
+
+    .distance-text {
+      font-size: 0.55rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="week-navigation">
+  <div>
+    {% if can_go_prev %}
+    <a
+      href="{{ url_for('weekly_plan_detail', week_start_date=prev_week_date) }}"
+      class="button"
+    >
+      <span class="icon"><i class="fas fa-chevron-left"></i></span>
+    </a>
+    {% endif %}
+  </div>
+  <h1 class="title">{{ week_start_display }} - {{ week_end_display }}</h1>
+  <div>
+    <a
+      href="{{ url_for('weekly_plan_detail', week_start_date=next_week_date) }}"
+      class="button"
+    >
+      <span class="icon"><i class="fas fa-chevron-right"></i></span>
+    </a>
+  </div>
+</div>
+
+{% if weekly_plan %}
+<!-- Day labels -->
+<div class="days-grid">
+  {% for day in days %}
+  <div class="day-cell">
+    <div class="day-label">{{ day.day_name }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Running row -->
+<!--<div class="plan-row-label">Running</div>-->
+<div class="days-grid" style="padding-top: 0">
+  {% for day in days %}
+  <div class="day-cell">
+    {% if day.run %} {% if day.run.type == 'actual' %}
+    <!-- Show actual run data -->
+    {% set size = (40 + (day.run.distance_miles * 5))|int %} {% set size =
+    [size, 120]|min %} {% set size_mobile = ([25 + (day.run.distance_miles *
+    2.5), 50]|min)|int %}
+    <div
+      class="distance-circle"
+      style="width: {{ size }}px; height: {{ size }}px; --size-mobile: {{ size_mobile }}px;"
+    >
+      {{ "%.1f"|format(day.run.distance_miles) }}
+    </div>
+    {% if day.run.count > 1 %}
+    <div class="distance-text">{{ day.run.count }} runs</div>
+    {% endif %} {% elif day.run.type == 'planned' %}
+    <!-- Show planned run data -->
+    {% if day.run.distance_miles %} {% set size = (40 + (day.run.distance_miles
+    * 5))|int %} {% set size = [size, 120]|min %} {% set size_mobile = ([25 +
+    (day.run.distance_miles * 2.5), 50]|min)|int %}
+    <a
+      href="{{ url_for('weekly_running_plan', weekly_plan_id=weekly_plan['id']) }}"
+    >
+      <div
+        class="distance-circle planned"
+        style="width: {{ size }}px; height: {{ size }}px; --size-mobile: {{ size_mobile }}px;"
+      >
+        {{ "%.1f"|format(day.run.distance_miles) }}
+      </div>
+    </a>
+    <div class="distance-text">{{ day.run.run_type }}</div>
+    {% endif %} {% endif %} {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Lifting row -->
+<!--<div class="plan-row-label" style="margin-top: 1.5rem">Lifting</div>-->
+<div class="days-grid" style="padding-top: 0">
+  {% for day in days %}
+  <div class="day-cell">
+    {% if day.lifting %}
+    <a
+      href="{{ url_for('planned_lifting_detail', planned_session_id=day.lifting['id']) }}"
+    >
+      <div class="lifting-badge">{{ day.lifting['name'] }}</div>
+    </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% if weekly_plan['objective'] or weekly_plan['description'] %}
+<div class="week-objective">
+  {% if weekly_plan['objective'] %}
+  <h3>Week Objective</h3>
+  <p>{{ weekly_plan['objective'] }}</p>
+  {% endif %} {% if weekly_plan['description'] %}
+  <p class="mt-2">{{ weekly_plan['description'] }}</p>
+  {% endif %} {% if weekly_plan['week_number'] and weekly_plan['total_weeks'] %}
+  <p class="mt-2">
+    <small
+      ><strong>Week {{ weekly_plan['week_number'] }}</strong> of {{
+      weekly_plan['total_weeks'] }}</small
+    >
+  </p>
+  {% endif %}
+</div>
+{% endif %} {% else %}
+<div class="notification is-info is-light">
+  <p><strong>No training plan set for this week.</strong></p>
+  <p class="mt-2">
+    Create a weekly plan to see your scheduled runs and lifting sessions.
+  </p>
+</div>
+{% endif %} {% endblock %}
