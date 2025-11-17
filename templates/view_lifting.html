@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}Lifting Sessions - Coach{% endblock
-%} {% block extra_css %}
+{% extends "base.html" %} {% block title %}Lifting Sessions - Coach{% endblock%}
+{% block extra_css %}
 <style>
   .block header {
     border-bottom: 1px solid lightgray;
@@ -89,7 +89,9 @@
   <div class="exercise-detail">
     <h4>{{ exercise.exercise_name }}</h4>
     <div class="stats">
+      {% if exercise.weight %}
       <span>{{ "%d" % exercise.weight }}lbs</span>
+      {% endif %}
       <span>Sets: {{ exercise.reps_display }}</span>
       <span>Rest: {{ exercise.rest_seconds }} secs</span>
     </div>
