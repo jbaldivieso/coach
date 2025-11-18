@@ -822,5 +822,59 @@ def planned_lifting_detail(planned_session_id):
     )
 
 
+@app.route("/api/search-exercises")
+def search_exercises():
+    """Search exercises by name with fuzzy matching."""
+    query = request.args.get("q", "").strip().lower()
+
+    if not query:
+        return {"exercises": []}
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get all exercises with session dates
+    cursor.execute("""
+        SELECT
+            le.exercise_name,
+            le.weight,
+            le.reps_per_set,
+            le.rest_seconds,
+            le.notes,
+            ls.date as session_date,
+            ls.name as session_name
+        FROM lifting_exercises le
+        JOIN lifting_sessions ls ON le.session_id = ls.id
+        ORDER BY ls.date DESC
+    """)
+
+    all_exercises = cursor.fetchall()
+    conn.close()
+
+    # Fuzzy search: match exercises where query appears anywhere in the name
+    matching_exercises = []
+    for exercise in all_exercises:
+        exercise_name_lower = exercise["exercise_name"].lower()
+
+        # Simple fuzzy matching: check if query is substring of exercise name
+        if query in exercise_name_lower:
+            reps_list = json.loads(exercise["reps_per_set"])
+
+            matching_exercises.append(
+                {
+                    "exercise_name": exercise["exercise_name"],
+                    "session_date": exercise["session_date"],
+                    "session_name": exercise["session_name"],
+                    "weight": exercise["weight"],
+                    "reps_display": ", ".join(map(str, reps_list)),
+                    "num_sets": len(reps_list),
+                    "rest_seconds": exercise["rest_seconds"],
+                    "notes": exercise["notes"] or "",
+                }
+            )
+
+    return {"exercises": matching_exercises}
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8000)

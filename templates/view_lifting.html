@@ -66,6 +66,30 @@
   </div>
 </div>
 
+<!-- Exercise Search -->
+<div class="box">
+  <div class="field">
+    <div class="control has-icons-left">
+      <input
+        class="input"
+        type="text"
+        id="exercise-search"
+        placeholder="Search exercises (e.g., 'squat', 'bench')..."
+      />
+      <span class="icon is-left">
+        <i class="fas fa-search"></i>
+      </span>
+    </div>
+    <p class="help">Search your exercise history</p>
+  </div>
+
+  <!-- Search Results -->
+  <div id="search-results" style="display: none; margin-top: 1rem">
+    <strong>Search Results:</strong>
+    <div id="search-results-content" style="margin-top: 0.5rem"></div>
+  </div>
+</div>
+
 {% if sessions %} {% for session in sessions %}
 <div class="block">
   <header>
@@ -108,4 +132,96 @@
     <span>Log Your First Session</span>
   </a>
 </div>
-{% endif %} {% endblock %}
+{% endif %} {% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("exercise-search");
+    const searchResults = document.getElementById("search-results");
+    const searchResultsContent = document.getElementById(
+      "search-results-content",
+    );
+
+    // Exercise search functionality
+    let searchTimeout;
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+
+      // Clear previous timeout
+      clearTimeout(searchTimeout);
+
+      if (query.length < 2) {
+        searchResults.style.display = "none";
+        return;
+      }
+
+      // Debounce search by 300ms
+      searchTimeout = setTimeout(() => {
+        performSearch(query);
+      }, 300);
+    });
+
+    function performSearch(query) {
+      fetch(`/api/search-exercises?q=${encodeURIComponent(query)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          displaySearchResults(data.exercises);
+        })
+        .catch((error) => {
+          console.error("Search error:", error);
+          searchResults.style.display = "none";
+        });
+    }
+
+    function displaySearchResults(exercises) {
+      if (exercises.length === 0) {
+        searchResultsContent.innerHTML =
+          '<p class="has-text-grey-light">No matching exercises found.</p>';
+        searchResults.style.display = "block";
+        return;
+      }
+
+      let html = "";
+
+      exercises.forEach((exercise) => {
+        html += '<div class="exercise-detail">';
+        html += `<h4>${formatDate(exercise.session_date)} - ${exercise.exercise_name}</h4>`;
+        html += '<div class="stats">';
+
+        if (exercise.weight) {
+          html += `<span>${Math.round(exercise.weight)}lbs</span>`;
+        } else {
+          html += "<span>Bodyweight</span>";
+        }
+
+        html += `<span>Sets: ${exercise.reps_display}</span>`;
+
+        if (exercise.rest_seconds) {
+          html += `<span>Rest: ${exercise.rest_seconds} secs</span>`;
+        }
+
+        html += "</div>";
+
+        if (exercise.notes) {
+          html += `<div class="notes">${exercise.notes}</div>`;
+        } else {
+          html += '<div class="notes"></div>';
+        }
+
+        html += "</div>";
+      });
+
+      searchResultsContent.innerHTML = html;
+      searchResults.style.display = "block";
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + "T00:00:00");
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+  });
+</script>
+{% endblock %}
