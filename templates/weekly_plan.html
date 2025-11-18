@@ -262,7 +262,7 @@ block extra_css %}
   <h3>Week Objective</h3>
   <p>{{ weekly_plan['objective'] }}</p>
   {% endif %} {% if weekly_plan['description'] %}
-  <p class="mt-2">{{ weekly_plan['description'] }}</p>
+  <div class="mt-2">{{ weekly_plan['description']|markdown }}</div>
   {% endif %} {% if weekly_plan['week_number'] and weekly_plan['total_weeks'] %}
   <p class="mt-2">
     <small

@@ -8,10 +8,21 @@ import sqlite3
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+import markdown
 from flask import Flask, flash, redirect, render_template, request, url_for
+from markupsafe import Markup
 
 app = Flask(__name__)
 app.secret_key = "your-secret-key-here-change-in-production"
+
+
+@app.template_filter("markdown")
+def markdown_filter(text):
+    """Convert markdown text to HTML."""
+    if not text:
+        return ""
+    return Markup(markdown.markdown(text, extensions=["nl2br", "fenced_code"]))
+
 
 DB_PATH = "training.db"
 

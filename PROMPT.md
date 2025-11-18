@@ -59,6 +59,7 @@ In `weekly_plans.description`, include:
 - **Recovery guidance**: Sleep, nutrition, stretching priorities
 - **Warning signs**: What to watch for (fatigue, injury indicators)
 - **Adaptations**: When to back off or skip sessions
+- (All description fields can use markdown.)
 
 ---
 
