@@ -1,5 +1,11 @@
 # Training Goals & Target Events
 
+## Goal of this project
+- Planning for running distances and intensities, scheduled out at the week level
+- Planning for lifting, inc which exercises, # sets/# reps, rest durations
+- General advice for other areas related to fitness, health, recovery, etc.
+
+
 ## Current Target Events
 
 **Primary:** Deception Pass 25K - December 14, 2025
@@ -42,3 +48,8 @@
 - Running almost always happens first thing in the morning, except for Tuesdays–because of futsal the night before, I run later, around lunch or early afternoon
 - Lifting happens in the evenings during the week and midday on Sundays
 - I do abs separately (typically 6-8 minutes of planks) 2-3 days/week–no need for explicit ab exercises in the plans
+
+## Background
+- I am a 49-year old male, very active. I run most days (20-35 miles a week, usually), bike commute ~10 miles 3-4 days a week, weightlift, and play futsal once a week at a high level of intensity–I run hard, and it’s a lot of pounding on hardwood floors.
+- I also am into ski mountaineering, mountaineering, and climbing.
+- I have a history of tendonitis in my feet. Left foot pronates more than the right, leading to issues with the tibialis posterior. Plantar fasciitis and Achilles tendonitis flare up at times in either foot, but I largely manage through steady load increasing and stretching. Issues with tightness in the lower back.
