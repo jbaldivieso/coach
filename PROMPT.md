@@ -72,6 +72,7 @@ Before finalizing, verify:
 - [ ] Lifting doesn't compromise running recovery
 - [ ] Plan accounts for weekly futsal impact
 - [ ] Vertical/elevation training is progressive and sufficient
+- [ ] Dates correspond with the correct day of the week!
 
 ---
 

@@ -217,10 +217,10 @@ Lifting{% endblock %} {% block extra_css %}
     {% endif %}
 
     <div class="detail-item">
-      <span class="detail-label">Sets × Reps</span>
-      <span class="detail-value"
-        >{{ exercise.num_sets }} × {{ exercise.reps_display }}</span
-      >
+      <span class="detail-label">(Sets) Reps</span>
+      <span class="detail-value">
+        ({{ exercise.num_sets }}) {{ exercise.reps_display }}
+      </span>
     </div>
 
     {% if exercise.rest_display %}
