@@ -1,7 +1,3 @@
 # Coach
 
-This is a lightweight web app in Flask designed to track my running and weightlifting and solicit and persist exercise plans from Claude Code on a weekly basis.
-
-## Server details
-- ssh into basement.local (user is jon; see keychain pwd)
-- restart app with `sudo systemctl restart coach.service`
+The name of this project is Coach. This project is a simple SPA using Vue for the front end and Django for the backend. It is designed to record weightlifting sessions for different users, and to display the resulting data in various ways.
