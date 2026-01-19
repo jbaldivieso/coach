@@ -71,13 +71,27 @@ class SessionWithExercisesCreateSchema(Schema):
     exercises: List[ExerciseCreateSchema]
 
 
+class PaginatedSessionsSchema(Schema):
+    """Schema for paginated sessions response."""
+    items: List[SessionSchema]
+    total: int
+    has_more: bool
+
+
 # ============ Session Endpoints ============
 
-@router.get("/sessions/", response=List[SessionSchema], auth=django_auth)
-def list_sessions(request):
-    """List all sessions for the authenticated user."""
-    sessions = Session.objects.filter(user=request.user).prefetch_related("exercises")
-    return sessions
+@router.get("/sessions/", response=PaginatedSessionsSchema, auth=django_auth)
+def list_sessions(request, offset: int = 0, limit: int = 10):
+    """List sessions for the authenticated user with pagination."""
+    queryset = Session.objects.filter(user=request.user).prefetch_related("exercises")
+    total = queryset.count()
+    sessions = queryset[offset:offset + limit]
+    has_more = offset + limit < total
+    return {
+        "items": sessions,
+        "total": total,
+        "has_more": has_more,
+    }
 
 
 @router.post("/sessions/", response={201: SessionSchema, 400: MessageSchema}, auth=django_auth)

@@ -57,8 +57,10 @@ class TestListSessions:
         response = authenticated_client.get("/api/lifting/sessions/")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0]["title"] == "Test Session"
+        assert data["total"] == 1
+        assert len(data["items"]) == 1
+        assert data["items"][0]["title"] == "Test Session"
+        assert data["has_more"] is False
 
     def test_list_sessions_unauthenticated(self, client):
         response = client.get("/api/lifting/sessions/")
@@ -68,8 +70,9 @@ class TestListSessions:
         response = authenticated_client.get("/api/lifting/sessions/")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0]["title"] == "Test Session"
+        assert data["total"] == 1
+        assert len(data["items"]) == 1
+        assert data["items"][0]["title"] == "Test Session"
 
 
 class TestCreateSession:

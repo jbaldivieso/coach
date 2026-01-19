@@ -16,6 +16,12 @@ export interface Session {
   exercises: Exercise[];
 }
 
+export interface PaginatedSessions {
+  items: Session[];
+  total: number;
+  has_more: boolean;
+}
+
 export interface ExerciseFormData {
   title: string;
   weight_lbs: string;
