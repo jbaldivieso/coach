@@ -1,9 +1,57 @@
+# Environment
 .env
+.env.*
+!.env.example
 env.txt
+
+# Python
 *.pyc
 __pycache__/
-*.sqlite
-*.db
-sample_activity_*.json
+*.pyo
+*.pyd
+.Python
 venv/
 .venv/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+db.sqlite3
+
+# Django
+staticfiles/
+media/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite
+dist/
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+
+# Misc
+sample_activity_*.json
+*.log

@@ -1,0 +1,45 @@
+// Import Bulma
+@use "bulma/sass" as *;
+
+// Global custom styles
+
+// Mobile-first responsive tweaks
+html {
+  overflow-y: auto;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+// App layout
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+// Compact form styles for information density
+.field {
+  &:not(:last-child) {
+    margin-bottom: 0.75rem;
+  }
+}
+
+// Mobile optimizations
+@media screen and (max-width: 768px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
