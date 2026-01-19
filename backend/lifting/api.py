@@ -1,6 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
+from django.db import transaction
 from ninja import Router, Schema
 from ninja.security import django_auth
 
@@ -61,6 +62,15 @@ class SessionUpdateSchema(Schema):
     session_type: Optional[str] = None
 
 
+class SessionWithExercisesCreateSchema(Schema):
+    """Schema for creating a session with embedded exercises."""
+    title: str
+    date: date
+    comments: str = ""
+    session_type: str
+    exercises: List[ExerciseCreateSchema]
+
+
 # ============ Session Endpoints ============
 
 @router.get("/sessions/", response=List[SessionSchema], auth=django_auth)
@@ -74,6 +84,43 @@ def list_sessions(request):
 def create_session(request, data: SessionCreateSchema):
     """Create a new lifting session."""
     session = Session.objects.create(user=request.user, **data.dict())
+    return 201, session
+
+
+@router.post("/sessions/with-exercises/", response={201: SessionSchema, 400: MessageSchema}, auth=django_auth)
+def create_session_with_exercises(request, data: SessionWithExercisesCreateSchema):
+    """Create a new lifting session with exercises in a single atomic operation."""
+    # Validate session_type
+    valid_types = [choice[0] for choice in Session.SESSION_TYPE_CHOICES]
+    if data.session_type not in valid_types:
+        return 400, {"message": f"Invalid session type. Must be one of: {', '.join(valid_types)}"}
+
+    # Validate date is not in future
+    if data.date > date.today():
+        return 400, {"message": "Date cannot be in the future"}
+
+    # Validate at least one exercise
+    if not data.exercises:
+        return 400, {"message": "At least one exercise is required"}
+
+    # Use transaction to ensure atomicity
+    with transaction.atomic():
+        session = Session.objects.create(
+            user=request.user,
+            title=data.title,
+            date=data.date,
+            comments=data.comments,
+            session_type=data.session_type,
+        )
+
+        for exercise_data in data.exercises:
+            Exercise.objects.create(
+                session=session,
+                **exercise_data.dict()
+            )
+
+    # Refetch with exercises for response
+    session = Session.objects.filter(id=session.id).prefetch_related("exercises").first()
     return 201, session
 
 
