@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as DateType
 from typing import List, Optional
 
 from django.db import transaction
@@ -42,7 +42,7 @@ class ExerciseUpdateSchema(Schema):
 class SessionSchema(Schema):
     id: int
     title: str
-    date: date
+    date: DateType
     comments: str
     session_type: str
     exercises: List[ExerciseSchema]
@@ -50,14 +50,14 @@ class SessionSchema(Schema):
 
 class SessionCreateSchema(Schema):
     title: str
-    date: date
+    date: DateType
     comments: str = ""
     session_type: str
 
 
 class SessionUpdateSchema(Schema):
     title: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[DateType] = None
     comments: Optional[str] = None
     session_type: Optional[str] = None
 
@@ -65,7 +65,7 @@ class SessionUpdateSchema(Schema):
 class SessionWithExercisesCreateSchema(Schema):
     """Schema for creating a session with embedded exercises."""
     title: str
-    date: date
+    date: DateType
     comments: str = ""
     session_type: str
     exercises: List[ExerciseCreateSchema]

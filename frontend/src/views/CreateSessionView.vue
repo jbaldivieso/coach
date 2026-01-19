@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { api } from "@/api/client";
-import type { ExerciseFormData, SessionFormData, Session } from "@/types/lifting";
+import type { ExerciseFormData, SessionFormData, Session, ExerciseEditState } from "@/types/lifting";
 import { SESSION_TYPES } from "@/types/lifting";
 
 const router = useRouter();
+const route = useRoute();
+
+// Edit mode detection
+const isEditMode = computed(() => route.name === 'edit-session');
+const sessionId = computed(() => isEditMode.value ? Number(route.params.id) : null);
+const pageTitle = computed(() => isEditMode.value ? 'Edit Session' : 'New Session');
 
 // Form state
 const sessionForm = ref<SessionFormData>({
@@ -22,6 +28,9 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const validationErrors = ref<Record<string, string>>({});
 const titleInputRef = ref<HTMLInputElement | null>(null);
+const loadingSession = ref(false);
+const exerciseStates = ref<ExerciseEditState[]>([]);
+const deletedExerciseIds = ref<number[]>([]);
 
 function getTodayDateString(): string {
   return new Date().toISOString().split("T")[0] as string;
@@ -33,16 +42,77 @@ function createEmptyExercise(): ExerciseFormData {
     weight_lbs: "",
     rest_seconds: "",
     reps: "",
+    comments: "",
   };
 }
 
 function addExercise() {
-  exercises.value.push(createEmptyExercise());
+  const newExercise = createEmptyExercise();
+  exercises.value.push(newExercise);
+  if (isEditMode.value) {
+    exerciseStates.value.push({ data: newExercise });
+  }
 }
 
 function removeExercise(index: number) {
   if (exercises.value.length > 1) {
+    if (isEditMode.value && exerciseStates.value[index]?.id) {
+      deletedExerciseIds.value.push(exerciseStates.value[index].id!);
+    }
     exercises.value.splice(index, 1);
+    if (isEditMode.value) {
+      exerciseStates.value.splice(index, 1);
+    }
+  }
+}
+
+async function fetchSession(id: number) {
+  loadingSession.value = true;
+  error.value = null;
+
+  try {
+    const response = await api.get<Session>(`/api/lifting/sessions/${id}/`);
+
+    if (response.data) {
+      // Populate session form
+      sessionForm.value = {
+        title: response.data.title,
+        date: response.data.date,
+        session_type: response.data.session_type,
+        comments: response.data.comments,
+      };
+
+      // Populate exercises and initialize exercise states
+      const exerciseFormDataList: ExerciseFormData[] = response.data.exercises.map(ex => ({
+        title: ex.title,
+        weight_lbs: ex.weight_lbs?.toString() || "",
+        rest_seconds: ex.rest_seconds.toString(),
+        reps: ex.reps.join(", "),
+        comments: ex.comments,
+      }));
+      exercises.value = exerciseFormDataList;
+
+      // Initialize exercise states for tracking
+      exerciseStates.value = response.data.exercises.map((ex, index) => ({
+        id: ex.id,
+        data: exerciseFormDataList[index]!,
+      }));
+
+      // Ensure at least one exercise
+      if (exercises.value.length === 0) {
+        const newExercise = createEmptyExercise();
+        exercises.value.push(newExercise);
+        exerciseStates.value.push({ data: newExercise });
+      }
+    } else {
+      error.value = response.error || "Failed to load session";
+      router.push({ name: "home" });
+    }
+  } catch {
+    error.value = "Network error. Please try again.";
+    router.push({ name: "home" });
+  } finally {
+    loadingSession.value = false;
   }
 }
 
@@ -120,11 +190,82 @@ function buildPayload() {
       weight_lbs: String(ex.weight_lbs).trim() ? parseInt(String(ex.weight_lbs), 10) : null,
       rest_seconds: parseInt(String(ex.rest_seconds), 10),
       reps: ex.reps.split(",").map((r) => parseInt(r.trim(), 10)).filter((r) => !isNaN(r)),
+      comments: ex.comments.trim(),
     })),
   };
 }
 
+async function handleUpdate() {
+  if (!sessionId.value) return;
+
+  error.value = null;
+  if (!validateForm()) return;
+
+  loading.value = true;
+
+  try {
+    await api.fetchCsrfToken();
+
+    // 1. Update session metadata
+    const sessionPayload = {
+      title: sessionForm.value.title.trim(),
+      date: sessionForm.value.date,
+      session_type: sessionForm.value.session_type,
+      comments: sessionForm.value.comments.trim(),
+    };
+
+    const sessionResponse = await api.put<Session>(
+      `/api/lifting/sessions/${sessionId.value}/`,
+      sessionPayload
+    );
+
+    if (!sessionResponse.data) {
+      error.value = sessionResponse.error || "Failed to update session";
+      loading.value = false;
+      return;
+    }
+
+    // 2. Delete removed exercises
+    for (const exerciseId of deletedExerciseIds.value) {
+      await api.delete(`/api/lifting/exercises/${exerciseId}/`);
+    }
+
+    // 3. Update/create exercises
+    const payload = buildPayload();
+    for (let i = 0; i < exercises.value.length; i++) {
+      const exerciseData = payload.exercises[i];
+      const exerciseState = exerciseStates.value[i];
+
+      if (exerciseState && exerciseState.id) {
+        // Update existing exercise
+        await api.put(
+          `/api/lifting/exercises/${exerciseState.id}/`,
+          exerciseData
+        );
+      } else if (sessionId.value) {
+        // Create new exercise
+        await api.post(
+          `/api/lifting/sessions/${sessionId.value}/exercises/`,
+          exerciseData
+        );
+      }
+    }
+
+    // Success - redirect to home
+    router.push({ name: "home" });
+  } catch {
+    error.value = "Network error. Please try again.";
+  } finally {
+    loading.value = false;
+  }
+}
+
 async function handleSubmit() {
+  if (isEditMode.value) {
+    await handleUpdate();
+    return;
+  }
+
   error.value = null;
 
   if (!validateForm()) {
@@ -152,16 +293,25 @@ async function handleSubmit() {
 }
 
 onMounted(() => {
-  titleInputRef.value?.focus();
+  if (isEditMode.value && sessionId.value) {
+    fetchSession(sessionId.value);
+  } else {
+    titleInputRef.value?.focus();
+  }
 });
 </script>
 
 <template>
   <div class="container">
     <section class="section">
-      <h1 class="title">New Session</h1>
+      <h1 class="title">{{ pageTitle }}</h1>
 
-      <form @submit.prevent="handleSubmit">
+      <div v-if="loadingSession" class="has-text-centered py-6">
+        <span class="loader"></span>
+        <p class="mt-3">Loading session...</p>
+      </div>
+
+      <form v-else @submit.prevent="handleSubmit">
         <!-- Session Fields -->
         <div class="box">
           <h2 class="subtitle">Session Details</h2>
@@ -322,6 +472,20 @@ onMounted(() => {
               {{ validationErrors[`exercise.${index}.reps`] || "Enter comma-separated numbers for each set" }}
             </p>
           </div>
+
+          <!-- Exercise Comments -->
+          <div class="field">
+            <label class="label" :for="`exercise-${index}-comments`">Comments</label>
+            <div class="control">
+              <textarea
+                :id="`exercise-${index}-comments`"
+                v-model="exercise.comments"
+                class="textarea"
+                placeholder="Optional notes about this exercise..."
+                rows="2"
+              ></textarea>
+            </div>
+          </div>
         </div>
 
         <!-- Add Exercise Button -->
@@ -344,7 +508,7 @@ onMounted(() => {
             :class="{ 'is-loading': loading }"
             :disabled="loading"
           >
-            Save Session
+            {{ isEditMode ? 'Update Session' : 'Save Session' }}
           </button>
         </div>
       </form>

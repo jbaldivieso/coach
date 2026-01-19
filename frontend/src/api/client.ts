@@ -73,6 +73,14 @@ class ApiClient {
   post<T>(url: string, body?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>("POST", url, body);
   }
+
+  put<T>(url: string, body?: unknown): Promise<ApiResponse<T>> {
+    return this.request<T>("PUT", url, body);
+  }
+
+  delete<T>(url: string): Promise<ApiResponse<T>> {
+    return this.request<T>("DELETE", url);
+  }
 }
 
 export const api = new ApiClient();

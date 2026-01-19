@@ -121,6 +121,14 @@ onMounted(() => {
               <span class="has-text-weight-semibold">{{ session.date }}</span>
               <span class="ml-2">{{ session.title }}</span>
             </div>
+            <RouterLink
+              :to="{ name: 'edit-session', params: { id: session.id } }"
+              class="button is-small is-ghost"
+            >
+              <span class="icon is-small">
+                <span>✏️</span>
+              </span>
+            </RouterLink>
           </div>
 
           <!-- Row 2: Expandable exercises summary -->

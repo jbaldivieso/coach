@@ -27,6 +27,12 @@ export interface ExerciseFormData {
   weight_lbs: string;
   rest_seconds: string;
   reps: string;
+  comments: string;
+}
+
+export interface ExerciseEditState {
+  id?: number;
+  data: ExerciseFormData;
 }
 
 export interface SessionFormData {
