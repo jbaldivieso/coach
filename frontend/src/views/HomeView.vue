@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import { api } from "@/api/client";
 import type { Session, PaginatedSessions } from "@/types/lifting";
 import PencilIcon from "@/components/svg/IconPencil.vue";
+import CopyIcon from "@/components/svg/IconCopy.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -130,6 +131,14 @@ onMounted(() => {
               <span class="ml-2">{{ session.title }}</span>
             </h2>
             <div class="is-flex">
+              <RouterLink
+                :to="{ name: 'copy-session', params: { id: session.id } }"
+                class="button is-small is-ghost"
+              >
+                <span class="icon is-small">
+                  <CopyIcon />
+                </span>
+              </RouterLink>
               <RouterLink
                 :to="{ name: 'edit-session', params: { id: session.id } }"
                 class="button is-small is-ghost"

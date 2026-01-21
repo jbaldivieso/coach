@@ -127,6 +127,8 @@ body {
   // The 'lightness' value is decreased by 20 percentage points
   background-color: $darker-blue;
 }
-.bi-pencil {
+.bi-pencil,
+.bi-copy {
   fill: var(--color3);
+  width: 1.25em;
 }

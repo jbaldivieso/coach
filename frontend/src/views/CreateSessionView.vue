@@ -2,16 +2,31 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { api } from "@/api/client";
-import type { ExerciseFormData, SessionFormData, Session, ExerciseEditState } from "@/types/lifting";
+import type {
+  ExerciseFormData,
+  SessionFormData,
+  Session,
+  ExerciseEditState,
+} from "@/types/lifting";
 import { SESSION_TYPES } from "@/types/lifting";
 
 const router = useRouter();
 const route = useRoute();
 
-// Edit mode detection
-const isEditMode = computed(() => route.name === 'edit-session');
-const sessionId = computed(() => isEditMode.value ? Number(route.params.id) : null);
-const pageTitle = computed(() => isEditMode.value ? 'Edit Session' : 'New Session');
+// Mode detection
+const isEditMode = computed(() => route.name === "edit-session");
+const isCopyMode = computed(() => route.name === "copy-session");
+const sessionId = computed(() =>
+  isEditMode.value ? Number(route.params.id) : null,
+);
+const sourceSessionId = computed(() =>
+  isCopyMode.value ? Number(route.params.id) : null,
+);
+const pageTitle = computed(() => {
+  if (isEditMode.value) return "Edit Session";
+  if (isCopyMode.value) return "Copy Session";
+  return "New Session";
+});
 
 // Form state
 const sessionForm = ref<SessionFormData>({
@@ -83,13 +98,14 @@ async function fetchSession(id: number) {
       };
 
       // Populate exercises and initialize exercise states
-      const exerciseFormDataList: ExerciseFormData[] = response.data.exercises.map(ex => ({
-        title: ex.title,
-        weight_lbs: ex.weight_lbs?.toString() || "",
-        rest_seconds: ex.rest_seconds.toString(),
-        reps: ex.reps.join(", "),
-        comments: ex.comments,
-      }));
+      const exerciseFormDataList: ExerciseFormData[] =
+        response.data.exercises.map((ex) => ({
+          title: ex.title,
+          weight_lbs: ex.weight_lbs?.toString() || "",
+          rest_seconds: ex.rest_seconds.toString(),
+          reps: ex.reps.join(", "),
+          comments: ex.comments,
+        }));
       exercises.value = exerciseFormDataList;
 
       // Initialize exercise states for tracking
@@ -103,6 +119,47 @@ async function fetchSession(id: number) {
         const newExercise = createEmptyExercise();
         exercises.value.push(newExercise);
         exerciseStates.value.push({ data: newExercise });
+      }
+    } else {
+      error.value = response.error || "Failed to load session";
+      router.push({ name: "home" });
+    }
+  } catch {
+    error.value = "Network error. Please try again.";
+    router.push({ name: "home" });
+  } finally {
+    loadingSession.value = false;
+  }
+}
+
+async function fetchSessionForCopy(id: number) {
+  loadingSession.value = true;
+  error.value = null;
+
+  try {
+    const response = await api.get<Session>(`/api/lifting/sessions/${id}/`);
+
+    if (response.data) {
+      // Populate session form with copied values (but today's date)
+      sessionForm.value = {
+        title: response.data.title,
+        date: getTodayDateString(),
+        session_type: response.data.session_type,
+        comments: "",
+      };
+
+      // Transform exercises for copy mode
+      exercises.value = response.data.exercises.map((ex) => ({
+        title: ex.title,
+        weight_lbs: ex.weight_lbs?.toString() || "",
+        rest_seconds: ex.rest_seconds.toString(),
+        reps: "",
+        comments: `Previously: ${ex.reps.join(", ")}`,
+      }));
+
+      // Ensure at least one exercise
+      if (exercises.value.length === 0) {
+        exercises.value.push(createEmptyExercise());
       }
     } else {
       error.value = response.error || "Failed to load session";
@@ -150,16 +207,19 @@ function validateForm(): boolean {
   // Exercise validation
   exercises.value.forEach((exercise, index) => {
     if (!exercise.title.trim()) {
-      validationErrors.value[`exercise.${index}.title`] = "Exercise title is required";
+      validationErrors.value[`exercise.${index}.title`] =
+        "Exercise title is required";
       isValid = false;
     }
 
     const restValue = String(exercise.rest_seconds).trim();
     if (!restValue) {
-      validationErrors.value[`exercise.${index}.rest`] = "Rest time is required";
+      validationErrors.value[`exercise.${index}.rest`] =
+        "Rest time is required";
       isValid = false;
     } else if (isNaN(Number(restValue)) || Number(restValue) < 0) {
-      validationErrors.value[`exercise.${index}.rest`] = "Rest must be a positive number";
+      validationErrors.value[`exercise.${index}.rest`] =
+        "Rest must be a positive number";
       isValid = false;
     }
 
@@ -167,10 +227,14 @@ function validateForm(): boolean {
       validationErrors.value[`exercise.${index}.reps`] = "Reps are required";
       isValid = false;
     } else {
-      const repsArray = exercise.reps.split(",").map((r) => r.trim()).filter((r) => r !== "");
+      const repsArray = exercise.reps
+        .split(",")
+        .map((r) => r.trim())
+        .filter((r) => r !== "");
       const invalidReps = repsArray.some((r) => isNaN(parseInt(r, 10)));
       if (invalidReps || repsArray.length === 0) {
-        validationErrors.value[`exercise.${index}.reps`] = "Reps must be comma-separated numbers (e.g., 5, 5, 5)";
+        validationErrors.value[`exercise.${index}.reps`] =
+          "Reps must be comma-separated numbers (e.g., 5, 5, 5)";
         isValid = false;
       }
     }
@@ -187,9 +251,14 @@ function buildPayload() {
     comments: sessionForm.value.comments.trim(),
     exercises: exercises.value.map((ex) => ({
       title: ex.title.trim(),
-      weight_lbs: String(ex.weight_lbs).trim() ? parseInt(String(ex.weight_lbs), 10) : null,
+      weight_lbs: String(ex.weight_lbs).trim()
+        ? parseInt(String(ex.weight_lbs), 10)
+        : null,
       rest_seconds: parseInt(String(ex.rest_seconds), 10),
-      reps: ex.reps.split(",").map((r) => parseInt(r.trim(), 10)).filter((r) => !isNaN(r)),
+      reps: ex.reps
+        .split(",")
+        .map((r) => parseInt(r.trim(), 10))
+        .filter((r) => !isNaN(r)),
       comments: ex.comments.trim(),
     })),
   };
@@ -216,7 +285,7 @@ async function handleUpdate() {
 
     const sessionResponse = await api.put<Session>(
       `/api/lifting/sessions/${sessionId.value}/`,
-      sessionPayload
+      sessionPayload,
     );
 
     if (!sessionResponse.data) {
@@ -240,13 +309,13 @@ async function handleUpdate() {
         // Update existing exercise
         await api.put(
           `/api/lifting/exercises/${exerciseState.id}/`,
-          exerciseData
+          exerciseData,
         );
       } else if (sessionId.value) {
         // Create new exercise
         await api.post(
           `/api/lifting/sessions/${sessionId.value}/exercises/`,
-          exerciseData
+          exerciseData,
         );
       }
     }
@@ -278,7 +347,10 @@ async function handleSubmit() {
     await api.fetchCsrfToken();
 
     const payload = buildPayload();
-    const response = await api.post<Session>("/api/lifting/sessions/with-exercises/", payload);
+    const response = await api.post<Session>(
+      "/api/lifting/sessions/with-exercises/",
+      payload,
+    );
 
     if (response.data) {
       router.push({ name: "home" });
@@ -295,6 +367,8 @@ async function handleSubmit() {
 onMounted(() => {
   if (isEditMode.value && sessionId.value) {
     fetchSession(sessionId.value);
+  } else if (isCopyMode.value && sourceSessionId.value) {
+    fetchSessionForCopy(sourceSessionId.value);
   } else {
     titleInputRef.value?.focus();
   }
@@ -357,10 +431,17 @@ onMounted(() => {
           <div class="field">
             <label class="label" for="session-type">Type</label>
             <div class="control">
-              <div class="select is-fullwidth" :class="{ 'is-danger': validationErrors['session.type'] }">
+              <div
+                class="select is-fullwidth"
+                :class="{ 'is-danger': validationErrors['session.type'] }"
+              >
                 <select id="session-type" v-model="sessionForm.session_type">
                   <option value="" disabled>Select type...</option>
-                  <option v-for="type in SESSION_TYPES" :key="type.value" :value="type.value">
+                  <option
+                    v-for="type in SESSION_TYPES"
+                    :key="type.value"
+                    :value="type.value"
+                  >
                     {{ type.label }}
                   </option>
                 </select>
@@ -388,7 +469,9 @@ onMounted(() => {
 
         <!-- Exercises -->
         <div v-for="(exercise, index) in exercises" :key="index" class="box">
-          <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+          <div
+            class="is-flex is-justify-content-space-between is-align-items-center mb-3"
+          >
             <h2 class="subtitle mb-0">Exercise {{ index + 1 }}</h2>
             <button
               v-if="exercises.length > 1"
@@ -407,12 +490,17 @@ onMounted(() => {
                 :id="`exercise-${index}-title`"
                 v-model="exercise.title"
                 class="input"
-                :class="{ 'is-danger': validationErrors[`exercise.${index}.title`] }"
+                :class="{
+                  'is-danger': validationErrors[`exercise.${index}.title`],
+                }"
                 type="text"
                 placeholder="e.g., Bench Press"
               />
             </div>
-            <p v-if="validationErrors[`exercise.${index}.title`]" class="help is-danger">
+            <p
+              v-if="validationErrors[`exercise.${index}.title`]"
+              class="help is-danger"
+            >
               {{ validationErrors[`exercise.${index}.title`] }}
             </p>
           </div>
@@ -421,7 +509,9 @@ onMounted(() => {
           <div class="columns is-mobile">
             <div class="column">
               <div class="field">
-                <label class="label" :for="`exercise-${index}-weight`">Weight (lbs)</label>
+                <label class="label" :for="`exercise-${index}-weight`"
+                  >Weight (lbs)</label
+                >
                 <div class="control">
                   <input
                     :id="`exercise-${index}-weight`"
@@ -436,19 +526,26 @@ onMounted(() => {
             </div>
             <div class="column">
               <div class="field">
-                <label class="label" :for="`exercise-${index}-rest`">Rest (sec)</label>
+                <label class="label" :for="`exercise-${index}-rest`"
+                  >Rest (sec)</label
+                >
                 <div class="control">
                   <input
                     :id="`exercise-${index}-rest`"
                     v-model="exercise.rest_seconds"
                     class="input"
-                    :class="{ 'is-danger': validationErrors[`exercise.${index}.rest`] }"
+                    :class="{
+                      'is-danger': validationErrors[`exercise.${index}.rest`],
+                    }"
                     type="number"
                     placeholder="e.g., 60"
                     min="0"
                   />
                 </div>
-                <p v-if="validationErrors[`exercise.${index}.rest`]" class="help is-danger">
+                <p
+                  v-if="validationErrors[`exercise.${index}.rest`]"
+                  class="help is-danger"
+                >
                   {{ validationErrors[`exercise.${index}.rest`] }}
                 </p>
               </div>
@@ -463,19 +560,31 @@ onMounted(() => {
                 :id="`exercise-${index}-reps`"
                 v-model="exercise.reps"
                 class="input"
-                :class="{ 'is-danger': validationErrors[`exercise.${index}.reps`] }"
+                :class="{
+                  'is-danger': validationErrors[`exercise.${index}.reps`],
+                }"
                 type="text"
                 placeholder="e.g., 5, 5, 5"
               />
             </div>
-            <p class="help" :class="{ 'is-danger': validationErrors[`exercise.${index}.reps`] }">
-              {{ validationErrors[`exercise.${index}.reps`] || "Enter comma-separated numbers for each set" }}
+            <p
+              class="help"
+              :class="{
+                'is-danger': validationErrors[`exercise.${index}.reps`],
+              }"
+            >
+              {{
+                validationErrors[`exercise.${index}.reps`] ||
+                "Enter comma-separated numbers for each set"
+              }}
             </p>
           </div>
 
           <!-- Exercise Comments -->
           <div class="field">
-            <label class="label" :for="`exercise-${index}-comments`">Comments</label>
+            <label class="label" :for="`exercise-${index}-comments`"
+              >Comments</label
+            >
             <div class="control">
               <textarea
                 :id="`exercise-${index}-comments`"
@@ -490,7 +599,11 @@ onMounted(() => {
 
         <!-- Add Exercise Button -->
         <div class="field">
-          <button type="button" class="button is-link is-light is-fullwidth" @click="addExercise">
+          <button
+            type="button"
+            class="button is-fullwidth"
+            @click="addExercise"
+          >
             + Add Another Exercise
           </button>
         </div>
@@ -508,7 +621,7 @@ onMounted(() => {
             :class="{ 'is-loading': loading }"
             :disabled="loading"
           >
-            {{ isEditMode ? 'Update Session' : 'Save Session' }}
+            {{ isEditMode ? "Update Session" : "Save Session" }}
           </button>
         </div>
       </form>
