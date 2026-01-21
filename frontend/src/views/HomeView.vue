@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import { api } from "@/api/client";
 import type { Session, PaginatedSessions } from "@/types/lifting";
+import PencilIcon from "@/components/svg/IconPencil.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -29,7 +30,7 @@ async function fetchSessions(offset: number = 0, append: boolean = false) {
 
   try {
     const response = await api.get<PaginatedSessions>(
-      `/api/lifting/sessions/?offset=${offset}&limit=${PAGE_SIZE}`
+      `/api/lifting/sessions/?offset=${offset}&limit=${PAGE_SIZE}`,
     );
 
     if (response.data) {
@@ -86,7 +87,9 @@ onMounted(() => {
   <div class="container">
     <section class="section">
       <!-- Header with title and add button -->
-      <div class="is-flex is-justify-content-space-between is-align-items-center mb-5">
+      <div
+        class="is-flex is-justify-content-space-between is-align-items-center mb-5"
+      >
         <h1 class="title mb-0">Sessions</h1>
         <RouterLink :to="{ name: 'create-session' }" class="button is-primary">
           +
@@ -102,7 +105,10 @@ onMounted(() => {
       <!-- Error state -->
       <div v-else-if="error" class="notification is-danger is-light">
         {{ error }}
-        <button class="button is-small is-danger is-light ml-3" @click="fetchSessions()">
+        <button
+          class="button is-small is-danger is-light ml-3"
+          @click="fetchSessions()"
+        >
           Retry
         </button>
       </div>
@@ -113,45 +119,57 @@ onMounted(() => {
       </div>
 
       <!-- Sessions list -->
-      <div v-else>
+      <div v-else id="session-list">
         <div v-for="session in sessions" :key="session.id" class="box mb-3">
           <!-- Row 1: Date and Title -->
-          <div class="is-flex is-justify-content-space-between is-align-items-center">
-            <div>
+          <div
+            class="is-flex is-justify-content-space-between is-align-items-center"
+          >
+            <h2>
               <span class="has-text-weight-semibold">{{ session.date }}</span>
               <span class="ml-2">{{ session.title }}</span>
+            </h2>
+            <div class="is-flex">
+              <RouterLink
+                :to="{ name: 'edit-session', params: { id: session.id } }"
+                class="button is-small is-ghost"
+              >
+                <span class="icon is-small">
+                  <PencilIcon />
+                </span>
+              </RouterLink>
             </div>
-            <RouterLink
-              :to="{ name: 'edit-session', params: { id: session.id } }"
-              class="button is-small is-ghost"
-            >
-              <span class="icon is-small">
-                <span>✏️</span>
-              </span>
-            </RouterLink>
           </div>
 
           <!-- Row 2: Expandable exercises summary -->
-          <div class="mt-2">
-            <button
-              class="button is-small is-ghost p-0"
-              @click="toggleExpanded(session.id)"
-            >
-              <span class="icon is-small">
-                <span>{{ isExpanded(session.id) ? '▼' : '▶' }}</span>
-              </span>
-              <span>{{ session.exercises.length }} exercise{{ session.exercises.length !== 1 ? 's' : '' }}</span>
-            </button>
+          <div>
+            <a @click="toggleExpanded(session.id)">
+              <div
+                :class="['triangle', isExpanded(session.id) ? 'down' : 'right']"
+              ></div>
+              <span
+                >{{ session.exercises.length }} exercise{{
+                  session.exercises.length !== 1 ? "s" : ""
+                }}</span
+              >
+            </a>
 
             <!-- Expanded exercise details -->
-            <div v-if="isExpanded(session.id)" class="mt-3 pl-4">
-              <div v-for="exercise in session.exercises" :key="exercise.id" class="mb-2">
+            <div v-if="isExpanded(session.id)" class="pl-4">
+              <div
+                v-for="exercise in session.exercises"
+                :key="exercise.id"
+                class="mt-2"
+              >
                 <p>
-                  <strong>{{ exercise.title }}</strong>:
-                  {{ formatWeight(exercise.weight_lbs) }} &times; {{ formatReps(exercise.reps) }}
-                  <span class="has-text-grey is-size-7">({{ exercise.rest_seconds }}s rest)</span>
+                  <strong>{{ exercise.title }}</strong
+                  >: {{ formatWeight(exercise.weight_lbs) }} &times;
+                  {{ formatReps(exercise.reps) }}
+                  <span class="has-text-grey"
+                    >{{ exercise.rest_seconds }} secs</span
+                  >
                 </p>
-                <p v-if="exercise.comments" class="has-text-grey is-size-7 ml-3">
+                <p v-if="exercise.comments" class="has-text-grey is-size-7">
                   {{ exercise.comments }}
                 </p>
               </div>
@@ -162,7 +180,7 @@ onMounted(() => {
         <!-- Load more button -->
         <div v-if="hasMore" class="has-text-centered mt-4">
           <button
-            class="button is-link is-light"
+            class="button"
             :class="{ 'is-loading': loadingMore }"
             :disabled="loadingMore"
             @click="loadMore"
@@ -172,5 +190,101 @@ onMounted(() => {
         </div>
       </div>
     </section>
+
+    <!-- Swatches with Bulma "primary" variants -->
+    <table class="table" v-if="false">
+      <tbody>
+        <tr>
+          <td><code>--bulma-primary</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-invert</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-invert)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-light</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-light)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-light-invert</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-light-invert)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-dark</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-dark)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-dark-invert</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-dark-invert)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-soft</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-soft)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-bold</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-bold)"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td><code>--bulma-primary-on-scheme</code></td>
+          <td>
+            <span
+              class="bd-color-swatch"
+              style="--background: var(--bulma-primary-on-scheme)"
+            ></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
+<style scoped>
+.bd-color-swatch {
+  width: 1em;
+  height: 1em;
+  background-color: var(--background);
+  display: block;
+  border-radius: 3px;
+}
+</style>

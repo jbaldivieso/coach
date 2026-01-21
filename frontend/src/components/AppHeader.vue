@@ -14,7 +14,7 @@ async function handleLogout() {
 </script>
 
 <template>
-  <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+  <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
         <router-link class="navbar-item has-text-weight-bold" to="/">
@@ -26,7 +26,7 @@ async function handleLogout() {
         <div class="navbar-item">
           <div class="buttons">
             <button
-              class="button is-light is-small"
+              class="button logout is-small"
               :class="{ 'is-loading': authStore.loading }"
               :disabled="authStore.loading"
               @click="handleLogout"

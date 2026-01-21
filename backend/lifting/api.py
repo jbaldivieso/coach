@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import date as DateType
 from typing import List, Optional
 
@@ -6,13 +7,14 @@ from ninja import Router, Schema
 from ninja.security import django_auth
 
 from accounts.api import MessageSchema
-from .models import Session, Exercise
 
+from .models import Exercise, Session
 
 router = Router()
 
 
 # ============ Schemas ============
+
 
 class ExerciseSchema(Schema):
     id: int
@@ -64,6 +66,7 @@ class SessionUpdateSchema(Schema):
 
 class SessionWithExercisesCreateSchema(Schema):
     """Schema for creating a session with embedded exercises."""
+
     title: str
     date: DateType
     comments: str = ""
@@ -73,6 +76,7 @@ class SessionWithExercisesCreateSchema(Schema):
 
 class PaginatedSessionsSchema(Schema):
     """Schema for paginated sessions response."""
+
     items: List[SessionSchema]
     total: int
     has_more: bool
@@ -80,12 +84,13 @@ class PaginatedSessionsSchema(Schema):
 
 # ============ Session Endpoints ============
 
+
 @router.get("/sessions/", response=PaginatedSessionsSchema, auth=django_auth)
 def list_sessions(request, offset: int = 0, limit: int = 10):
     """List sessions for the authenticated user with pagination."""
     queryset = Session.objects.filter(user=request.user).prefetch_related("exercises")
     total = queryset.count()
-    sessions = queryset[offset:offset + limit]
+    sessions = queryset[offset : offset + limit]
     has_more = offset + limit < total
     return {
         "items": sessions,
@@ -94,23 +99,31 @@ def list_sessions(request, offset: int = 0, limit: int = 10):
     }
 
 
-@router.post("/sessions/", response={201: SessionSchema, 400: MessageSchema}, auth=django_auth)
+@router.post(
+    "/sessions/", response={201: SessionSchema, 400: MessageSchema}, auth=django_auth
+)
 def create_session(request, data: SessionCreateSchema):
     """Create a new lifting session."""
     session = Session.objects.create(user=request.user, **data.dict())
     return 201, session
 
 
-@router.post("/sessions/with-exercises/", response={201: SessionSchema, 400: MessageSchema}, auth=django_auth)
+@router.post(
+    "/sessions/with-exercises/",
+    response={201: SessionSchema, 400: MessageSchema},
+    auth=django_auth,
+)
 def create_session_with_exercises(request, data: SessionWithExercisesCreateSchema):
     """Create a new lifting session with exercises in a single atomic operation."""
     # Validate session_type
     valid_types = [choice[0] for choice in Session.SESSION_TYPE_CHOICES]
     if data.session_type not in valid_types:
-        return 400, {"message": f"Invalid session type. Must be one of: {', '.join(valid_types)}"}
+        return 400, {
+            "message": f"Invalid session type. Must be one of: {', '.join(valid_types)}"
+        }
 
     # Validate date is not in future
-    if data.date > date.today():
+    if data.date > dt.date.today():
         return 400, {"message": "Date cannot be in the future"}
 
     # Validate at least one exercise
@@ -128,26 +141,37 @@ def create_session_with_exercises(request, data: SessionWithExercisesCreateSchem
         )
 
         for exercise_data in data.exercises:
-            Exercise.objects.create(
-                session=session,
-                **exercise_data.dict()
-            )
+            Exercise.objects.create(session=session, **exercise_data.dict())
 
     # Refetch with exercises for response
-    session = Session.objects.filter(id=session.id).prefetch_related("exercises").first()
+    session = (
+        Session.objects.filter(id=session.id).prefetch_related("exercises").first()
+    )
     return 201, session
 
 
-@router.get("/sessions/{session_id}/", response={200: SessionSchema, 404: MessageSchema}, auth=django_auth)
+@router.get(
+    "/sessions/{session_id}/",
+    response={200: SessionSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def get_session(request, session_id: int):
     """Get a specific session by ID."""
-    session = Session.objects.filter(id=session_id, user=request.user).prefetch_related("exercises").first()
+    session = (
+        Session.objects.filter(id=session_id, user=request.user)
+        .prefetch_related("exercises")
+        .first()
+    )
     if not session:
         return 404, {"message": "Session not found"}
     return 200, session
 
 
-@router.put("/sessions/{session_id}/", response={200: SessionSchema, 404: MessageSchema}, auth=django_auth)
+@router.put(
+    "/sessions/{session_id}/",
+    response={200: SessionSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def update_session(request, session_id: int, data: SessionUpdateSchema):
     """Update a session."""
     session = Session.objects.filter(id=session_id, user=request.user).first()
@@ -159,11 +183,17 @@ def update_session(request, session_id: int, data: SessionUpdateSchema):
     session.save()
 
     # Refetch with exercises for response
-    session = Session.objects.filter(id=session_id).prefetch_related("exercises").first()
+    session = (
+        Session.objects.filter(id=session_id).prefetch_related("exercises").first()
+    )
     return 200, session
 
 
-@router.delete("/sessions/{session_id}/", response={200: MessageSchema, 404: MessageSchema}, auth=django_auth)
+@router.delete(
+    "/sessions/{session_id}/",
+    response={200: MessageSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def delete_session(request, session_id: int):
     """Delete a session and all its exercises."""
     session = Session.objects.filter(id=session_id, user=request.user).first()
@@ -175,7 +205,12 @@ def delete_session(request, session_id: int):
 
 # ============ Exercise Endpoints ============
 
-@router.post("/sessions/{session_id}/exercises/", response={201: ExerciseSchema, 404: MessageSchema}, auth=django_auth)
+
+@router.post(
+    "/sessions/{session_id}/exercises/",
+    response={201: ExerciseSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def create_exercise(request, session_id: int, data: ExerciseCreateSchema):
     """Create an exercise within a session."""
     session = Session.objects.filter(id=session_id, user=request.user).first()
@@ -186,10 +221,16 @@ def create_exercise(request, session_id: int, data: ExerciseCreateSchema):
     return 201, exercise
 
 
-@router.put("/exercises/{exercise_id}/", response={200: ExerciseSchema, 404: MessageSchema}, auth=django_auth)
+@router.put(
+    "/exercises/{exercise_id}/",
+    response={200: ExerciseSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def update_exercise(request, exercise_id: int, data: ExerciseUpdateSchema):
     """Update an exercise."""
-    exercise = Exercise.objects.filter(id=exercise_id, session__user=request.user).first()
+    exercise = Exercise.objects.filter(
+        id=exercise_id, session__user=request.user
+    ).first()
     if not exercise:
         return 404, {"message": "Exercise not found"}
 
@@ -199,10 +240,16 @@ def update_exercise(request, exercise_id: int, data: ExerciseUpdateSchema):
     return 200, exercise
 
 
-@router.delete("/exercises/{exercise_id}/", response={200: MessageSchema, 404: MessageSchema}, auth=django_auth)
+@router.delete(
+    "/exercises/{exercise_id}/",
+    response={200: MessageSchema, 404: MessageSchema},
+    auth=django_auth,
+)
 def delete_exercise(request, exercise_id: int):
     """Delete an exercise."""
-    exercise = Exercise.objects.filter(id=exercise_id, session__user=request.user).first()
+    exercise = Exercise.objects.filter(
+        id=exercise_id, session__user=request.user
+    ).first()
     if not exercise:
         return 404, {"message": "Exercise not found"}
     exercise.delete()

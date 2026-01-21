@@ -1,16 +1,39 @@
-// Import Bulma
-@use "bulma/sass" as *;
+@use "bulma/sass" with (
+  $primary: hsl(205, 96%, 39%)
+);
+@use "sass:color";
 
 // Global custom styles
 
 // Mobile-first responsive tweaks
+$main-blue: #262b40;
+$darker-blue: color.adjust($main-blue, $lightness: -5%);
+:root {
+  --color1: #041c32;
+  --color2: #04293a;
+  --color3: #064663;
+  --color4: #ecb365; /* $primary: hsl(35deg, 78%, 66%) */
+
+  /* https://www.figma.com/color-palettes/sapphire-nightfall-whisper/ */
+  --color1: #0474c4;
+  --color2: #a8c4ec;
+  --color3: #5379ae;
+  --color4: #06457f;
+  --color5: #2c444c;
+  --color6: #262b40;
+
+  --bulma-body-color: var(--color4);
+  --bulma-scheme-main: var(--color5);
+  --bulma-link-text: var(--bulma-primary-light);
+  --bulma-body-family: Chivo, Inter, sans-serif;
+}
 html {
   overflow-y: auto;
 }
 
 body {
   min-height: 100vh;
-  background-color: #fafafa;
+  background-color: $main-blue;
 }
 
 // App layout
@@ -20,11 +43,30 @@ body {
   min-height: 100vh;
 }
 
+.navbar {
+  --bulma-navbar-background-color: #{$darker-blue};
+}
+@media screen and (max-width: 1023px) {
+  // Always have navbar be a single line
+  .navbar > .container {
+    display: flex;
+  }
+  .navbar-end {
+    justify-content: flex-end;
+    margin-inline-start: auto;
+  }
+}
+.logout {
+  background-color: $main-blue;
+  border-color: var(--color1);
+  color: var(--bulma-primary);
+}
 .main-content {
   flex: 1;
-  padding: 1rem;
 }
-
+.section {
+  --bulma-section-padding: 1.5rem;
+}
 // Compact form styles for information density
 .field {
   &:not(:last-child) {
@@ -32,14 +74,59 @@ body {
   }
 }
 
-// Mobile optimizations
-@media screen and (max-width: 768px) {
+// We're mobile first!
+@media screen and (min-width: 768px) {
   .main-content {
-    padding: 0.75rem;
+    padding: 1rem;
   }
 
   .container {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
+}
+
+.button.is-ghost:hover {
+  color: var(--bulma-button-ghost-color);
+  text-decoration: none;
+}
+
+#session-list .box {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0 0 1em 0;
+  &:not(:last-child) {
+    margin: 0 0 1em 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color1);
+  }
+}
+
+.triangle {
+  display: inline-block;
+  font-size: 50%;
+  width: 0;
+  border-left: 0.67em solid transparent;
+  border-right: 0.67em solid transparent;
+  border-top: 0.67em solid transparent;
+  border-bottom: 0.67em solid transparent;
+  height: 0;
+  &.down {
+    border-top: 1em solid var(--bulma-primary-dark-invert); /* The visible part creates the triangle */
+    margin-bottom: -0.5em;
+    margin-right: 0.5em;
+  }
+  &.right {
+    width: 0;
+    height: 0;
+    border-left: 1em solid var(--bulma-primary-dark-invert); /* The visible part creates the triangle */
+  }
+}
+.box {
+  // Darken an rgb() color using color.adjust()
+  // The 'lightness' value is decreased by 20 percentage points
+  background-color: $darker-blue;
+}
+.bi-pencil {
+  fill: var(--color3);
 }
