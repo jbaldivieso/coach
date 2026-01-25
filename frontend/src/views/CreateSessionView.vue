@@ -9,6 +9,7 @@ import type {
   ExerciseEditState,
 } from "@/types/lifting";
 import { SESSION_TYPES } from "@/types/lifting";
+import RestTimer from "@/components/RestTimer.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -46,6 +47,35 @@ const titleInputRef = ref<HTMLInputElement | null>(null);
 const loadingSession = ref(false);
 const exerciseStates = ref<ExerciseEditState[]>([]);
 const deletedExerciseIds = ref<number[]>([]);
+
+// Timer state
+const timerActive = ref(false);
+const timerExerciseIndex = ref<number | null>(null);
+
+const timerExercise = computed(() => {
+  if (timerExerciseIndex.value === null) return null;
+  return exercises.value[timerExerciseIndex.value] || null;
+});
+
+function canShowTimer(exercise: ExerciseFormData): boolean {
+  return (
+    exercise.title.trim() !== "" &&
+    exercise.rest_seconds !== "" &&
+    !isNaN(Number(exercise.rest_seconds)) &&
+    Number(exercise.rest_seconds) > 0 &&
+    exercise.reps.trim() !== ""
+  );
+}
+
+function startTimer(index: number) {
+  timerExerciseIndex.value = index;
+  timerActive.value = true;
+}
+
+function closeTimer() {
+  timerActive.value = false;
+  timerExerciseIndex.value = null;
+}
 
 function getTodayDateString(): string {
   return new Date().toISOString().split("T")[0] as string;
@@ -580,6 +610,17 @@ onMounted(() => {
             </p>
           </div>
 
+          <!-- Timer Button -->
+          <div v-if="canShowTimer(exercise)" class="field">
+            <button
+              type="button"
+              class="button is-fullwidth is-outlined"
+              @click="startTimer(index)"
+            >
+              Start Timer
+            </button>
+          </div>
+
           <!-- Exercise Comments -->
           <div class="field">
             <label class="label" :for="`exercise-${index}-comments`"
@@ -627,4 +668,13 @@ onMounted(() => {
       </form>
     </section>
   </div>
+
+  <!-- Rest Timer Overlay -->
+  <RestTimer
+    v-if="timerActive && timerExercise"
+    :exercise-name="timerExercise.title"
+    :rest-seconds="Number(timerExercise.rest_seconds)"
+    :reps="timerExercise.reps"
+    @close="closeTimer"
+  />
 </template>

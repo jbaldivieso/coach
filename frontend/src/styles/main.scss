@@ -9,10 +9,10 @@
 $main-blue: #262b40;
 $darker-blue: color.adjust($main-blue, $lightness: -5%);
 :root {
-  --color1: #041c32;
-  --color2: #04293a;
-  --color3: #064663;
-  --color4: #ecb365; /* $primary: hsl(35deg, 78%, 66%) */
+  //--color1: #041c32;
+  //--color2: #04293a;
+  //--color3: #064663;
+  //--color4: #ecb365;
 
   /* https://www.figma.com/color-palettes/sapphire-nightfall-whisper/ */
   --color1: #0474c4;
@@ -131,4 +131,9 @@ body {
 .bi-copy {
   fill: var(--color3);
   width: 1.25em;
+}
+
+.button.is-outlined {
+  color: var(--color2);
+  border-color: var(--color2);
 }
