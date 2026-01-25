@@ -3,11 +3,11 @@ Description=Coach Weightlifting App
 After=network.target
 
 [Service]
-User=pi
-Group=pi
-WorkingDirectory=/home/pi/coach/backend
-EnvironmentFile=/home/pi/coach/deploy/.env
-ExecStart=/home/pi/coach/backend/.venv/bin/gunicorn \
+User=jon
+Group=jon
+WorkingDirectory=/home/jon/coach2/backend
+EnvironmentFile=/home/jon/coach2/deploy/.env
+ExecStart=/home/jon/coach2/backend/.venv/bin/gunicorn \
     --workers 2 \
     --bind 0.0.0.0:8000 \
     --timeout 30 \
