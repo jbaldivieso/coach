@@ -8,6 +8,8 @@ dependencies = [
     "django>=6.0.1",
     "django-cors-headers>=4.9.0",
     "django-ninja>=1.5.3",
+    "gunicorn>=24.1.1",
+    "whitenoise>=6.11.0",
 ]
 
 [dependency-groups]

@@ -1,0 +1,19 @@
+[Unit]
+Description=Coach Weightlifting App
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/coach/backend
+EnvironmentFile=/home/pi/coach/deploy/.env
+ExecStart=/home/pi/coach/backend/.venv/bin/gunicorn \
+    --workers 2 \
+    --bind 0.0.0.0:8000 \
+    --timeout 30 \
+    config.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
