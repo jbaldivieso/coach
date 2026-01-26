@@ -168,3 +168,18 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 ).split(",")
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read the CSRF token
+
+
+# Production security settings (when running behind a reverse proxy like Nginx)
+if not DEBUG:
+    # Trust X-Forwarded-Proto header from reverse proxy
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    # Secure cookie settings for HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # HSTS (uncomment after confirming HTTPS works)
+    # SECURE_HSTS_SECONDS = 31536000  # 1 year
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
