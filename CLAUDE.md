@@ -4,9 +4,9 @@ This document provides instructions for AI agents working on this codebase.
 
 ## Project Overview
 
-Coach is a weightlifting tracking SPA with:
+Coach is a weightlifting tracking PWA with:
 - **Backend:** Django 6.0 + Django Ninja API (Python 3.12, uv)
-- **Frontend:** Vue 3 + TypeScript + Vite + Bulma
+- **Frontend:** Vue 3 + TypeScript + Vite + Bulma + PWA support
 
 ## Working Directory Context
 
@@ -32,9 +32,21 @@ cd frontend && npm run test:run
 # Terminal 1 - Backend
 cd backend && DJANGO_SETTINGS_MODULE=config.settings uv run python manage.py runserver
 
-# Terminal 2 - Frontend
+# Terminal 2 - Frontend (development)
 cd frontend && npm run dev
 ```
+
+### Building and Testing Production Frontend
+
+```bash
+# Build for production (outputs to frontend/dist)
+cd frontend && npm run build
+
+# Preview production build locally
+cd frontend && npm run preview
+```
+
+**Note:** The production build uses `base: "/static/"` for Django static file serving. Use `npm run preview` (Vite's preview server) to test production builds locally - it handles the `/static/` base path correctly.
 
 ### Adding Python Dependencies
 
@@ -143,6 +155,13 @@ if (response.data) {
 
 5. **Type Safety:** Frontend uses TypeScript. Define types for API responses.
 
+6. **PWA Support:** The frontend is configured as a Progressive Web App using `vite-plugin-pwa`:
+   - Service worker auto-generated during build
+   - Web app manifest at `/static/manifest.webmanifest`
+   - iOS-specific meta tags for "Add to Home Screen" support
+   - Screen Wake Lock API works better when installed as PWA on iOS
+   - Icon: `frontend/public/icon.svg` (can be replaced with PNG icons for better compatibility)
+
 ## File Locations
 
 | Purpose | Location |
@@ -156,3 +175,5 @@ if (response.data) {
 | Auth store | `frontend/src/stores/auth.ts` |
 | API client | `frontend/src/api/client.ts` |
 | Global styles | `frontend/src/styles/main.scss` |
+| Vite config (includes PWA) | `frontend/vite.config.ts` |
+| PWA icon | `frontend/public/icon.svg` |

@@ -70,10 +70,10 @@ cd frontend
 npm install
 
 # Run the development server
-npm run dev
+npm run preview
 ```
 
-The frontend runs on http://localhost:5173
+The frontend runs on http://localhost:4173
 
 **Note:** The frontend proxies `/api` requests to the backend, so both servers need to be running during development.
 
