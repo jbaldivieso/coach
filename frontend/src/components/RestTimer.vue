@@ -23,6 +23,7 @@ let wakeLock: WakeLockSentinel | null = null;
 
 // Audio context for alarm sound
 let audioContext: AudioContext | null = null;
+let audioElement: HTMLAudioElement | null = null;
 
 // Timer interval
 let timerInterval: number | null = null;
@@ -45,8 +46,20 @@ const repsDisplay = computed(() => {
   return repsArray.join(", ");
 });
 
-function startTimer() {
+async function startTimer() {
   if (timerInterval) clearInterval(timerInterval);
+
+  // Initialize and resume audio context early (important for iOS)
+  try {
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+  } catch (error) {
+    console.log("Failed to initialize audio context:", error);
+  }
 
   isRunning.value = true;
   timerInterval = window.setInterval(() => {
@@ -93,9 +106,18 @@ function completeTimer() {
   flashScreen();
 }
 
-function playAlarmSound() {
+async function playAlarmSound() {
+  // Try Web Audio API first (better quality)
   try {
-    audioContext = new AudioContext();
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+
+    // Critical for iOS: resume context if suspended
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -105,31 +127,77 @@ function playAlarmSound() {
     oscillator.frequency.value = 880; // A5 note
     oscillator.type = "square";
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    // Louder volume for iOS
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
 
-    // Create a beeping pattern: 3 beeps
-    const beepDuration = 0.15;
-    const beepGap = 0.1;
+    // Create a more insistent beeping pattern: 5 beeps
+    const beepDuration = 0.2;
+    const beepGap = 0.15;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const startTime = audioContext.currentTime + i * (beepDuration + beepGap);
-      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.setValueAtTime(0.5, startTime);
       gainNode.gain.setValueAtTime(0, startTime + beepDuration);
     }
 
     oscillator.start();
     oscillator.stop(
-      audioContext.currentTime + 3 * (beepDuration + beepGap) + 0.1,
+      audioContext.currentTime + 5 * (beepDuration + beepGap) + 0.1,
     );
-  } catch {
-    // Audio not supported, fail silently
+  } catch (error) {
+    console.log("Web Audio API failed:", error);
+    // Fallback to HTMLAudioElement
+    playFallbackSound();
+  }
+}
+
+function playFallbackSound() {
+  try {
+    // Generate a beep sound using Web Audio API and play via audio element
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+
+    // Create a short beep buffer
+    const duration = 0.2;
+    const sampleRate = audioContext.sampleRate;
+    const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Generate 880Hz sine wave
+    for (let i = 0; i < buffer.length; i++) {
+      data[i] = Math.sin((2 * Math.PI * 880 * i) / sampleRate) * 0.5;
+    }
+
+    // Play the beep 5 times with gaps
+    let playCount = 0;
+    const playBeep = () => {
+      const source = audioContext!.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContext!.destination);
+      source.start();
+
+      playCount++;
+      if (playCount < 5) {
+        setTimeout(playBeep, 350);
+      }
+    };
+    playBeep();
+  } catch (error) {
+    console.log("Fallback audio failed:", error);
   }
 }
 
 function triggerHapticFeedback() {
+  // Note: iOS Safari does not support the Vibration API
+  // Haptic feedback on iOS relies on the audio playing through the device
+  // and the system's haptic engine responding to certain audio patterns
   if ("vibrate" in navigator) {
     // Vibration pattern: vibrate, pause, vibrate, pause, vibrate
-    navigator.vibrate([200, 100, 200, 100, 200]);
+    const didVibrate = navigator.vibrate([200, 100, 200, 100, 200]);
+    console.log("Vibration triggered:", didVibrate);
+  } else {
+    console.log("Vibration API not supported (expected on iOS)");
   }
 }
 
@@ -190,6 +258,10 @@ function cleanup() {
   if (audioContext) {
     audioContext.close();
     audioContext = null;
+  }
+  if (audioElement) {
+    audioElement.pause();
+    audioElement = null;
   }
 }
 
