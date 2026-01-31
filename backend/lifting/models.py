@@ -30,9 +30,8 @@ class Exercise(models.Model):
 
     title = models.CharField(max_length=100)
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="exercises")
-    weight_lbs = models.IntegerField(null=True, blank=True)
+    sets = models.JSONField(default=list)  # [{"weight": int|null, "reps": int}]
     rest_seconds = models.IntegerField()
-    reps = models.JSONField()  # Array of integers like [10, 10, 8]
     comments = models.TextField(blank=True)
 
     def __str__(self):

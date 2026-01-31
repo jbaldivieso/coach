@@ -239,8 +239,11 @@ describe("SearchView", () => {
         {
           exercise_id: 1,
           exercise_title: "Bench Press",
-          weight_lbs: 135,
-          reps: [10, 10, 8],
+          sets: [
+            { weight: 135, reps: 10 },
+            { weight: 135, reps: 10 },
+            { weight: 135, reps: 8 },
+          ],
           rest_seconds: 90,
           session_id: 1,
           session_date: "2024-01-15",
@@ -264,18 +267,21 @@ describe("SearchView", () => {
       const cells = row.findAll("td");
       expect(cells[0]?.text()).toContain("2024-01-15");
       expect(cells[1]?.text()).toBe("Bench Press");
-      expect(cells[2]?.text()).toBe("135 lbs");
+      expect(cells[2]?.text()).toBe("135 lbs"); // Max weight
     }
   });
 
-  it("displays bodyweight when weight_lbs is null", async () => {
+  it("displays bodyweight when all sets have null weight", async () => {
     const resultsResponse: SearchResultsResponse = {
       items: [
         {
           exercise_id: 1,
           exercise_title: "Pull-ups",
-          weight_lbs: null,
-          reps: [10, 8, 6],
+          sets: [
+            { weight: null, reps: 10 },
+            { weight: null, reps: 8 },
+            { weight: null, reps: 6 },
+          ],
           rest_seconds: 120,
           session_id: 1,
           session_date: "2024-01-15",
@@ -295,6 +301,39 @@ describe("SearchView", () => {
     if (row) {
       const cells = row.findAll("td");
       expect(cells[2]?.text()).toBe("bodyweight");
+    }
+  });
+
+  it("displays max weight when sets have mixed weights", async () => {
+    const resultsResponse: SearchResultsResponse = {
+      items: [
+        {
+          exercise_id: 1,
+          exercise_title: "Assisted Pull-ups",
+          sets: [
+            { weight: 50, reps: 10 },
+            { weight: 60, reps: 8 },
+            { weight: 40, reps: 6 },
+          ],
+          rest_seconds: 120,
+          session_id: 1,
+          session_date: "2024-01-15",
+          session_title: "Upper A",
+        },
+      ],
+      total: 1,
+    };
+
+    vi.mocked(api.get).mockResolvedValue({ data: resultsResponse, error: null });
+
+    const wrapper = mountComponent();
+    await flushPromises();
+
+    const rows = wrapper.findAll("tbody tr");
+    const row = rows[0];
+    if (row) {
+      const cells = row.findAll("td");
+      expect(cells[2]?.text()).toBe("60 lbs"); // Max weight
     }
   });
 });

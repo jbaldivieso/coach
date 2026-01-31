@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import { api } from "@/api/client";
-import type { Session, PaginatedSessions } from "@/types/lifting";
+import type { Session, PaginatedSessions, Set } from "@/types/lifting";
 import PencilIcon from "@/components/svg/IconPencil.vue";
 import CopyIcon from "@/components/svg/IconCopy.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
@@ -74,12 +74,13 @@ function isExpanded(sessionId: number): boolean {
   return expandedSessionIds.value.has(sessionId);
 }
 
-function formatWeight(weight_lbs: number | null): string {
-  return weight_lbs !== null ? `${weight_lbs} lbs` : "bodyweight";
-}
-
-function formatReps(reps: number[]): string {
-  return reps.join(", ");
+function formatSets(sets: Set[]): string {
+  return sets
+    .map((s) => {
+      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
+      return `${weightPart} x ${s.reps}`;
+    })
+    .join(", ");
 }
 
 onMounted(() => {
@@ -200,8 +201,7 @@ onMounted(() => {
               >
                 <p>
                   <strong>{{ exercise.title }}</strong
-                  >: {{ formatWeight(exercise.weight_lbs) }} &times;
-                  {{ formatReps(exercise.reps) }}
+                  >: {{ formatSets(exercise.sets) }}
                   <span class="has-text-grey"
                     >{{ exercise.rest_seconds }} secs</span
                   >

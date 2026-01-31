@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import type { Set } from "@/types/lifting";
 
 const props = defineProps<{
   exerciseName: string;
   restSeconds: number;
-  reps: string;
+  sets: Set[];
 }>();
 
 const emit = defineEmits<{
@@ -38,12 +39,13 @@ const formattedTime = computed(() => {
   return seconds.toString();
 });
 
-const repsDisplay = computed(() => {
-  const repsArray = props.reps
-    .split(",")
-    .map((r) => r.trim())
-    .filter((r) => r !== "");
-  return repsArray.join(", ");
+const setsDisplay = computed(() => {
+  return props.sets
+    .map((s) => {
+      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
+      return `${weightPart} x ${s.reps}`;
+    })
+    .join(", ");
 });
 
 async function startTimer() {
@@ -339,7 +341,7 @@ watch(isRunning, (running) => {
 
       <div class="timer-info">
         <p>Rest: {{ restSeconds }} seconds</p>
-        <p>Reps so far: {{ repsDisplay || "—" }}</p>
+        <p>Sets so far: {{ setsDisplay || "—" }}</p>
       </div>
     </div>
   </div>

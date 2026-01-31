@@ -16,28 +16,30 @@ router = Router()
 # ============ Schemas ============
 
 
+class SetSchema(Schema):
+    weight: Optional[int] = None
+    reps: int
+
+
 class ExerciseSchema(Schema):
     id: int
     title: str
-    weight_lbs: Optional[int]
+    sets: List[SetSchema]
     rest_seconds: int
-    reps: List[int]
     comments: str
 
 
 class ExerciseCreateSchema(Schema):
     title: str
-    weight_lbs: Optional[int] = None
+    sets: List[SetSchema]
     rest_seconds: int
-    reps: List[int]
     comments: str = ""
 
 
 class ExerciseUpdateSchema(Schema):
     title: Optional[str] = None
-    weight_lbs: Optional[int] = None
+    sets: Optional[List[SetSchema]] = None
     rest_seconds: Optional[int] = None
-    reps: Optional[List[int]] = None
     comments: Optional[str] = None
 
 
@@ -99,8 +101,7 @@ class AutocompleteResponseSchema(Schema):
 class SearchResultSchema(Schema):
     exercise_id: int
     exercise_title: str
-    weight_lbs: Optional[int]
-    reps: List[int]
+    sets: List[SetSchema]
     rest_seconds: int
     session_id: int
     session_date: str
@@ -361,8 +362,7 @@ def search_results(
         items.append({
             "exercise_id": exercise.id,
             "exercise_title": exercise.title,
-            "weight_lbs": exercise.weight_lbs,
-            "reps": exercise.reps,
+            "sets": exercise.sets,
             "rest_seconds": exercise.rest_seconds,
             "session_id": exercise.session.id,
             "session_date": str(exercise.session.date),

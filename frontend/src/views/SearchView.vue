@@ -8,6 +8,7 @@ import type {
   SearchResult,
   SearchResultsResponse,
   SearchFilter,
+  Set,
 } from "@/types/lifting";
 
 // Search state
@@ -172,14 +173,23 @@ function removeFilter(filter: SearchFilter) {
   fetchResults();
 }
 
-// Format weight for display
-function formatWeight(weight: number | null): string {
-  return weight !== null ? `${weight} lbs` : "bodyweight";
+// Get max weight from sets for display
+function getMaxWeight(sets: Set[]): string {
+  const weights = sets.map((s) => s.weight).filter((w) => w !== null) as number[];
+  if (weights.length === 0) {
+    return "bodyweight";
+  }
+  return `${Math.max(...weights)} lbs`;
 }
 
-// Format reps for display
-function formatReps(reps: number[]): string {
-  return reps.join(", ");
+// Format sets for display
+function formatSets(sets: Set[]): string {
+  return sets
+    .map((s) => {
+      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
+      return `${weightPart} x ${s.reps}`;
+    })
+    .join(", ");
 }
 
 // Get autocomplete item prefix
@@ -290,7 +300,7 @@ onMounted(() => {
               <th>Session</th>
               <th v-if="!exerciseFilter">Exercise</th>
               <th>Weight</th>
-              <th :class="{ 'is-hidden-mobile': !bothFiltersActive }">Reps</th>
+              <th :class="{ 'is-hidden-mobile': !bothFiltersActive }">Sets</th>
               <th :class="{ 'is-hidden-mobile': !bothFiltersActive }">Rest</th>
             </tr>
           </thead>
@@ -313,9 +323,9 @@ onMounted(() => {
                 </RouterLink>
               </td>
               <td v-if="!exerciseFilter">{{ result.exercise_title }}</td>
-              <td>{{ formatWeight(result.weight_lbs) }}</td>
+              <td>{{ getMaxWeight(result.sets) }}</td>
               <td :class="{ 'is-hidden-mobile': !bothFiltersActive }">
-                {{ formatReps(result.reps) }}
+                {{ formatSets(result.sets) }}
               </td>
               <td :class="{ 'is-hidden-mobile': !bothFiltersActive }">
                 {{ result.rest_seconds }}s

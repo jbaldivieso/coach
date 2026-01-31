@@ -1,9 +1,18 @@
+export interface Set {
+  weight: number | null;
+  reps: number;
+}
+
+export interface SetFormData {
+  weight: string; // "" for bodyweight
+  reps: string;
+}
+
 export interface Exercise {
   id: number;
   title: string;
-  weight_lbs: number | null;
+  sets: Set[];
   rest_seconds: number;
-  reps: number[];
   comments: string;
 }
 
@@ -24,9 +33,8 @@ export interface PaginatedSessions {
 
 export interface ExerciseFormData {
   title: string;
-  weight_lbs: string;
+  sets: SetFormData[];
   rest_seconds: string;
-  reps: string;
   comments: string;
 }
 
@@ -66,8 +74,7 @@ export interface AutocompleteResponse {
 export interface SearchResult {
   exercise_id: number;
   exercise_title: string;
-  weight_lbs: number | null;
-  reps: number[];
+  sets: Set[];
   rest_seconds: number;
   session_id: number;
   session_date: string;

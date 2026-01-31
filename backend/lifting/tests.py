@@ -23,9 +23,12 @@ def exercise(db, session):
     return Exercise.objects.create(
         title="Bench Press",
         session=session,
-        weight_lbs=135,
+        sets=[
+            {"weight": 135, "reps": 10},
+            {"weight": 135, "reps": 10},
+            {"weight": 135, "reps": 8},
+        ],
         rest_seconds=90,
-        reps=[10, 10, 8],
         comments="Felt good",
     )
 
@@ -175,9 +178,12 @@ class TestCreateExercise:
             f"/api/lifting/sessions/{session.id}/exercises/",
             data={
                 "title": "Squat",
-                "weight_lbs": 225,
+                "sets": [
+                    {"weight": 225, "reps": 5},
+                    {"weight": 225, "reps": 5},
+                    {"weight": 225, "reps": 5},
+                ],
                 "rest_seconds": 120,
-                "reps": [5, 5, 5],
                 "comments": "",
             },
             content_type="application/json",
@@ -185,12 +191,20 @@ class TestCreateExercise:
         assert response.status_code == 201
         data = response.json()
         assert data["title"] == "Squat"
-        assert data["reps"] == [5, 5, 5]
+        assert data["sets"] == [
+            {"weight": 225, "reps": 5},
+            {"weight": 225, "reps": 5},
+            {"weight": 225, "reps": 5},
+        ]
 
     def test_create_exercise_other_user_session(self, authenticated_client, other_session):
         response = authenticated_client.post(
             f"/api/lifting/sessions/{other_session.id}/exercises/",
-            data={"title": "Squat", "rest_seconds": 90, "reps": [5]},
+            data={
+                "title": "Squat",
+                "rest_seconds": 90,
+                "sets": [{"weight": None, "reps": 5}],
+            },
             content_type="application/json",
         )
         assert response.status_code == 404
@@ -200,18 +214,18 @@ class TestUpdateExercise:
     def test_update_exercise(self, authenticated_client, exercise):
         response = authenticated_client.put(
             f"/api/lifting/exercises/{exercise.id}/",
-            data={"weight_lbs": 145},
+            data={"sets": [{"weight": 145, "reps": 10}]},
             content_type="application/json",
         )
         assert response.status_code == 200
-        assert response.json()["weight_lbs"] == 145
+        assert response.json()["sets"] == [{"weight": 145, "reps": 10}]
 
     def test_update_exercise_other_user(self, authenticated_client, other_session):
         other_exercise = Exercise.objects.create(
             title="Other Ex",
             session=other_session,
             rest_seconds=60,
-            reps=[10],
+            sets=[{"weight": None, "reps": 10}],
         )
         response = authenticated_client.put(
             f"/api/lifting/exercises/{other_exercise.id}/",
@@ -232,7 +246,7 @@ class TestDeleteExercise:
             title="Other Ex",
             session=other_session,
             rest_seconds=60,
-            reps=[10],
+            sets=[{"weight": None, "reps": 10}],
         )
         response = authenticated_client.delete(f"/api/lifting/exercises/{other_exercise.id}/")
         assert response.status_code == 404
@@ -253,16 +267,22 @@ def search_sessions(db, user):
     Exercise.objects.create(
         title="Bench Press",
         session=session1,
-        weight_lbs=135,
+        sets=[
+            {"weight": 135, "reps": 10},
+            {"weight": 135, "reps": 10},
+            {"weight": 135, "reps": 8},
+        ],
         rest_seconds=90,
-        reps=[10, 10, 8],
     )
     Exercise.objects.create(
         title="Overhead Press",
         session=session1,
-        weight_lbs=95,
+        sets=[
+            {"weight": 95, "reps": 8},
+            {"weight": 95, "reps": 8},
+            {"weight": 95, "reps": 6},
+        ],
         rest_seconds=90,
-        reps=[8, 8, 6],
     )
 
     session2 = Session.objects.create(
@@ -274,16 +294,22 @@ def search_sessions(db, user):
     Exercise.objects.create(
         title="Squat",
         session=session2,
-        weight_lbs=225,
+        sets=[
+            {"weight": 225, "reps": 5},
+            {"weight": 225, "reps": 5},
+            {"weight": 225, "reps": 5},
+        ],
         rest_seconds=120,
-        reps=[5, 5, 5],
     )
     Exercise.objects.create(
         title="Bench Press",
         session=session2,
-        weight_lbs=145,
+        sets=[
+            {"weight": 145, "reps": 8},
+            {"weight": 145, "reps": 8},
+            {"weight": 145, "reps": 8},
+        ],
         rest_seconds=90,
-        reps=[8, 8, 8],
     )
 
     return [session1, session2]
@@ -328,7 +354,7 @@ class TestSearchAutocomplete:
             title="Bench Press Special",
             session=other_session,
             rest_seconds=60,
-            reps=[10],
+            sets=[{"weight": None, "reps": 10}],
         )
 
         response = authenticated_client.get("/api/lifting/search/autocomplete/?q=Special")
@@ -381,7 +407,7 @@ class TestSearchResults:
             title="Other Exercise",
             session=other_session,
             rest_seconds=60,
-            reps=[10],
+            sets=[{"weight": None, "reps": 10}],
         )
 
         response = authenticated_client.get("/api/lifting/search/results/?exercise_title=Other Exercise")

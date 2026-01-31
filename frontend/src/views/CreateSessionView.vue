@@ -7,9 +7,12 @@ import type {
   SessionFormData,
   Session,
   ExerciseEditState,
+  SetFormData,
+  Set,
 } from "@/types/lifting";
 import { SESSION_TYPES } from "@/types/lifting";
 import RestTimer from "@/components/RestTimer.vue";
+import IconPlus from "@/components/svg/IconPlus.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -63,7 +66,8 @@ function canShowTimer(exercise: ExerciseFormData): boolean {
     exercise.rest_seconds !== "" &&
     !isNaN(Number(exercise.rest_seconds)) &&
     Number(exercise.rest_seconds) > 0 &&
-    exercise.reps.trim() !== ""
+    exercise.sets.length > 0 &&
+    exercise.sets.some((s) => String(s.reps).trim() !== "")
   );
 }
 
@@ -81,14 +85,28 @@ function getTodayDateString(): string {
   return new Date().toISOString().split("T")[0] as string;
 }
 
+function createEmptySet(): SetFormData {
+  return { weight: "", reps: "" };
+}
+
 function createEmptyExercise(): ExerciseFormData {
   return {
     title: "",
-    weight_lbs: "",
+    sets: [createEmptySet()],
     rest_seconds: "",
-    reps: "",
     comments: "",
   };
+}
+
+function addSet(exerciseIndex: number) {
+  exercises.value[exerciseIndex]?.sets.push(createEmptySet());
+}
+
+function removeSet(exerciseIndex: number, setIndex: number) {
+  const exercise = exercises.value[exerciseIndex];
+  if (exercise && exercise.sets.length > 1) {
+    exercise.sets.splice(setIndex, 1);
+  }
 }
 
 function addExercise() {
@@ -131,9 +149,11 @@ async function fetchSession(id: number) {
       const exerciseFormDataList: ExerciseFormData[] =
         response.data.exercises.map((ex) => ({
           title: ex.title,
-          weight_lbs: ex.weight_lbs?.toString() || "",
+          sets: ex.sets.map((s: Set) => ({
+            weight: s.weight?.toString() || "",
+            reps: s.reps.toString(),
+          })),
           rest_seconds: ex.rest_seconds.toString(),
-          reps: ex.reps.join(", "),
           comments: ex.comments,
         }));
       exercises.value = exerciseFormDataList;
@@ -178,13 +198,24 @@ async function fetchSessionForCopy(id: number) {
         comments: "",
       };
 
-      // Transform exercises for copy mode
+      // Transform exercises for copy mode - keep weights, clear reps, show previous in comments
+      const formatPreviousSets = (sets: Set[]): string => {
+        return sets
+          .map((s) => {
+            const w = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
+            return `${w} x ${s.reps}`;
+          })
+          .join(", ");
+      };
+
       exercises.value = response.data.exercises.map((ex) => ({
         title: ex.title,
-        weight_lbs: ex.weight_lbs?.toString() || "",
+        sets: ex.sets.map((s: Set) => ({
+          weight: s.weight?.toString() || "",
+          reps: "", // Clear reps for new entry
+        })),
         rest_seconds: ex.rest_seconds.toString(),
-        reps: "",
-        comments: `Previously: ${ex.reps.join(", ")}`,
+        comments: `Previously: ${formatPreviousSets(ex.sets)}`,
       }));
 
       // Ensure at least one exercise
@@ -235,38 +266,49 @@ function validateForm(): boolean {
   }
 
   // Exercise validation
-  exercises.value.forEach((exercise, index) => {
+  exercises.value.forEach((exercise, exIndex) => {
     if (!exercise.title.trim()) {
-      validationErrors.value[`exercise.${index}.title`] =
+      validationErrors.value[`exercise.${exIndex}.title`] =
         "Exercise title is required";
       isValid = false;
     }
 
     const restValue = String(exercise.rest_seconds).trim();
     if (!restValue) {
-      validationErrors.value[`exercise.${index}.rest`] =
+      validationErrors.value[`exercise.${exIndex}.rest`] =
         "Rest time is required";
       isValid = false;
     } else if (isNaN(Number(restValue)) || Number(restValue) < 0) {
-      validationErrors.value[`exercise.${index}.rest`] =
+      validationErrors.value[`exercise.${exIndex}.rest`] =
         "Rest must be a positive number";
       isValid = false;
     }
 
-    if (!exercise.reps.trim()) {
-      validationErrors.value[`exercise.${index}.reps`] = "Reps are required";
+    // Validate sets
+    if (exercise.sets.length === 0) {
+      validationErrors.value[`exercise.${exIndex}.sets`] =
+        "At least one set is required";
       isValid = false;
     } else {
-      const repsArray = exercise.reps
-        .split(",")
-        .map((r) => r.trim())
-        .filter((r) => r !== "");
-      const invalidReps = repsArray.some((r) => isNaN(parseInt(r, 10)));
-      if (invalidReps || repsArray.length === 0) {
-        validationErrors.value[`exercise.${index}.reps`] =
-          "Reps must be comma-separated numbers (e.g., 5, 5, 5)";
-        isValid = false;
-      }
+      exercise.sets.forEach((set, setIndex) => {
+        const repsVal = String(set.reps).trim();
+        if (!repsVal) {
+          validationErrors.value[`exercise.${exIndex}.set.${setIndex}.reps`] =
+            "Reps required";
+          isValid = false;
+        } else if (isNaN(parseInt(repsVal, 10)) || parseInt(repsVal, 10) < 0) {
+          validationErrors.value[`exercise.${exIndex}.set.${setIndex}.reps`] =
+            "Invalid reps";
+          isValid = false;
+        }
+
+        const weightVal = String(set.weight).trim();
+        if (weightVal !== "" && isNaN(parseInt(weightVal, 10))) {
+          validationErrors.value[`exercise.${exIndex}.set.${setIndex}.weight`] =
+            "Invalid weight";
+          isValid = false;
+        }
+      });
     }
   });
 
@@ -281,14 +323,13 @@ function buildPayload() {
     comments: sessionForm.value.comments.trim(),
     exercises: exercises.value.map((ex) => ({
       title: ex.title.trim(),
-      weight_lbs: String(ex.weight_lbs).trim()
-        ? parseInt(String(ex.weight_lbs), 10)
-        : null,
+      sets: ex.sets
+        .filter((s) => String(s.reps).trim() !== "")
+        .map((s) => ({
+          weight: String(s.weight).trim() ? parseInt(String(s.weight), 10) : null,
+          reps: parseInt(String(s.reps), 10),
+        })),
       rest_seconds: parseInt(String(ex.rest_seconds), 10),
-      reps: ex.reps
-        .split(",")
-        .map((r) => parseInt(r.trim(), 10))
-        .filter((r) => !isNaN(r)),
       comments: ex.comments.trim(),
     })),
   };
@@ -535,78 +576,107 @@ onMounted(() => {
             </p>
           </div>
 
-          <!-- Weight and Rest -->
-          <div class="columns is-mobile">
-            <div class="column">
-              <div class="field">
-                <label class="label" :for="`exercise-${index}-weight`"
-                  >Weight (lbs)</label
-                >
-                <div class="control">
-                  <input
-                    :id="`exercise-${index}-weight`"
-                    v-model="exercise.weight_lbs"
-                    class="input"
-                    type="number"
-                    placeholder="Optional"
-                    min="0"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="column">
-              <div class="field">
-                <label class="label" :for="`exercise-${index}-rest`"
-                  >Rest (sec)</label
-                >
-                <div class="control">
-                  <input
-                    :id="`exercise-${index}-rest`"
-                    v-model="exercise.rest_seconds"
-                    class="input"
-                    :class="{
-                      'is-danger': validationErrors[`exercise.${index}.rest`],
-                    }"
-                    type="number"
-                    placeholder="e.g., 60"
-                    min="0"
-                  />
-                </div>
-                <p
-                  v-if="validationErrors[`exercise.${index}.rest`]"
-                  class="help is-danger"
-                >
-                  {{ validationErrors[`exercise.${index}.rest`] }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Reps -->
+          <!-- Rest time -->
           <div class="field">
-            <label class="label" :for="`exercise-${index}-reps`">Reps</label>
+            <label class="label" :for="`exercise-${index}-rest`"
+              >Rest (sec)</label
+            >
             <div class="control">
               <input
-                :id="`exercise-${index}-reps`"
-                v-model="exercise.reps"
+                :id="`exercise-${index}-rest`"
+                v-model="exercise.rest_seconds"
                 class="input"
                 :class="{
-                  'is-danger': validationErrors[`exercise.${index}.reps`],
+                  'is-danger': validationErrors[`exercise.${index}.rest`],
                 }"
-                type="text"
-                placeholder="e.g., 5, 5, 5"
+                type="number"
+                placeholder="e.g., 60"
+                min="0"
               />
             </div>
             <p
-              class="help"
-              :class="{
-                'is-danger': validationErrors[`exercise.${index}.reps`],
-              }"
+              v-if="validationErrors[`exercise.${index}.rest`]"
+              class="help is-danger"
             >
-              {{
-                validationErrors[`exercise.${index}.reps`] ||
-                "Enter comma-separated numbers for each set"
-              }}
+              {{ validationErrors[`exercise.${index}.rest`] }}
+            </p>
+          </div>
+
+          <!-- Sets -->
+          <div class="field">
+            <label class="label">Sets</label>
+            <div
+              v-for="(set, setIndex) in exercise.sets"
+              :key="setIndex"
+              class="columns is-mobile is-vcentered mb-0"
+            >
+              <div class="column is-4">
+                <div class="control">
+                  <input
+                    :id="`exercise-${index}-set-${setIndex}-weight`"
+                    v-model="set.weight"
+                    class="input"
+                    :class="{
+                      'is-danger':
+                        validationErrors[
+                          `exercise.${index}.set.${setIndex}.weight`
+                        ],
+                    }"
+                    type="number"
+                    placeholder="lbs"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="column is-narrow has-text-centered px-1">
+                <span>&times;</span>
+              </div>
+              <div class="column is-4">
+                <div class="control">
+                  <input
+                    :id="`exercise-${index}-set-${setIndex}-reps`"
+                    v-model="set.reps"
+                    class="input"
+                    :class="{
+                      'is-danger':
+                        validationErrors[
+                          `exercise.${index}.set.${setIndex}.reps`
+                        ],
+                    }"
+                    type="number"
+                    placeholder="reps"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="column">
+                <button
+                  v-if="setIndex === exercise.sets.length - 1"
+                  type="button"
+                  class="button is-small is-ghost add-set-btn"
+                  aria-label="Add set"
+                  @click="addSet(index)"
+                >
+                  <span class="icon is-small">
+                    <IconPlus />
+                  </span>
+                </button>
+              </div>
+              <div class="column">
+                <button
+                  v-if="exercise.sets.length > 1"
+                  type="button"
+                  class="delete is-small"
+                  aria-label="Remove set"
+                  @click="removeSet(index, setIndex)"
+                ></button>
+              </div>
+            </div>
+            <p
+              v-if="validationErrors[`exercise.${index}.sets`]"
+              class="help is-danger"
+            >
+              {{ validationErrors[`exercise.${index}.sets`] }}
             </p>
           </div>
 
@@ -674,7 +744,33 @@ onMounted(() => {
     v-if="timerActive && timerExercise"
     :exercise-name="timerExercise.title"
     :rest-seconds="Number(timerExercise.rest_seconds)"
-    :reps="timerExercise.reps"
+    :sets="
+      timerExercise.sets
+        .filter((s) => String(s.reps).trim() !== '')
+        .map((s) => ({
+          weight: String(s.weight).trim() ? parseInt(String(s.weight), 10) : null,
+          reps: parseInt(String(s.reps), 10),
+        }))
+    "
     @close="closeTimer"
   />
 </template>
+
+<style scoped>
+.set-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.add-set-btn {
+  padding: 0;
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.add-set-btn .icon {
+  height: 0.875rem;
+  width: 0.875rem;
+}
+</style>

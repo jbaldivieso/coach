@@ -17,6 +17,6 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ["title", "session", "weight_lbs", "rest_seconds"]
+    list_display = ["title", "session", "rest_seconds"]
     list_filter = ["session__session_type"]
     search_fields = ["title", "comments"]
