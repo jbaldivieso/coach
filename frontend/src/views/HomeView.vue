@@ -6,6 +6,7 @@ import type { Session, PaginatedSessions } from "@/types/lifting";
 import PencilIcon from "@/components/svg/IconPencil.vue";
 import CopyIcon from "@/components/svg/IconCopy.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
+import IconComment from "@/components/svg/IconComment.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -165,10 +166,22 @@ onMounted(() => {
                   session.exercises.length !== 1 ? "s" : ""
                 }}</span
               >
+              <span v-if="session.comments" class="icon is-small ml-3">
+                <IconComment />
+              </span>
             </a>
 
             <!-- Expanded exercise details -->
             <div v-if="isExpanded(session.id)" class="pl-4">
+              <!-- Session comments -->
+              <p
+                v-if="session.comments"
+                class="has-text-grey is-size-7 mt-1 mb-3"
+              >
+                {{ session.comments }}
+              </p>
+
+              <!-- Exercises -->
               <div
                 v-for="exercise in session.exercises"
                 :key="exercise.id"

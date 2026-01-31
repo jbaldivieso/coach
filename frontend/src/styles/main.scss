@@ -128,9 +128,13 @@ body {
   background-color: $darker-blue;
 }
 .bi-pencil,
-.bi-copy {
+.bi-copy,
+.bi-comment {
   fill: var(--color3);
   width: 1.25em;
+}
+.bi-comment {
+  width: 0.75rem;
 }
 
 .button.is-outlined {
