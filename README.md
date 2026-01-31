@@ -1,6 +1,6 @@
 # Coach
 
-A weightlifting session tracking application with a Vue 3 frontend and Django backend.
+A weightlifting session tracking Progressive Web App (PWA) with a Vue 3 frontend and Django backend.
 
 ## Project Structure
 
@@ -38,6 +38,7 @@ coach/
 - **Pinia** for state management
 - **Vue Router** for navigation
 - **Vitest** for testing
+- **PWA** support with `vite-plugin-pwa` (offline capability, installable, Wake Lock API)
 
 ## Development Setup
 
@@ -63,19 +64,45 @@ The backend runs on http://127.0.0.1:8000
 
 ### Frontend
 
+**First time setup:**
+
 ```bash
 cd frontend
 
-# Install dependencies
+# Install all npm dependencies (only needed once, or when dependencies change)
 npm install
+```
 
-# Run the development server
+**Running the development server:**
+
+```bash
+cd frontend
+
+# Start the dev server with hot reload
+npm run dev
+```
+
+The frontend development server runs on http://localhost:5173
+
+**Note:** The frontend proxies `/api` requests to the backend, so both servers need to be running during development.
+
+#### Testing the Production Build Locally
+
+To test the production PWA build locally:
+
+```bash
+cd frontend
+
+# Build for production
+npm run build
+
+# Preview the production build
 npm run preview
 ```
 
-The frontend runs on http://localhost:4173
+The production preview server runs on http://localhost:4173
 
-**Note:** The frontend proxies `/api` requests to the backend, so both servers need to be running during development.
+**Important:** The production build uses `base: "/static/"` for Django static file serving. The preview server handles this correctly, but PWA features (service worker, offline support, installation) only work in the production build, not in development mode.
 
 ## Testing
 
@@ -151,6 +178,38 @@ Collect static files:
 cd backend
 DJANGO_SETTINGS_MODULE=config.settings uv run python manage.py collectstatic
 ```
+
+## Progressive Web App (PWA) Features
+
+Coach is configured as a Progressive Web App with the following features:
+
+- **Installable:** Can be installed on mobile devices (iOS, Android) and desktop browsers
+- **Offline Support:** Service worker caches assets for offline functionality
+- **Screen Wake Lock:** Keeps the screen awake during workouts (works best when installed as PWA on iOS)
+- **App-like Experience:** Runs in standalone mode without browser UI when installed
+- **Web App Manifest:** Custom icon, name, and theme color
+
+### Installing on Mobile
+
+**iOS (Safari):**
+1. Visit the site in Safari
+2. Tap the Share button
+3. Scroll down and tap "Add to Home Screen"
+4. Tap "Add"
+
+**Android (Chrome):**
+1. Visit the site in Chrome
+2. Tap the menu (three dots)
+3. Tap "Add to Home screen" or "Install app"
+4. Confirm installation
+
+### PWA Configuration Files
+
+- `frontend/vite.config.ts` - PWA plugin configuration
+- `frontend/public/icon.svg` - App icon (can be replaced with PNG icons)
+- Service worker is auto-generated during build
+
+**Note:** PWA features like service worker and installation prompts only work with the production build (`npm run build`), not in development mode.
 
 ## Architecture Notes for Future Development
 
