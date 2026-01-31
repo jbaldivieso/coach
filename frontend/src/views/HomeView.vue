@@ -5,6 +5,7 @@ import { api } from "@/api/client";
 import type { Session, PaginatedSessions } from "@/types/lifting";
 import PencilIcon from "@/components/svg/IconPencil.vue";
 import CopyIcon from "@/components/svg/IconCopy.vue";
+import IconPlus from "@/components/svg/IconPlus.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -90,10 +91,13 @@ onMounted(() => {
       <!-- Header with title and add button -->
       <div
         class="is-flex is-justify-content-space-between is-align-items-center mb-5"
+        id="page-head"
       >
         <h1 class="title mb-0">Sessions</h1>
         <RouterLink :to="{ name: 'create-session' }" class="button is-primary">
-          +
+          <span class="icon">
+            <IconPlus />
+          </span>
         </RouterLink>
       </div>
 
@@ -295,5 +299,12 @@ onMounted(() => {
   background-color: var(--background);
   display: block;
   border-radius: 3px;
+}
+.bi-plus {
+  fill: white;
+}
+#page-head .icon {
+  height: 1rem;
+  width: 1rem;
 }
 </style>
