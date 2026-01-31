@@ -309,7 +309,7 @@ onMounted(() => {
               <td>
                 <RouterLink
                   :to="{
-                    name: 'edit-session',
+                    name: 'session-detail',
                     params: { id: result.session_id },
                   }"
                 >

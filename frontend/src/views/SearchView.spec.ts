@@ -22,8 +22,8 @@ const router = createRouter({
   routes: [
     { path: "/search", name: "search", component: SearchView },
     {
-      path: "/sessions/:id/edit",
-      name: "edit-session",
+      path: "/session/:id",
+      name: "session-detail",
       component: { template: "<div/>" },
     },
   ],

@@ -391,8 +391,8 @@ async function handleUpdate() {
       }
     }
 
-    // Success - redirect to home
-    router.push({ name: "home" });
+    // Success - redirect to session detail
+    router.push({ name: "session-detail", params: { id: sessionId.value } });
   } catch {
     error.value = "Network error. Please try again.";
   } finally {
@@ -424,7 +424,7 @@ async function handleSubmit() {
     );
 
     if (response.data) {
-      router.push({ name: "home" });
+      router.push({ name: "session-detail", params: { id: response.data.id } });
     } else {
       error.value = response.error || "Failed to create session";
     }

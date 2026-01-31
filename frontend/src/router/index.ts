@@ -29,6 +29,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: "/session/:id",
+      name: "session-detail",
+      component: () => import("@/views/SessionDetailView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
       path: "/search",
       name: "search",
       component: () => import("@/views/SearchView.vue"),

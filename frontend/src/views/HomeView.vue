@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import { api } from "@/api/client";
-import type { Session, PaginatedSessions, Set } from "@/types/lifting";
+import type { Session, PaginatedSessions, Set as LiftingSet } from "@/types/lifting";
 import PencilIcon from "@/components/svg/IconPencil.vue";
 import CopyIcon from "@/components/svg/IconCopy.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
@@ -74,7 +74,7 @@ function isExpanded(sessionId: number): boolean {
   return expandedSessionIds.value.has(sessionId);
 }
 
-function formatSets(sets: Set[]): string {
+function formatSets(sets: LiftingSet[]): string {
   return sets
     .map((s) => {
       const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
@@ -229,7 +229,7 @@ onMounted(() => {
     </section>
 
     <!-- Swatches with Bulma "primary" variants -->
-    <table class="table" v-if="false">
+    <table class="table" v-if="true">
       <tbody>
         <tr>
           <td><code>--bulma-primary</code></td>
