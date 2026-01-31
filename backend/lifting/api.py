@@ -82,6 +82,36 @@ class PaginatedSessionsSchema(Schema):
     has_more: bool
 
 
+# ============ Search Schemas ============
+
+
+class AutocompleteItemSchema(Schema):
+    type: str  # "session" or "exercise"
+    id: Optional[int]  # session_id for sessions, None for exercises
+    label: str  # "2024-01-15: Upper A" or "Bench Press"
+    value: str  # The title value for filtering
+
+
+class AutocompleteResponseSchema(Schema):
+    items: List[AutocompleteItemSchema]
+
+
+class SearchResultSchema(Schema):
+    exercise_id: int
+    exercise_title: str
+    weight_lbs: Optional[int]
+    reps: List[int]
+    rest_seconds: int
+    session_id: int
+    session_date: str
+    session_title: str
+
+
+class SearchResultsResponseSchema(Schema):
+    items: List[SearchResultSchema]
+    total: int
+
+
 # ============ Session Endpoints ============
 
 
@@ -254,3 +284,89 @@ def delete_exercise(request, exercise_id: int):
         return 404, {"message": "Exercise not found"}
     exercise.delete()
     return 200, {"message": "Exercise deleted"}
+
+
+# ============ Search Endpoints ============
+
+
+@router.get("/search/autocomplete/", response=AutocompleteResponseSchema, auth=django_auth)
+def search_autocomplete(request, q: str = ""):
+    """Return autocomplete suggestions for sessions and exercises."""
+    if len(q) < 3:
+        return {"items": []}
+
+    items = []
+
+    # Find distinct matching session titles
+    session_titles = list(
+        set(
+            Session.objects.filter(
+                user=request.user,
+                title__icontains=q,
+            ).values_list("title", flat=True)
+        )
+    )[:5]
+
+    for title in session_titles:
+        items.append({
+            "type": "session",
+            "id": None,
+            "label": title,
+            "value": title,
+        })
+
+    # Find distinct matching exercise titles
+    exercise_titles = list(
+        set(
+            Exercise.objects.filter(
+                session__user=request.user,
+                title__icontains=q,
+            ).values_list("title", flat=True)
+        )
+    )[:5]
+
+    for title in exercise_titles:
+        items.append({
+            "type": "exercise",
+            "id": None,
+            "label": title,
+            "value": title,
+        })
+
+    return {"items": items}
+
+
+@router.get("/search/results/", response=SearchResultsResponseSchema, auth=django_auth)
+def search_results(
+    request,
+    session_title: Optional[str] = None,
+    exercise_title: Optional[str] = None,
+):
+    """Return search results filtered by session title and/or exercise title."""
+    queryset = Exercise.objects.filter(session__user=request.user).select_related(
+        "session"
+    )
+
+    if session_title:
+        queryset = queryset.filter(session__title=session_title)
+
+    if exercise_title:
+        queryset = queryset.filter(title=exercise_title)
+
+    # Order by session date descending, then exercise title
+    queryset = queryset.order_by("-session__date", "title")
+
+    items = []
+    for exercise in queryset:
+        items.append({
+            "exercise_id": exercise.id,
+            "exercise_title": exercise.title,
+            "weight_lbs": exercise.weight_lbs,
+            "reps": exercise.reps,
+            "rest_seconds": exercise.rest_seconds,
+            "session_id": exercise.session.id,
+            "session_date": str(exercise.session.date),
+            "session_title": exercise.session.title,
+        })
+
+    return {"items": items, "total": len(items)}

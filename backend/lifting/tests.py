@@ -236,3 +236,165 @@ class TestDeleteExercise:
         )
         response = authenticated_client.delete(f"/api/lifting/exercises/{other_exercise.id}/")
         assert response.status_code == 404
+
+
+# ============ Search Endpoint Tests ============
+
+
+@pytest.fixture
+def search_sessions(db, user):
+    """Create multiple sessions with exercises for search testing."""
+    session1 = Session.objects.create(
+        title="Upper A",
+        date="2024-01-15",
+        session_type="volume",
+        user=user,
+    )
+    Exercise.objects.create(
+        title="Bench Press",
+        session=session1,
+        weight_lbs=135,
+        rest_seconds=90,
+        reps=[10, 10, 8],
+    )
+    Exercise.objects.create(
+        title="Overhead Press",
+        session=session1,
+        weight_lbs=95,
+        rest_seconds=90,
+        reps=[8, 8, 6],
+    )
+
+    session2 = Session.objects.create(
+        title="Lower A",
+        date="2024-01-17",
+        session_type="weight",
+        user=user,
+    )
+    Exercise.objects.create(
+        title="Squat",
+        session=session2,
+        weight_lbs=225,
+        rest_seconds=120,
+        reps=[5, 5, 5],
+    )
+    Exercise.objects.create(
+        title="Bench Press",
+        session=session2,
+        weight_lbs=145,
+        rest_seconds=90,
+        reps=[8, 8, 8],
+    )
+
+    return [session1, session2]
+
+
+class TestSearchAutocomplete:
+    def test_autocomplete_requires_auth(self, client):
+        response = client.get("/api/lifting/search/autocomplete/?q=ben")
+        assert response.status_code == 401
+
+    def test_autocomplete_requires_min_3_chars(self, authenticated_client, search_sessions):
+        # 2 chars should return empty
+        response = authenticated_client.get("/api/lifting/search/autocomplete/?q=be")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+
+    def test_autocomplete_returns_distinct_session_titles(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/search/autocomplete/?q=Upper")
+        assert response.status_code == 200
+        data = response.json()
+
+        session_items = [i for i in data["items"] if i["type"] == "session"]
+        assert len(session_items) == 1
+        assert session_items[0]["value"] == "Upper A"
+        assert session_items[0]["label"] == "Upper A"
+        assert session_items[0]["id"] is None  # No specific session ID
+
+    def test_autocomplete_returns_distinct_exercises(self, authenticated_client, search_sessions):
+        # "Bench Press" appears in both sessions, should only return once
+        response = authenticated_client.get("/api/lifting/search/autocomplete/?q=Bench")
+        assert response.status_code == 200
+        data = response.json()
+
+        exercise_items = [i for i in data["items"] if i["type"] == "exercise"]
+        assert len(exercise_items) == 1
+        assert exercise_items[0]["value"] == "Bench Press"
+
+    def test_autocomplete_only_returns_own_data(self, authenticated_client, search_sessions, other_session):
+        # Add an exercise to other_session
+        Exercise.objects.create(
+            title="Bench Press Special",
+            session=other_session,
+            rest_seconds=60,
+            reps=[10],
+        )
+
+        response = authenticated_client.get("/api/lifting/search/autocomplete/?q=Special")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+
+
+class TestSearchResults:
+    def test_search_requires_auth(self, client):
+        response = client.get("/api/lifting/search/results/")
+        assert response.status_code == 401
+
+    def test_search_no_filters_returns_all(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/search/results/")
+        assert response.status_code == 200
+        data = response.json()
+        # 2 exercises in session1, 2 in session2 = 4 total
+        assert data["total"] == 4
+        assert len(data["items"]) == 4
+
+    def test_search_filter_by_session_title(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/search/results/?session_title=Upper A")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 2
+        assert all(item["session_title"] == "Upper A" for item in data["items"])
+
+    def test_search_filter_by_exercise_title(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/search/results/?exercise_title=Bench Press")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 2
+        assert all(item["exercise_title"] == "Bench Press" for item in data["items"])
+
+    def test_search_filter_combined(self, authenticated_client, search_sessions):
+        response = authenticated_client.get(
+            "/api/lifting/search/results/?session_title=Upper A&exercise_title=Bench Press"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1
+        item = data["items"][0]
+        assert item["session_title"] == "Upper A"
+        assert item["exercise_title"] == "Bench Press"
+
+    def test_search_only_returns_own_data(self, authenticated_client, search_sessions, other_session):
+        # Add an exercise to other_session
+        Exercise.objects.create(
+            title="Other Exercise",
+            session=other_session,
+            rest_seconds=60,
+            reps=[10],
+        )
+
+        response = authenticated_client.get("/api/lifting/search/results/?exercise_title=Other Exercise")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 0
+        assert data["items"] == []
+
+    def test_search_results_ordered_by_date_desc(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/search/results/")
+        assert response.status_code == 200
+        data = response.json()
+        # session2 is 2024-01-17, session1 is 2024-01-15
+        # So session2's exercises should come first
+        dates = [item["session_date"] for item in data["items"]]
+        assert dates == sorted(dates, reverse=True)

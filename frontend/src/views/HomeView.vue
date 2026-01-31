@@ -7,6 +7,7 @@ import PencilIcon from "@/components/svg/IconPencil.vue";
 import CopyIcon from "@/components/svg/IconCopy.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
 import IconComment from "@/components/svg/IconComment.vue";
+import IconSearch from "@/components/svg/IconSearch.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -89,17 +90,27 @@ onMounted(() => {
 <template>
   <div class="container">
     <section class="section">
-      <!-- Header with title and add button -->
+      <!-- Header with title and action buttons -->
       <div
         class="is-flex is-justify-content-space-between is-align-items-center mb-5"
         id="page-head"
       >
         <h1 class="title mb-0">Sessions</h1>
-        <RouterLink :to="{ name: 'create-session' }" class="button is-primary">
-          <span class="icon">
-            <IconPlus />
-          </span>
-        </RouterLink>
+        <div class="buttons">
+          <RouterLink :to="{ name: 'search' }" class="button is-primary">
+            <span class="icon">
+              <IconSearch />
+            </span>
+          </RouterLink>
+          <RouterLink
+            :to="{ name: 'create-session' }"
+            class="button is-primary"
+          >
+            <span class="icon">
+              <IconPlus />
+            </span>
+          </RouterLink>
+        </div>
       </div>
 
       <!-- Loading state -->
@@ -312,9 +323,6 @@ onMounted(() => {
   background-color: var(--background);
   display: block;
   border-radius: 3px;
-}
-.bi-plus {
-  fill: white;
 }
 #page-head .icon {
   height: 1rem;

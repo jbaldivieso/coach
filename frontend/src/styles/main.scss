@@ -73,7 +73,10 @@ body {
     margin-bottom: 0.75rem;
   }
 }
-
+.table {
+  --bulma-table-color: var(--bulma-text-strong);
+  --bulma-table-background-color: transparent;
+}
 // We're mobile first!
 @media screen and (min-width: 768px) {
   .main-content {
@@ -132,6 +135,11 @@ body {
 .bi-comment {
   fill: var(--color3);
   width: 1.25em;
+}
+
+.bi-plus,
+.bi-search {
+  fill: var(--bulma-link-text);
 }
 .bi-comment {
   width: 0.75rem;

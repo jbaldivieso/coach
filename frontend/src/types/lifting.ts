@@ -50,3 +50,38 @@ export const SESSION_TYPES: { value: SessionType; label: string }[] = [
   { value: "endurance", label: "Endurance" },
   { value: "recovery", label: "Recovery" },
 ];
+
+// Search types
+export interface AutocompleteItem {
+  type: "session" | "exercise";
+  id: number | null;
+  label: string;
+  value: string;
+}
+
+export interface AutocompleteResponse {
+  items: AutocompleteItem[];
+}
+
+export interface SearchResult {
+  exercise_id: number;
+  exercise_title: string;
+  weight_lbs: number | null;
+  reps: number[];
+  rest_seconds: number;
+  session_id: number;
+  session_date: string;
+  session_title: string;
+}
+
+export interface SearchResultsResponse {
+  items: SearchResult[];
+  total: number;
+}
+
+export interface SearchFilter {
+  type: "session" | "exercise";
+  id: number | null;
+  label: string;
+  value: string;
+}
