@@ -161,7 +161,11 @@ function playFallbackSound() {
     // Create a short beep buffer
     const duration = 0.2;
     const sampleRate = audioContext.sampleRate;
-    const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+    const buffer = audioContext.createBuffer(
+      1,
+      duration * sampleRate,
+      sampleRate,
+    );
     const data = buffer.getChannelData(0);
 
     // Generate 880Hz sine wave
@@ -302,30 +306,34 @@ watch(isRunning, (running) => {
 
       <div class="timer-controls controls field has-addons">
         <template v-if="!isComplete">
-        <div class="control">
-          <button class="button is-large control-button" @click="togglePause">
-            {{ isRunning ? "Pause" : "Play" }}
-          </button>
-        </div>
-        <div class="control">
-          <button
-            class="button is-large control-button"
-            @click="handleCancel"
-          >
-            Cancel
-          </button>
-        </div>
+          <div class="control">
+            <button class="button is-large control-button" @click="togglePause">
+              {{ isRunning ? "Pause" : "Play" }}
+            </button>
+          </div>
+          <div class="control">
+            <button
+              class="button is-large control-button"
+              @click="handleCancel"
+            >
+              Cancel
+            </button>
+          </div>
         </template>
         <template v-else>
-          <button
-            class="button is-large is-primary control-button"
-            @click="handleOk"
-          >
-            OK
-          </button>
-          <button class="button is-large control-button" @click="handleExtend">
-            +30
-          </button>
+          <div class="control">
+            <button class="button is-large control-button" @click="handleOk">
+              OK
+            </button>
+          </div>
+          <div class="control">
+            <button
+              class="button is-large control-button"
+              @click="handleExtend"
+            >
+              +30
+            </button>
+          </div>
         </template>
       </div>
 
@@ -352,7 +360,9 @@ watch(isRunning, (running) => {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  transition: background-color 0.1s, color 0.1s;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
 }
 
 .rest-timer-overlay.inverted {
