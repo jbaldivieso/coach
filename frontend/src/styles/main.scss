@@ -57,11 +57,21 @@ body {
     margin-inline-start: auto;
   }
 }
-.logout {
-  background-color: $main-blue;
-  border-color: var(--color1);
-  color: var(--bulma-primary);
+.dropdown-content {
+  background-color: var(--bulma-primary);
+  //border-radius: var(--bulma-dropdown-content-radius);
+  //box-shadow: var(--bulma-dropdown-content-shadow);
+  //padding-bottom: var(--bulma-dropdown-content-padding-bottom);
+  //padding-top: var(--bulma-dropdown-content-padding-top);
 }
+a.dropdown-item,
+button.dropdown-item {
+  background-color: transparent;
+}
+.dropdown-item {
+  color: var(--bulma-primary-dark);
+}
+
 .main-content {
   flex: 1;
 }
