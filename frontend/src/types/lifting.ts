@@ -92,3 +92,15 @@ export interface SearchFilter {
   label: string;
   value: string;
 }
+
+// Calendar types
+export interface SessionDate {
+  date: string;
+  session_id: number;
+}
+
+export interface CalendarMonth {
+  year: number;
+  month: number;
+  sessions: SessionDate[];
+}

@@ -26,6 +26,11 @@ const changeGroups = ref<ChangeGroup[]>([
         title: "Search sessions and exercises",
         description: "Want to see how your benching efforts have changed over time? Search it up!"
       },
+      {
+        date: "2026-01-31",
+        title: "Session calendar",
+        description: "Get sense of when your workouts have been"
+      },
     ],
   },
 ]);

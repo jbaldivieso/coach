@@ -8,6 +8,7 @@ import CopyIcon from "@/components/svg/IconCopy.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
 import IconComment from "@/components/svg/IconComment.vue";
 import IconSearch from "@/components/svg/IconSearch.vue";
+import SessionCalendar from "@/components/SessionCalendar.vue";
 
 // Data state
 const sessions = ref<Session[]>([]);
@@ -114,122 +115,134 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="loading" class="has-text-centered py-6">
-        <span class="loader"></span>
-        <p class="mt-3">Loading sessions...</p>
-      </div>
-
-      <!-- Error state -->
-      <div v-else-if="error" class="notification is-danger is-light">
-        {{ error }}
-        <button
-          class="button is-small is-danger is-light ml-3"
-          @click="fetchSessions()"
-        >
-          Retry
-        </button>
-      </div>
-
-      <!-- Empty state -->
-      <div v-else-if="sessions.length === 0" class="has-text-centered py-6">
-        <p class="is-size-5 has-text-grey">No sessions yet</p>
-      </div>
-
-      <!-- Sessions list -->
-      <div v-else id="session-list">
-        <div v-for="session in sessions" :key="session.id" class="box mb-3">
-          <!-- Row 1: Date and Title -->
-          <div
-            class="is-flex is-justify-content-space-between is-align-items-center"
-          >
-            <h2>
-              <span class="has-text-weight-semibold">{{ session.date }}</span>
-              <span class="ml-2">{{ session.title }}</span>
-            </h2>
-            <div class="is-flex">
-              <RouterLink
-                :to="{ name: 'copy-session', params: { id: session.id } }"
-                class="button is-small is-ghost"
-              >
-                <span class="icon is-small">
-                  <CopyIcon />
-                </span>
-              </RouterLink>
-              <RouterLink
-                :to="{ name: 'edit-session', params: { id: session.id } }"
-                class="button is-small is-ghost"
-              >
-                <span class="icon is-small">
-                  <PencilIcon />
-                </span>
-              </RouterLink>
-            </div>
+      <div class="home-layout">
+        <!-- Sessions column -->
+        <div class="sessions-column">
+          <!-- Loading state -->
+          <div v-if="loading" class="has-text-centered py-6">
+            <span class="loader"></span>
+            <p class="mt-3">Loading sessions...</p>
           </div>
 
-          <!-- Row 2: Expandable exercises summary -->
-          <div>
-            <a @click="toggleExpanded(session.id)">
-              <div
-                :class="['triangle', isExpanded(session.id) ? 'down' : 'right']"
-              ></div>
-              <span
-                >{{ session.exercises.length }} exercise{{
-                  session.exercises.length !== 1 ? "s" : ""
-                }}</span
-              >
-              <span v-if="session.comments" class="icon is-small ml-3">
-                <IconComment />
-              </span>
-            </a>
+          <!-- Error state -->
+          <div v-else-if="error" class="notification is-danger is-light">
+            {{ error }}
+            <button
+              class="button is-small is-danger is-light ml-3"
+              @click="fetchSessions()"
+            >
+              Retry
+            </button>
+          </div>
 
-            <!-- Expanded exercise details -->
-            <div v-if="isExpanded(session.id)" class="pl-4">
-              <!-- Session comments -->
-              <p
-                v-if="session.comments"
-                class="has-text-grey is-size-7 mt-1 mb-3"
-              >
-                {{ session.comments }}
-              </p>
+          <!-- Empty state -->
+          <div v-else-if="sessions.length === 0" class="has-text-centered py-6">
+            <p class="is-size-5 has-text-grey">No sessions yet</p>
+          </div>
 
-              <!-- Exercises -->
+          <!-- Sessions list -->
+          <div v-else id="session-list">
+            <div v-for="session in sessions" :key="session.id" class="box mb-3">
+              <!-- Row 1: Date and Title -->
               <div
-                v-for="exercise in session.exercises"
-                :key="exercise.id"
-                class="mt-2"
+                class="is-flex is-justify-content-space-between is-align-items-center"
               >
-                <p>
-                  <strong>{{ exercise.title }}</strong
-                  >: {{ formatSets(exercise.sets) }}
-                  <span class="has-text-grey"
-                    >{{ exercise.rest_seconds }} secs</span
+                <h2>
+                  <span class="has-text-weight-semibold">{{ session.date }}</span>
+                  <span class="ml-2">{{ session.title }}</span>
+                </h2>
+                <div class="is-flex">
+                  <RouterLink
+                    :to="{ name: 'copy-session', params: { id: session.id } }"
+                    class="button is-small is-ghost"
                   >
-                </p>
-                <p v-if="exercise.comments" class="has-text-grey is-size-7">
-                  {{ exercise.comments }}
-                </p>
+                    <span class="icon is-small">
+                      <CopyIcon />
+                    </span>
+                  </RouterLink>
+                  <RouterLink
+                    :to="{ name: 'edit-session', params: { id: session.id } }"
+                    class="button is-small is-ghost"
+                  >
+                    <span class="icon is-small">
+                      <PencilIcon />
+                    </span>
+                  </RouterLink>
+                </div>
               </div>
+
+              <!-- Row 2: Expandable exercises summary -->
+              <div>
+                <a @click="toggleExpanded(session.id)">
+                  <div
+                    :class="['triangle', isExpanded(session.id) ? 'down' : 'right']"
+                  ></div>
+                  <span
+                    >{{ session.exercises.length }} exercise{{
+                      session.exercises.length !== 1 ? "s" : ""
+                    }}</span
+                  >
+                  <span v-if="session.comments" class="icon is-small ml-3">
+                    <IconComment />
+                  </span>
+                </a>
+
+                <!-- Expanded exercise details -->
+                <div v-if="isExpanded(session.id)" class="pl-4">
+                  <!-- Session comments -->
+                  <p
+                    v-if="session.comments"
+                    class="has-text-grey is-size-7 mt-1 mb-3"
+                  >
+                    {{ session.comments }}
+                  </p>
+
+                  <!-- Exercises -->
+                  <div
+                    v-for="exercise in session.exercises"
+                    :key="exercise.id"
+                    class="mt-2"
+                  >
+                    <p>
+                      <strong>{{ exercise.title }}</strong
+                      >: {{ formatSets(exercise.sets) }}
+                      <span class="has-text-grey"
+                        >{{ exercise.rest_seconds }} secs</span
+                      >
+                    </p>
+                    <p v-if="exercise.comments" class="has-text-grey is-size-7">
+                      {{ exercise.comments }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Load more button -->
+            <div v-if="hasMore" class="has-text-centered mt-4">
+              <button
+                class="button"
+                :class="{ 'is-loading': loadingMore }"
+                :disabled="loadingMore"
+                @click="loadMore"
+              >
+                Load more
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Load more button -->
-        <div v-if="hasMore" class="has-text-centered mt-4">
-          <button
-            class="button"
-            :class="{ 'is-loading': loadingMore }"
-            :disabled="loadingMore"
-            @click="loadMore"
-          >
-            Load more
-          </button>
+        <!-- Calendar column -->
+        <div class="calendar-column">
+          <div class="calendar-sticky">
+            <SessionCalendar />
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Swatches with Bulma "primary" variants -->
-    <table class="table" v-if="true">
+    <table class="table" v-if="false">
       <tbody>
         <tr>
           <td><code>--bulma-primary</code></td>
@@ -327,5 +340,37 @@ onMounted(() => {
 #page-head .icon {
   height: 1rem;
   width: 1rem;
+}
+
+.home-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sessions-column {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mobile: calendar above sessions */
+.calendar-column {
+  order: -1;
+}
+
+/* Wider screens: side by side, calendar on right */
+@media screen and (min-width: 650px) {
+  .home-layout {
+    flex-direction: row;
+  }
+  .calendar-column {
+    order: 0;
+    width: 280px;
+    flex-shrink: 0;
+  }
+  .calendar-sticky {
+    position: sticky;
+    top: 1rem;
+  }
 }
 </style>

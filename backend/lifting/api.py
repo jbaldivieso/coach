@@ -113,6 +113,20 @@ class SearchResultsResponseSchema(Schema):
     total: int
 
 
+# ============ Calendar Schemas ============
+
+
+class SessionDateSchema(Schema):
+    date: DateType
+    session_id: int
+
+
+class CalendarMonthSchema(Schema):
+    year: int
+    month: int
+    sessions: List[SessionDateSchema]
+
+
 # ============ Session Endpoints ============
 
 
@@ -127,6 +141,24 @@ def list_sessions(request, offset: int = 0, limit: int = 10):
         "items": sessions,
         "total": total,
         "has_more": has_more,
+    }
+
+
+@router.get("/sessions/calendar/", response=CalendarMonthSchema, auth=django_auth)
+def get_calendar_month(request, year: int, month: int):
+    """Get session dates for a given month. Returns most recent session per date."""
+    from django.db.models import Max
+
+    sessions = (
+        Session.objects.filter(user=request.user, date__year=year, date__month=month)
+        .values("date")
+        .annotate(session_id=Max("id"))
+        .order_by("date")
+    )
+    return {
+        "year": year,
+        "month": month,
+        "sessions": [{"date": s["date"], "session_id": s["session_id"]} for s in sessions],
     }
 
 
