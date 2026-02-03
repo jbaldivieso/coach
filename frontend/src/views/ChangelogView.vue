@@ -14,6 +14,16 @@ interface ChangeGroup {
 
 const changeGroups = ref<ChangeGroup[]>([
   {
+    date: "2026-02-02",
+    changes: [
+      {
+        date: "2026-02-02",
+        title: "Quick clear for comment fields",
+        description: "If you clone a session, we add a comment with the last time's stats. Now you can delete that more easily when you want.",
+      },
+    ]
+  },
+  {
     date: "2026-01-31",
     changes: [
       {

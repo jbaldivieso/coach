@@ -526,7 +526,7 @@ onMounted(() => {
           <!-- Comments -->
           <div class="field">
             <label class="label" for="session-comments">Comments</label>
-            <div class="control">
+            <div class="control" style="position: relative">
               <textarea
                 id="session-comments"
                 v-model="sessionForm.comments"
@@ -534,6 +534,14 @@ onMounted(() => {
                 placeholder="Optional notes about this session..."
                 rows="2"
               ></textarea>
+              <button
+                v-if="sessionForm.comments"
+                type="button"
+                class="delete is-small"
+                aria-label="Clear comments"
+                style="position: absolute; top: 0.5rem; right: 0.5rem"
+                @click="sessionForm.comments = ''"
+              ></button>
             </div>
           </div>
         </div>
@@ -696,7 +704,7 @@ onMounted(() => {
             <label class="label" :for="`exercise-${index}-comments`"
               >Comments</label
             >
-            <div class="control">
+            <div class="control" style="position: relative">
               <textarea
                 :id="`exercise-${index}-comments`"
                 v-model="exercise.comments"
@@ -704,6 +712,14 @@ onMounted(() => {
                 placeholder="Optional notes about this exercise..."
                 rows="2"
               ></textarea>
+              <button
+                v-if="exercise.comments"
+                type="button"
+                class="delete is-small"
+                aria-label="Clear comments"
+                style="position: absolute; top: 0.5rem; right: 0.5rem"
+                @click="exercise.comments = ''"
+              ></button>
             </div>
           </div>
         </div>
