@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { api } from "@/api/client";
 import type {
@@ -8,11 +8,14 @@ import type {
   Session,
   ExerciseEditState,
   SetFormData,
-  Set,
+  Set as LiftingSet,
 } from "@/types/lifting";
 import { SESSION_TYPES } from "@/types/lifting";
 import RestTimer from "@/components/RestTimer.vue";
 import IconPlus from "@/components/svg/IconPlus.vue";
+import IconChevronUp from "@/components/svg/IconChevronUp.vue";
+import IconChevronDown from "@/components/svg/IconChevronDown.vue";
+import IconChevronRight from "@/components/svg/IconChevronRight.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -55,6 +58,9 @@ const deletedExerciseIds = ref<number[]>([]);
 const timerActive = ref(false);
 const timerExerciseIndex = ref<number | null>(null);
 
+// Collapse state
+const collapsedExercises = ref<Set<number>>(new Set());
+
 const timerExercise = computed(() => {
   if (timerExerciseIndex.value === null) return null;
   return exercises.value[timerExerciseIndex.value] || null;
@@ -79,6 +85,97 @@ function startTimer(index: number) {
 function closeTimer() {
   timerActive.value = false;
   timerExerciseIndex.value = null;
+}
+
+// Collapse helpers
+function canCollapse(exercise: ExerciseFormData): boolean {
+  return exercise.title.trim() !== "";
+}
+
+function isCollapsed(index: number): boolean {
+  return collapsedExercises.value.has(index);
+}
+
+function toggleCollapse(index: number) {
+  if (collapsedExercises.value.has(index)) {
+    collapsedExercises.value.delete(index);
+  } else {
+    collapsedExercises.value.add(index);
+  }
+}
+
+// Watch for title changes to auto-expand if title becomes empty
+watch(
+  exercises,
+  (newExercises) => {
+    for (let i = 0; i < newExercises.length; i++) {
+      if (collapsedExercises.value.has(i) && !canCollapse(newExercises[i]!)) {
+        collapsedExercises.value.delete(i);
+      }
+    }
+  },
+  { deep: true },
+);
+
+// Reorder functions
+function moveExerciseUp(index: number) {
+  if (index <= 0) return;
+  const exercises_arr = exercises.value;
+  [exercises_arr[index - 1], exercises_arr[index]] = [
+    exercises_arr[index]!,
+    exercises_arr[index - 1]!,
+  ];
+
+  // Swap collapse states
+  const wasCurrentCollapsed = collapsedExercises.value.has(index);
+  const wasPrevCollapsed = collapsedExercises.value.has(index - 1);
+  if (wasCurrentCollapsed) {
+    collapsedExercises.value.delete(index);
+    collapsedExercises.value.add(index - 1);
+  } else {
+    collapsedExercises.value.delete(index - 1);
+  }
+  if (wasPrevCollapsed) {
+    collapsedExercises.value.add(index);
+  }
+
+  // Swap exercise states if in edit mode
+  if (isEditMode.value && exerciseStates.value.length > index) {
+    [exerciseStates.value[index - 1], exerciseStates.value[index]] = [
+      exerciseStates.value[index]!,
+      exerciseStates.value[index - 1]!,
+    ];
+  }
+}
+
+function moveExerciseDown(index: number) {
+  if (index >= exercises.value.length - 1) return;
+  const exercises_arr = exercises.value;
+  [exercises_arr[index], exercises_arr[index + 1]] = [
+    exercises_arr[index + 1]!,
+    exercises_arr[index]!,
+  ];
+
+  // Swap collapse states
+  const wasCurrentCollapsed = collapsedExercises.value.has(index);
+  const wasNextCollapsed = collapsedExercises.value.has(index + 1);
+  if (wasCurrentCollapsed) {
+    collapsedExercises.value.delete(index);
+    collapsedExercises.value.add(index + 1);
+  } else {
+    collapsedExercises.value.delete(index + 1);
+  }
+  if (wasNextCollapsed) {
+    collapsedExercises.value.add(index);
+  }
+
+  // Swap exercise states if in edit mode
+  if (isEditMode.value && exerciseStates.value.length > index + 1) {
+    [exerciseStates.value[index], exerciseStates.value[index + 1]] = [
+      exerciseStates.value[index + 1]!,
+      exerciseStates.value[index]!,
+    ];
+  }
 }
 
 function getTodayDateString(): string {
@@ -126,6 +223,18 @@ function removeExercise(index: number) {
     if (isEditMode.value) {
       exerciseStates.value.splice(index, 1);
     }
+
+    // Update collapse indices
+    const newCollapsed = new Set<number>();
+    for (const collapsedIndex of collapsedExercises.value) {
+      if (collapsedIndex < index) {
+        newCollapsed.add(collapsedIndex);
+      } else if (collapsedIndex > index) {
+        newCollapsed.add(collapsedIndex - 1);
+      }
+      // Skip the removed index
+    }
+    collapsedExercises.value = newCollapsed;
   }
 }
 
@@ -149,7 +258,7 @@ async function fetchSession(id: number) {
       const exerciseFormDataList: ExerciseFormData[] =
         response.data.exercises.map((ex) => ({
           title: ex.title,
-          sets: ex.sets.map((s: Set) => ({
+          sets: ex.sets.map((s: LiftingSet) => ({
             weight: s.weight?.toString() || "",
             reps: s.reps.toString(),
           })),
@@ -199,7 +308,7 @@ async function fetchSessionForCopy(id: number) {
       };
 
       // Transform exercises for copy mode - keep weights, clear reps, show previous in comments
-      const formatPreviousSets = (sets: Set[]): string => {
+      const formatPreviousSets = (sets: LiftingSet[]): string => {
         return sets
           .map((s) => {
             const w = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
@@ -210,7 +319,7 @@ async function fetchSessionForCopy(id: number) {
 
       exercises.value = response.data.exercises.map((ex) => ({
         title: ex.title,
-        sets: ex.sets.map((s: Set) => ({
+        sets: ex.sets.map((s: LiftingSet) => ({
           weight: s.weight?.toString() || "",
           reps: "", // Clear reps for new entry
         })),
@@ -267,10 +376,13 @@ function validateForm(): boolean {
 
   // Exercise validation
   exercises.value.forEach((exercise, exIndex) => {
+    let exerciseHasError = false;
+
     if (!exercise.title.trim()) {
       validationErrors.value[`exercise.${exIndex}.title`] =
         "Exercise title is required";
       isValid = false;
+      exerciseHasError = true;
     }
 
     const restValue = String(exercise.rest_seconds).trim();
@@ -278,10 +390,12 @@ function validateForm(): boolean {
       validationErrors.value[`exercise.${exIndex}.rest`] =
         "Rest time is required";
       isValid = false;
+      exerciseHasError = true;
     } else if (isNaN(Number(restValue)) || Number(restValue) < 0) {
       validationErrors.value[`exercise.${exIndex}.rest`] =
         "Rest must be a positive number";
       isValid = false;
+      exerciseHasError = true;
     }
 
     // Validate sets
@@ -289,6 +403,7 @@ function validateForm(): boolean {
       validationErrors.value[`exercise.${exIndex}.sets`] =
         "At least one set is required";
       isValid = false;
+      exerciseHasError = true;
     } else {
       exercise.sets.forEach((set, setIndex) => {
         const repsVal = String(set.reps).trim();
@@ -296,10 +411,12 @@ function validateForm(): boolean {
           validationErrors.value[`exercise.${exIndex}.set.${setIndex}.reps`] =
             "Reps required";
           isValid = false;
+          exerciseHasError = true;
         } else if (isNaN(parseInt(repsVal, 10)) || parseInt(repsVal, 10) < 0) {
           validationErrors.value[`exercise.${exIndex}.set.${setIndex}.reps`] =
             "Invalid reps";
           isValid = false;
+          exerciseHasError = true;
         }
 
         const weightVal = String(set.weight).trim();
@@ -307,8 +424,14 @@ function validateForm(): boolean {
           validationErrors.value[`exercise.${exIndex}.set.${setIndex}.weight`] =
             "Invalid weight";
           isValid = false;
+          exerciseHasError = true;
         }
       });
+    }
+
+    // Auto-expand collapsed exercises with validation errors
+    if (exerciseHasError && collapsedExercises.value.has(exIndex)) {
+      collapsedExercises.value.delete(exIndex);
     }
   });
 
@@ -321,7 +444,7 @@ function buildPayload() {
     date: sessionForm.value.date,
     session_type: sessionForm.value.session_type,
     comments: sessionForm.value.comments.trim(),
-    exercises: exercises.value.map((ex) => ({
+    exercises: exercises.value.map((ex, index) => ({
       title: ex.title.trim(),
       sets: ex.sets
         .filter((s) => String(s.reps).trim() !== "")
@@ -331,6 +454,7 @@ function buildPayload() {
         })),
       rest_seconds: parseInt(String(ex.rest_seconds), 10),
       comments: ex.comments.trim(),
+      position: index,
     })),
   };
 }
@@ -551,38 +675,83 @@ onMounted(() => {
           <div
             class="is-flex is-justify-content-space-between is-align-items-center mb-3"
           >
-            <h2 class="subtitle mb-0">Exercise {{ index + 1 }}</h2>
-            <button
-              v-if="exercises.length > 1"
-              type="button"
-              class="delete"
-              aria-label="Remove exercise"
-              @click="removeExercise(index)"
-            ></button>
+            <!-- Left side: collapse toggle and title (when collapsed) -->
+            <div class="is-flex is-align-items-center">
+              <button
+                v-if="canCollapse(exercise)"
+                type="button"
+                class="button is-ghost is-small collapse-toggle mr-2"
+                :aria-label="isCollapsed(index) ? 'Expand exercise' : 'Collapse exercise'"
+                @click="toggleCollapse(index)"
+              >
+                <span class="icon is-small">
+                  <IconChevronRight v-if="isCollapsed(index)" />
+                  <IconChevronDown v-else />
+                </span>
+              </button>
+              <span v-if="isCollapsed(index)" class="collapsed-title">
+                {{ exercise.title }}
+              </span>
+            </div>
+
+            <!-- Right side: reorder and delete buttons -->
+            <div class="is-flex is-align-items-center exercise-controls">
+              <button
+                type="button"
+                class="button is-ghost is-small"
+                :disabled="index === 0"
+                aria-label="Move exercise up"
+                @click="moveExerciseUp(index)"
+              >
+                <span class="icon is-small">
+                  <IconChevronUp />
+                </span>
+              </button>
+              <button
+                type="button"
+                class="button is-ghost is-small"
+                :disabled="index === exercises.length - 1"
+                aria-label="Move exercise down"
+                @click="moveExerciseDown(index)"
+              >
+                <span class="icon is-small">
+                  <IconChevronDown />
+                </span>
+              </button>
+              <button
+                v-if="exercises.length > 1"
+                type="button"
+                class="delete"
+                aria-label="Remove exercise"
+                @click="removeExercise(index)"
+              ></button>
+            </div>
           </div>
 
-          <!-- Exercise Title -->
-          <div class="field">
-            <label class="label" :for="`exercise-${index}-title`">Title</label>
-            <div class="control">
-              <input
-                :id="`exercise-${index}-title`"
-                v-model="exercise.title"
-                class="input"
-                :class="{
-                  'is-danger': validationErrors[`exercise.${index}.title`],
-                }"
-                type="text"
-                placeholder="e.g., Bench Press"
-              />
+          <!-- Expanded content -->
+          <template v-if="!isCollapsed(index)">
+            <!-- Exercise Title -->
+            <div class="field">
+              <label class="label" :for="`exercise-${index}-title`">Title</label>
+              <div class="control">
+                <input
+                  :id="`exercise-${index}-title`"
+                  v-model="exercise.title"
+                  class="input"
+                  :class="{
+                    'is-danger': validationErrors[`exercise.${index}.title`],
+                  }"
+                  type="text"
+                  placeholder="e.g., Bench Press"
+                />
+              </div>
+              <p
+                v-if="validationErrors[`exercise.${index}.title`]"
+                class="help is-danger"
+              >
+                {{ validationErrors[`exercise.${index}.title`] }}
+              </p>
             </div>
-            <p
-              v-if="validationErrors[`exercise.${index}.title`]"
-              class="help is-danger"
-            >
-              {{ validationErrors[`exercise.${index}.title`] }}
-            </p>
-          </div>
 
           <!-- Rest time -->
           <div class="field">
@@ -722,6 +891,7 @@ onMounted(() => {
               ></button>
             </div>
           </div>
+          </template>
         </div>
 
         <!-- Add Exercise Button -->
@@ -772,7 +942,7 @@ onMounted(() => {
   />
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .set-buttons {
   display: flex;
   align-items: center;
@@ -783,10 +953,46 @@ onMounted(() => {
   padding: 0;
   height: 1.25rem;
   width: 1.25rem;
+
+  .icon {
+    height: 0.875rem;
+    width: 0.875rem;
+  }
 }
 
-.add-set-btn .icon {
-  height: 0.875rem;
-  width: 0.875rem;
+.collapse-toggle {
+  padding: 0;
+  height: 1.5rem;
+  width: 1.5rem;
+
+  .icon {
+    height: 1rem;
+    width: 1rem;
+    fill: var(--bulma-primary-dark-invert);
+  }
+}
+.collapsed-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.exercise-controls {
+  gap: 0.25rem;
+
+  .button {
+    padding: 0;
+    height: 1.5rem;
+    width: 1.5rem;
+
+    .icon {
+      height: 1rem;
+      width: 1rem;
+      fill: var(--bulma-primary-dark-invert);
+    }
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
 }
 </style>

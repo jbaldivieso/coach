@@ -2,7 +2,7 @@ import datetime as dt
 from datetime import date as DateType
 from typing import List, Optional
 
-from django.db import transaction
+from django.db import models, transaction
 from ninja import Router, Schema
 from ninja.security import django_auth
 
@@ -27,6 +27,7 @@ class ExerciseSchema(Schema):
     sets: List[SetSchema]
     rest_seconds: int
     comments: str
+    position: int
 
 
 class ExerciseCreateSchema(Schema):
@@ -34,6 +35,7 @@ class ExerciseCreateSchema(Schema):
     sets: List[SetSchema]
     rest_seconds: int
     comments: str = ""
+    position: Optional[int] = None
 
 
 class ExerciseUpdateSchema(Schema):
@@ -41,6 +43,7 @@ class ExerciseUpdateSchema(Schema):
     sets: Optional[List[SetSchema]] = None
     rest_seconds: Optional[int] = None
     comments: Optional[str] = None
+    position: Optional[int] = None
 
 
 class SessionSchema(Schema):
@@ -203,8 +206,10 @@ def create_session_with_exercises(request, data: SessionWithExercisesCreateSchem
             session_type=data.session_type,
         )
 
-        for exercise_data in data.exercises:
-            Exercise.objects.create(session=session, **exercise_data.dict())
+        for i, exercise_data in enumerate(data.exercises):
+            exercise_dict = exercise_data.dict()
+            exercise_dict["position"] = i
+            Exercise.objects.create(session=session, **exercise_dict)
 
     # Refetch with exercises for response
     session = (
@@ -280,7 +285,18 @@ def create_exercise(request, session_id: int, data: ExerciseCreateSchema):
     if not session:
         return 404, {"message": "Session not found"}
 
-    exercise = Exercise.objects.create(session=session, **data.dict())
+    exercise_dict = data.dict()
+    # Auto-assign position if not provided
+    if exercise_dict.get("position") is None:
+        max_position = (
+            Exercise.objects.filter(session=session).aggregate(
+                max_pos=models.Max("position")
+            )["max_pos"]
+            or -1
+        )
+        exercise_dict["position"] = max_position + 1
+
+    exercise = Exercise.objects.create(session=session, **exercise_dict)
     return 201, exercise
 
 

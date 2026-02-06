@@ -14,6 +14,7 @@ export interface Exercise {
   sets: Set[];
   rest_seconds: number;
   comments: string;
+  position: number;
 }
 
 export interface Session {

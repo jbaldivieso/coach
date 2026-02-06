@@ -31,6 +31,7 @@ const mockSession: Session = {
       ],
       rest_seconds: 90,
       comments: "Felt strong",
+      position: 0,
     },
     {
       id: 2,
@@ -41,6 +42,7 @@ const mockSession: Session = {
       ],
       rest_seconds: 120,
       comments: "",
+      position: 1,
     },
   ],
 };

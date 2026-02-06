@@ -33,6 +33,10 @@ class Exercise(models.Model):
     sets = models.JSONField(default=list)  # [{"weight": int|null, "reps": int}]
     rest_seconds = models.IntegerField()
     comments = models.TextField(blank=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position"]
 
     def __str__(self):
         return f"{self.title} - {self.session.title}"
