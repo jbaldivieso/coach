@@ -151,9 +151,19 @@ button.dropdown-item {
 .bi-plus,
 .bi-search {
   fill: var(--bulma-link-text);
+  width: 1.25em;
+  height: 1.25em;
 }
 .bi-comment {
   width: 0.75rem;
+}
+.bi-chevron-up,
+.bi-chevron-down,
+.bi-chevron-left,
+.bi-chevron-right {
+  fill: var(--color3);
+  width: 1em;
+  height: 1em;
 }
 
 .button.is-outlined {

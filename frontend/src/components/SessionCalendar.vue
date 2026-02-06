@@ -218,6 +218,8 @@ onMounted(() => {
     height: 0.75rem;
     svg {
       fill: var(--bulma-primary-dark);
+      width: 100%;
+      height: 100%;
     }
   }
 }
