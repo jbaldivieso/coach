@@ -179,7 +179,8 @@ function moveExerciseDown(index: number) {
 }
 
 function getTodayDateString(): string {
-  return new Date().toISOString().split("T")[0] as string;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function createEmptySet(): SetFormData {
@@ -358,10 +359,9 @@ function validateForm(): boolean {
     validationErrors.value["session.date"] = "Date is required";
     isValid = false;
   } else {
-    const selectedDate = new Date(sessionForm.value.date);
+    const selectedDate = new Date(sessionForm.value.date + "T00:00:00");
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    selectedDate.setHours(0, 0, 0, 0);
     if (selectedDate > today) {
       validationErrors.value["session.date"] = "Date cannot be in the future";
       isValid = false;
