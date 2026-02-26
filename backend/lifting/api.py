@@ -116,6 +116,10 @@ class SearchResultsResponseSchema(Schema):
     total: int
 
 
+class ExerciseTitleSuggestionsSchema(Schema):
+    suggestions: List[str]
+
+
 # ============ Calendar Schemas ============
 
 
@@ -298,6 +302,24 @@ def create_exercise(request, session_id: int, data: ExerciseCreateSchema):
 
     exercise = Exercise.objects.create(session=session, **exercise_dict)
     return 201, exercise
+
+
+@router.get("/exercises/autocomplete/", response=ExerciseTitleSuggestionsSchema, auth=django_auth)
+def exercise_title_autocomplete(request, q: str = ""):
+    """Return distinct exercise title suggestions from the user's history."""
+    if not q.strip():
+        return {"suggestions": []}
+
+    suggestions = list(
+        Exercise.objects.filter(
+            session__user=request.user,
+            title__icontains=q,
+        )
+        .values_list("title", flat=True)
+        .distinct()
+        .order_by("title")[:8]
+    )
+    return {"suggestions": suggestions}
 
 
 @router.put(

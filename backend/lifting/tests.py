@@ -424,3 +424,77 @@ class TestSearchResults:
         # So session2's exercises should come first
         dates = [item["session_date"] for item in data["items"]]
         assert dates == sorted(dates, reverse=True)
+
+
+# ============ Exercise Title Autocomplete Tests ============
+
+
+class TestExerciseTitleAutocomplete:
+    def test_requires_auth(self, client):
+        response = client.get("/api/lifting/exercises/autocomplete/?q=bench")
+        assert response.status_code == 401
+
+    def test_empty_query_returns_empty(self, authenticated_client, exercise):
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=")
+        assert response.status_code == 200
+        assert response.json()["suggestions"] == []
+
+    def test_whitespace_only_returns_empty(self, authenticated_client, exercise):
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=   ")
+        assert response.status_code == 200
+        assert response.json()["suggestions"] == []
+
+    def test_matches_substring(self, authenticated_client, exercise):
+        # exercise fixture has title "Bench Press"
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=ench")
+        assert response.status_code == 200
+        assert "Bench Press" in response.json()["suggestions"]
+
+    def test_case_insensitive(self, authenticated_client, exercise):
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=bench")
+        assert response.status_code == 200
+        assert "Bench Press" in response.json()["suggestions"]
+
+    def test_returns_distinct_titles(self, authenticated_client, user):
+        # Create two sessions with the same exercise name
+        s1 = Session.objects.create(title="Session A", date="2024-01-01", session_type="volume", user=user)
+        s2 = Session.objects.create(title="Session B", date="2024-01-02", session_type="volume", user=user)
+        Exercise.objects.create(title="Squat", session=s1, sets=[], rest_seconds=90)
+        Exercise.objects.create(title="Squat", session=s2, sets=[], rest_seconds=90)
+
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=squat")
+        assert response.status_code == 200
+        suggestions = response.json()["suggestions"]
+        assert suggestions.count("Squat") == 1
+
+    def test_only_returns_own_exercises(self, authenticated_client, other_session):
+        Exercise.objects.create(
+            title="Deadlift", session=other_session, sets=[], rest_seconds=120
+        )
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=dead")
+        assert response.status_code == 200
+        assert response.json()["suggestions"] == []
+
+    def test_results_ordered_alphabetically(self, authenticated_client, session):
+        Exercise.objects.create(title="Tricep Pushdown", session=session, sets=[], rest_seconds=60)
+        Exercise.objects.create(title="Tricep Dips", session=session, sets=[], rest_seconds=60)
+        Exercise.objects.create(title="Tricep Extension", session=session, sets=[], rest_seconds=60)
+
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=tricep")
+        assert response.status_code == 200
+        suggestions = response.json()["suggestions"]
+        assert suggestions == sorted(suggestions)
+
+    def test_returns_at_most_8_results(self, authenticated_client, session):
+        for i in range(10):
+            Exercise.objects.create(
+                title=f"Exercise {i:02d}", session=session, sets=[], rest_seconds=60
+            )
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/?q=exercise")
+        assert response.status_code == 200
+        assert len(response.json()["suggestions"]) <= 8
+
+    def test_no_query_param_returns_empty(self, authenticated_client, exercise):
+        response = authenticated_client.get("/api/lifting/exercises/autocomplete/")
+        assert response.status_code == 200
+        assert response.json()["suggestions"] == []

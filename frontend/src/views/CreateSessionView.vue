@@ -54,6 +54,76 @@ const loadingSession = ref(false);
 const exerciseStates = ref<ExerciseEditState[]>([]);
 const deletedExerciseIds = ref<number[]>([]);
 
+// Exercise title autocomplete state
+const exerciseTitleSuggestions = ref<string[]>([]);
+const exerciseTitleActiveIndex = ref<number | null>(null);
+const exerciseTitleHighlight = ref<number>(-1);
+let exerciseTitleDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function fetchExerciseSuggestions(query: string) {
+  if (!query.trim()) {
+    exerciseTitleSuggestions.value = [];
+    return;
+  }
+  const response = await api.get<{ suggestions: string[] }>(
+    `/api/lifting/exercises/autocomplete/?q=${encodeURIComponent(query)}`,
+  );
+  if (response.data) {
+    exerciseTitleSuggestions.value = response.data.suggestions;
+  }
+}
+
+function onExerciseTitleInput(index: number) {
+  exerciseTitleActiveIndex.value = index;
+  exerciseTitleHighlight.value = -1;
+  if (exerciseTitleDebounceTimer) clearTimeout(exerciseTitleDebounceTimer);
+  exerciseTitleDebounceTimer = setTimeout(() => {
+    fetchExerciseSuggestions(exercises.value[index]?.title || "");
+  }, 200);
+}
+
+function onExerciseTitleFocus(index: number) {
+  exerciseTitleActiveIndex.value = index;
+}
+
+function onExerciseTitleBlur() {
+  setTimeout(() => {
+    exerciseTitleActiveIndex.value = null;
+    exerciseTitleSuggestions.value = [];
+    exerciseTitleHighlight.value = -1;
+  }, 150);
+}
+
+function onExerciseTitleKeydown(event: KeyboardEvent, index: number) {
+  if (exerciseTitleSuggestions.value.length === 0 || exerciseTitleActiveIndex.value !== index) return;
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    exerciseTitleHighlight.value = (exerciseTitleHighlight.value + 1) % exerciseTitleSuggestions.value.length;
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    exerciseTitleHighlight.value =
+      exerciseTitleHighlight.value <= 0
+        ? exerciseTitleSuggestions.value.length - 1
+        : exerciseTitleHighlight.value - 1;
+  } else if (event.key === "Enter" && exerciseTitleHighlight.value >= 0) {
+    event.preventDefault();
+    selectExerciseSuggestion(index, exerciseTitleSuggestions.value[exerciseTitleHighlight.value]!);
+  } else if (event.key === "Escape") {
+    exerciseTitleSuggestions.value = [];
+    exerciseTitleActiveIndex.value = null;
+  }
+}
+
+function selectExerciseSuggestion(exerciseIndex: number, title: string) {
+  if (exercises.value[exerciseIndex]) {
+    exercises.value[exerciseIndex]!.title = title;
+  }
+  exerciseTitleSuggestions.value = [];
+  exerciseTitleActiveIndex.value = null;
+  exerciseTitleHighlight.value = -1;
+}
+
 // Timer state
 const timerActive = ref(false);
 const timerExerciseIndex = ref<number | null>(null);
@@ -738,17 +808,38 @@ onMounted(() => {
             <!-- Exercise Title -->
             <div class="field">
               <label class="label" :for="`exercise-${index}-title`">Title</label>
-              <div class="control">
-                <input
-                  :id="`exercise-${index}-title`"
-                  v-model="exercise.title"
-                  class="input"
-                  :class="{
-                    'is-danger': validationErrors[`exercise.${index}.title`],
-                  }"
-                  type="text"
-                  placeholder="e.g., Bench Press"
-                />
+              <div class="exercise-title-autocomplete">
+                <div class="control">
+                  <input
+                    :id="`exercise-${index}-title`"
+                    v-model="exercise.title"
+                    class="input"
+                    :class="{
+                      'is-danger': validationErrors[`exercise.${index}.title`],
+                    }"
+                    type="text"
+                    placeholder="e.g., Bench Press"
+                    autocomplete="off"
+                    @input="onExerciseTitleInput(index)"
+                    @focus="onExerciseTitleFocus(index)"
+                    @blur="onExerciseTitleBlur"
+                    @keydown="onExerciseTitleKeydown($event, index)"
+                  />
+                </div>
+                <div
+                  v-if="exerciseTitleActiveIndex === index && exerciseTitleSuggestions.length > 0"
+                  class="exercise-title-dropdown box p-0"
+                >
+                  <div
+                    v-for="(suggestion, sIdx) in exerciseTitleSuggestions"
+                    :key="suggestion"
+                    class="exercise-title-item p-3"
+                    :class="{ 'is-highlighted': sIdx === exerciseTitleHighlight }"
+                    @mousedown.prevent="selectExerciseSuggestion(index, suggestion)"
+                  >
+                    {{ suggestion }}
+                  </div>
+                </div>
               </div>
               <p
                 v-if="validationErrors[`exercise.${index}.title`]"
@@ -979,6 +1070,34 @@ onMounted(() => {
 .collapsed-title {
   font-weight: 600;
   font-size: 1.1rem;
+}
+
+.exercise-title-autocomplete {
+  position: relative;
+}
+
+.exercise-title-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.exercise-title-item {
+  cursor: pointer;
+  border-bottom: 1px solid var(--bulma-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover,
+  &.is-highlighted {
+    background-color: var(--bulma-scheme-main-bis);
+  }
 }
 
 .exercise-controls {
