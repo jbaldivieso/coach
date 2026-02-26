@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { RouterLink } from "vue-router";
 import { api } from "@/api/client";
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "@/types/lifting";
 
 // Search state
+const searchInputRef = ref<HTMLInputElement | null>(null);
 const searchQuery = ref("");
 const autocompleteItems = ref<AutocompleteItem[]>([]);
 const showAutocomplete = ref(false);
@@ -213,6 +214,7 @@ watch([sessionFilter, exerciseFilter], () => {
 onMounted(() => {
   fetchResults();
   document.addEventListener("click", onClickOutside);
+  nextTick(() => searchInputRef.value?.focus());
 });
 </script>
 
@@ -226,6 +228,7 @@ onMounted(() => {
         <div class="field">
           <div class="control">
             <input
+              ref="searchInputRef"
               v-model="searchQuery"
               type="text"
               class="input"

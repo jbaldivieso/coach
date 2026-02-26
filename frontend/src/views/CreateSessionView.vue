@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { api } from "@/api/client";
 import type {
@@ -198,6 +198,11 @@ function createEmptyExercise(): ExerciseFormData {
 
 function addSet(exerciseIndex: number) {
   exercises.value[exerciseIndex]?.sets.push(createEmptySet());
+  nextTick(() => {
+    const newSetIndex = exercises.value[exerciseIndex]!.sets.length - 1;
+    const weightInput = document.getElementById(`exercise-${exerciseIndex}-set-${newSetIndex}-weight`);
+    weightInput?.focus();
+  });
 }
 
 function removeSet(exerciseIndex: number, setIndex: number) {
