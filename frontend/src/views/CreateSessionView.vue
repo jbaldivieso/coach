@@ -148,6 +148,13 @@ function canShowTimer(exercise: ExerciseFormData): boolean {
 }
 
 function startTimer(index: number) {
+  // Clear iOS undo history for all form inputs so shake-to-undo won't trigger
+  // while the phone is set down between sets.
+  document.querySelectorAll<HTMLInputElement>("input, textarea").forEach((el) => {
+    el.setAttribute("readonly", "");
+    el.removeAttribute("readonly");
+  });
+  (document.activeElement as HTMLElement | null)?.blur();
   timerExerciseIndex.value = index;
   timerActive.value = true;
 }
