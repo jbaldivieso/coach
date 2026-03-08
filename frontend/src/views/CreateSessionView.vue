@@ -513,6 +513,14 @@ function validateForm(): boolean {
   return isValid;
 }
 
+async function scrollToFirstError() {
+  await nextTick();
+  const el = document.querySelector(".is-danger");
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 function buildPayload() {
   return {
     title: sessionForm.value.title.trim(),
@@ -538,7 +546,10 @@ async function handleUpdate() {
   if (!sessionId.value) return;
 
   error.value = null;
-  if (!validateForm()) return;
+  if (!validateForm()) {
+    scrollToFirstError();
+    return;
+  }
 
   loading.value = true;
 
@@ -608,6 +619,7 @@ async function handleSubmit() {
   error.value = null;
 
   if (!validateForm()) {
+    scrollToFirstError();
     return;
   }
 
