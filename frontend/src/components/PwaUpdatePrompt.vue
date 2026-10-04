@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRegisterSW } from "virtual:pwa-register/vue";
+import Btn from "@/components/ui/Btn.vue";
 
 const { needRefresh, updateServiceWorker } = useRegisterSW();
 
@@ -14,55 +15,46 @@ function dismiss() {
 
 <template>
   <Transition name="slide">
-    <div v-if="needRefresh" class="pwa-update-banner">
-      <span class="pwa-update-text">A new version is available</span>
-      <div class="pwa-update-actions">
-        <button class="button is-small is-primary" @click="update">
-          Update
-        </button>
-        <button class="button is-small is-ghost" @click="dismiss">
-          Later
-        </button>
-      </div>
+    <div v-if="needRefresh" class="pwa-update" role="status">
+      <span class="text">A new version is ready</span>
+      <Btn size="small" variant="primary" @click="update">Update</Btn>
+      <Btn size="small" variant="ghost" class="later" @click="dismiss">Later</Btn>
     </div>
   </Transition>
 </template>
 
 <style scoped>
-.pwa-update-banner {
+.pwa-update {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: var(--color4);
-  color: white;
-  padding: 0.75rem 1rem;
+  left: 8px;
+  right: 8px;
+  top: calc(8px + env(safe-area-inset-top));
+  z-index: 60;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  gap: 8px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 10px 10px 10px 14px;
+  background: var(--k);
+  color: var(--on-k);
+  border-radius: var(--r-lg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
 }
-
-.pwa-update-text {
-  font-weight: 500;
+.text {
+  flex: 1;
+  font-weight: 600;
 }
-
-.pwa-update-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
+.later {
+  color: var(--on-k);
 }
-
-/* Slide transition */
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
-
 .slide-enter-from,
 .slide-leave-to {
-  transform: translateY(100%);
+  transform: translateY(-120%);
+  opacity: 0;
 }
 </style>

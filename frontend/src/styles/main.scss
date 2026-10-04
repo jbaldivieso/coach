@@ -1,8 +1,2 @@
-// Bulma stays until every view has moved to the new components.
-@use "bulma/sass";
 @use "./tokens";
 @use "./base";
-
-:root {
-  --bulma-body-family: var(--font);
-}

@@ -48,7 +48,7 @@ onMounted(load);
           class="mo"
           :class="{ sel: isThisMonth(m.year, m.month) }"
         >
-          <b>{{ shortName(m.year, m.month) }}<span v-if="m.month === 1"> {{ m.year }}</span></b>
+          <b>{{ shortName(m.year, m.month) }}{{ m.month === 1 ? ` ${m.year}` : "" }}</b>
           <MonthCalendar :year="m.year" :month="m.month" :sessions="m.sessions" mini />
           <small>{{ m.sessions.length || "–" }}</small>
         </RouterLink>

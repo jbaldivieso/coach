@@ -5,11 +5,47 @@ export interface Change {
 
 export interface ChangeGroup {
   date: string; // "YYYY-MM-DD"
+  /** A few words for the ⋯ menu. */
+  teaser?: string;
   changes: Change[];
 }
 
 /** Newest first. The first group drives the unread dot on the ⋯ menu. */
 export const changelog: ChangeGroup[] = [
+  {
+    date: "2026-10-04",
+    teaser: "New look, planning, live tracking, supersets",
+    changes: [
+      {
+        title: "A whole new Coach. It's yellow now.",
+        description:
+          "New look, top to bottom. Yellow means something is happening right now: the current set, the Done button, the rest timer. Everything else stays out of your way.",
+      },
+      {
+        title: "Plan on your phone, in about a minute",
+        description:
+          "Start blank or from any past session. Every exercise shows its last 3 outings right there, so you can decide whether today's the day for 155. Tap a set to change it, or Save for later and plan from the laptop.",
+      },
+      {
+        title: "Live tracking, one tap per set",
+        description:
+          "Hit Done and the set is saved, the rest timer starts, and you're on to the next one. Kill the app mid-workout, iOS? Go ahead. Resume picks up at the right set, and even the right second of rest.",
+      },
+      {
+        title: "Supersets",
+        description: "Link two exercises and they share one rest. Do A, do B, rest. Repeat until regret.",
+      },
+      {
+        title: "Look back properly",
+        description:
+          "Tap any exercise name to see every time you've done it, with a chart. Tap the month on Home to see the whole year. Search answers \"when did I last…\" before you even scroll.",
+      },
+      {
+        title: "Goodbye, session types",
+        description: "Nobody will miss them. Not even Recovery.",
+      },
+    ],
+  },
   {
     date: "2026-02-05",
     changes: [

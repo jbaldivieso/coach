@@ -79,6 +79,7 @@ export interface SessionSummary {
   id: number;
   title: string;
   date: string;
+  exercises: { title: string }[];
 }
 
 export interface SearchResponse {

@@ -21,9 +21,7 @@ const authStore = useAuthStore();
 
 const menuOpen = ref(false);
 const unread = ref(hasUnreadChanges());
-const latestTeaser = computed(() =>
-  (changelog[0]?.changes ?? []).map((c) => c.title).slice(0, 2).join(", "),
-);
+const latestTeaser = computed(() => changelog[0]?.teaser ?? changelog[0]?.changes[0]?.title ?? "");
 
 const nav = computed(() => props.close ?? props.back);
 
@@ -116,6 +114,9 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 }
 .appbar.is-transparent .appbar-icon {
   color: inherit;
+}
+.appbar.is-transparent .unread-dot {
+  box-shadow: none;
 }
 .appbar-inner {
   display: flex;

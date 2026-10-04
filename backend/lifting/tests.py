@@ -756,7 +756,14 @@ class TestSearch:
         response = authenticated_client.get("/api/lifting/search/?q=lower")
         data = response.json()
         lower = search_sessions[1]
-        assert data["sessions"] == [{"id": lower.id, "title": "Lower A", "date": "2024-01-17"}]
+        assert data["sessions"] == [
+            {
+                "id": lower.id,
+                "title": "Lower A",
+                "date": "2024-01-17",
+                "exercises": [{"title": "Squat"}, {"title": "Bench Press"}],
+            }
+        ]
         assert data["last_session"] == data["sessions"][0]
         assert data["exercises"] == []
 

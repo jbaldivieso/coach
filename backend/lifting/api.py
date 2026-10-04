@@ -148,10 +148,15 @@ class ExerciseHistorySchema(Schema):
     has_more: bool
 
 
+class ExerciseTitleSchema(Schema):
+    title: str
+
+
 class SessionSummarySchema(Schema):
     id: int
     title: str
     date: DateType
+    exercises: List[ExerciseTitleSchema] = []
 
 
 class SearchResponseSchema(Schema):
@@ -676,11 +681,17 @@ def search(request, q: str = ""):
     if not q:
         return {"sessions": [], "exercises": [], "last_session": None}
 
-    sessions = list(
-        Session.objects.filter(
+    sessions = [
+        {
+            "id": s.id,
+            "title": s.title,
+            "date": s.date,
+            "exercises": [{"title": e.title} for e in s.exercises.all()],
+        }
+        for s in Session.objects.filter(
             user=request.user, status=Session.STATUS_DONE, title__icontains=q
-        ).values("id", "title", "date")[:20]
-    )
+        ).prefetch_related("exercises")[:20]
+    ]
     exercises = _title_suggestions(
         Exercise.objects.filter(
             session__user=request.user,

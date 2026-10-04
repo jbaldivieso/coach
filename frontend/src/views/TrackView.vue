@@ -249,22 +249,24 @@ onUnmounted(() => {
           <Icon name="clock" size="sm" /><span>Rest {{ restLeft }}</span><b>Show</b>
         </button>
 
-        <nav ref="strip" class="prog" aria-label="Exercises">
-          <button
-            v-for="(item, i) in stripItems"
-            :key="i"
-            type="button"
-            class="prog-chip"
-            :class="{ 'is-done': item.done, 'is-current': item.current }"
-            :aria-current="item.current ? 'step' : undefined"
-            @click="store.jumpTo(i)"
-          >
-            <Icon v-if="item.done" name="check" size="sm" />{{ item.label }}
-          </button>
+        <div class="prog-wrap">
+          <nav ref="strip" class="prog" aria-label="Exercises">
+            <button
+              v-for="(item, i) in stripItems"
+              :key="i"
+              type="button"
+              class="prog-chip"
+              :class="{ 'is-done': item.done, 'is-current': item.current }"
+              :aria-current="item.current ? 'step' : undefined"
+              @click="store.jumpTo(i)"
+            >
+              <Icon v-if="item.done" name="check" size="sm" />{{ item.label }}
+            </button>
+          </nav>
           <button type="button" class="prog-add" aria-label="Add exercise" @click="addOpen = true">
             <Icon name="plus" size="sm" />
           </button>
-        </nav>
+        </div>
 
         <div v-if="!position" class="all-done">
           <p class="trk-name">All done</p>
@@ -360,7 +362,7 @@ onUnmounted(() => {
       :title="`${store.rest.label || 'Rest'} · Rest`"
       :next="nextLine"
       :go-label="goLabel"
-      :note-label="`Note on ${store.rest.label || 'this exercise'}`"
+      :note-label="`Note on ${exercise?.title ?? 'this exercise'}`"
       @done="endRest"
       @hide="restVisible = false"
       @note="openNote(position ? position.exerciseIndex : undefined)"
@@ -417,13 +419,23 @@ onUnmounted(() => {
   text-underline-offset: 3px;
 }
 
+.prog-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 calc(-1 * var(--gutter)) 14px;
+  padding-right: var(--gutter);
+}
 .prog {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  margin: 0 calc(-1 * var(--gutter)) 14px;
-  padding: 2px var(--gutter);
+  padding: 2px 24px 2px var(--gutter);
   scrollbar-width: none;
+  /* fade out under the + button */
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 }
 .prog::-webkit-scrollbar {
   display: none;
@@ -452,8 +464,6 @@ onUnmounted(() => {
   color: var(--y);
 }
 .prog-add {
-  position: sticky;
-  right: 0;
   flex: 0 0 auto;
   width: 44px;
   min-height: 36px;
@@ -462,7 +472,6 @@ onUnmounted(() => {
   background: var(--k);
   color: var(--y);
   border-radius: var(--r-sm);
-  box-shadow: -14px 0 12px var(--concrete);
 }
 
 .trk-name {

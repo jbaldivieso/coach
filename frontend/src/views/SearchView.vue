@@ -118,6 +118,7 @@ onMounted(() => {
               :key="s.id"
               :title="s.title"
               :date="s.date"
+              :exercises="s.exercises"
               date-caption="month"
               :to="{ name: 'session-detail', params: { id: s.id } }"
             >

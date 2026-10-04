@@ -48,11 +48,11 @@ describe("SearchView", () => {
   it("answers when a matching session was last done", async () => {
     const data: SearchResponse = {
       sessions: [
-        { id: 9, title: "Lower B", date: daysBack(22) },
-        { id: 4, title: "Lower A", date: daysBack(36) },
+        { id: 9, title: "Lower B", date: daysBack(22), exercises: [{ title: "Squats" }, { title: "RDL" }] },
+        { id: 4, title: "Lower A", date: daysBack(36), exercises: [] },
       ],
       exercises: [{ title: "Lower back extension", count: 4, last_date: daysBack(36) }],
-      last_session: { id: 9, title: "Lower B", date: daysBack(22) },
+      last_session: { id: 9, title: "Lower B", date: daysBack(22), exercises: [] },
     };
     vi.mocked(api.get).mockResolvedValue({ data, error: null });
     const { wrapper } = await mountAt("/search?q=lower");
@@ -61,6 +61,7 @@ describe("SearchView", () => {
     expect(wrapper.find(".answer").text()).toContain("22 days ago");
     expect(wrapper.find(".answer").attributes("href")).toBe("/session/9");
     expect(wrapper.findAll(".list")[0]!.findAll(".row")).toHaveLength(2);
+    expect(wrapper.text()).toContain("Squats · RDL");
     expect(wrapper.text()).toContain("Lower back extension");
     expect(wrapper.text()).toContain("4 times");
   });

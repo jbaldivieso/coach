@@ -12,7 +12,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "bulma": "^1.0.4",
     "pinia": "^3.0.4",
     "sass": "^1.97.2",
     "vue": "^3.5.24",

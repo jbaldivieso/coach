@@ -6,7 +6,7 @@ This document provides instructions for AI agents working on this codebase.
 
 Coach is a weightlifting tracking PWA with:
 - **Backend:** Django 6.0 + Django Ninja API (Python 3.12, uv)
-- **Frontend:** Vue 3 + TypeScript + Vite + Bulma + PWA support
+- **Frontend:** Vue 3 + TypeScript + Vite + PWA support, with our own design tokens and components (no CSS framework)
 
 ## Working Directory Context
 
@@ -103,11 +103,20 @@ const myComputed = computed(() => myRef.value.toUpperCase());
 </script>
 
 <template>
-  <div class="container">
-    <!-- Use Bulma classes -->
+  <div class="screen">
+    <AppBar title="Coach" />
+    <main class="screen-body"><!-- content --></main>
+    <footer class="dock"><!-- primary actions, thumb height --></footer>
   </div>
 </template>
 ```
+
+Use the components in `src/components/ui/` (AppBar, Btn, Stepper, SetChips,
+Sheet, MonthCalendar, Autocomplete, Icon) and the tokens in
+`src/styles/tokens.scss`. Yellow (`--y`) means "live / act now" only: the app
+bar, the current set, the primary action, the rest screen. Black (`--k`) means
+state. Names and labels are condensed caps (`.caps`, `.eyebrow`); numbers and
+comments stay regular width. Supersets are the only striped (`--hazard`) element.
 
 ### Frontend Stores (Pinia)
 
@@ -151,7 +160,7 @@ if (response.data) {
 
 3. **CSRF:** The frontend must fetch a CSRF token before POST/PUT/DELETE requests. The API client handles this.
 
-4. **Mobile First:** Design for mobile screens first. Use Bulma's responsive classes.
+4. **Mobile First:** Design for a 390px-wide phone first; touch targets are at least 44px. The layout centers at `--content` width on larger screens.
 
 5. **Type Safety:** Frontend uses TypeScript. Define types for API responses.
 
@@ -174,6 +183,15 @@ if (response.data) {
 | Vue router | `frontend/src/router/index.ts` |
 | Auth store | `frontend/src/stores/auth.ts` |
 | API client | `frontend/src/api/client.ts` |
-| Global styles | `frontend/src/styles/main.scss` |
+| Global styles | `frontend/src/styles/main.scss` (tokens.scss, base.scss) |
+| UI components | `frontend/src/components/ui/` |
+| Plan view (new plans, saved plans, editing finished sessions) | `frontend/src/views/PlanView.vue`, logic in `src/utils/plan.ts` |
+| Track, Finish | `frontend/src/views/TrackView.vue`, `FinishView.vue` |
+| Live session state, saving, rest timer | `frontend/src/stores/activeSession.ts` |
+| Rest screen (wake lock, alarm) | `frontend/src/components/RestTimer.vue`, `src/utils/audio.ts` |
+| History views | `frontend/src/views/SessionDetailView.vue`, `ExerciseHistoryView.vue`, `YearView.vue`, `MonthView.vue`, `SearchView.vue` |
+| Shared helpers | `frontend/src/utils/format.ts`, `session.ts`, `ios.ts` |
+| Exercise history cache | `frontend/src/composables/useExerciseHistory.ts` |
+| What's New entries | `frontend/src/data/changelog.ts` |
 | Vite config (includes PWA) | `frontend/vite.config.ts` |
 | PWA icon | `frontend/public/icon.svg` |

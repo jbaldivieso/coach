@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import type { Outing } from "@/types/lifting";
 import { parseDate, formatShortDate, formatSet, formatWeight } from "@/utils/format";
 
-// Heaviest set per outing as dots over time; newest in yellow. Bodyweight
+// Heaviest set per outing as dots, one slot per outing, oldest to newest; newest in yellow. Bodyweight
 // exercises plot their most reps instead. The outing list below is the table view.
 const props = defineProps<{ outings: Outing[] }>(); // newest first
 
@@ -32,7 +32,7 @@ const series = computed(() =>
       const best = sets.reduce((a, b) =>
         mode.value === "weight" ? (b.weight! > a.weight! || (b.weight === a.weight && b.reps > a.reps) ? b : a) : b.reps > a.reps ? b : a,
       );
-      return { outing: o, best, value: mode.value === "weight" ? best.weight! : best.reps, t: parseDate(o.date).getTime() };
+      return { outing: o, best, value: mode.value === "weight" ? best.weight! : best.reps };
     })
     .filter((p): p is NonNullable<typeof p> => p !== null)
     .reverse(), // oldest → newest, left → right
@@ -67,12 +67,12 @@ function yFor(v: number) {
 const points = computed((): Point[] => {
   const s = series.value;
   if (!s.length) return [];
-  const t0 = s[0]!.t;
-  const t1 = s[s.length - 1]!.t;
+  // One evenly spaced slot per outing, so a busy week doesn't pile dots on each other
   const width = W - PAD.left - PAD.right;
+  const step = s.length > 1 ? width / (s.length - 1) : 0;
   return s.map((p, i) => ({
     key: p.outing.exercise_id,
-    x: t1 === t0 ? PAD.left + width / 2 : PAD.left + ((p.t - t0) / (t1 - t0)) * width,
+    x: s.length > 1 ? PAD.left + i * step : PAD.left + width / 2,
     y: yFor(p.value),
     value: p.value,
     label: `${formatShortDate(p.outing.date)} · ${formatSet(p.best)}`,
