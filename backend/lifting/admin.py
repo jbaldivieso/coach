@@ -9,14 +9,14 @@ class ExerciseInline(admin.TabularInline):
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ["title", "date", "session_type", "user"]
-    list_filter = ["session_type", "date", "user"]
+    list_display = ["title", "date", "status", "user"]
+    list_filter = ["status", "date", "user"]
     search_fields = ["title", "comments"]
     inlines = [ExerciseInline]
 
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ["title", "session", "rest_seconds"]
-    list_filter = ["session__session_type"]
+    list_display = ["title", "session", "rest_seconds", "superset_group"]
+    list_filter = ["session__status"]
     search_fields = ["title", "comments"]
