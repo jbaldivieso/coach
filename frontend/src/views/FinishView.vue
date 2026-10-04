@@ -131,8 +131,8 @@ onMounted(async () => {
   margin-top: 3px;
 }
 .row.in-superset {
-  border-left: 3px solid var(--k);
-  padding-left: 8px;
+  border-left: 1px dashed var(--muted);
+  padding-left: 10px;
 }
 .row-title {
   font-size: 15px;

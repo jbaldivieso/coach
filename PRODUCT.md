@@ -49,13 +49,13 @@ A personal, self-hosted tracker shaped around one person's actual training metho
 
 ## Capabilities and Constraints
 
-- Stack: Django 6 + Django Ninja API, Vue 3 + TypeScript + Vite + Bulma, SQLite, deployed to the owner's own server (GCP). Session auth.
-- Data model: Session (title, date, comments) → ordered Exercises (title, sets `[{weight, reps}]`, rest seconds, comments). Weight may be null (bodyweight).
+- Stack: Django 6 + Django Ninja API, Vue 3 + TypeScript + Vite with the app's own design tokens and components, SQLite, deployed to the owner's own server (GCP). Session auth.
+- Data model: Session (title, date, comments, status planned/active/done) → ordered Exercises (title, sets `[{weight, reps, done}]`, rest seconds, comments, superset group). Weight may be null (bodyweight) and may be fractional (152.5).
 - Plans set targets (number of sets, and reps/weight per set), but only actuals persist: a set's target is overwritten by what was lifted when it's marked done, and sets never done are dropped when the session finishes. No target-vs-actual record is kept.
 - Supersets: adjacent exercises can be grouped to share one rest; grouped exercises always have the same number of sets.
 - Exercise titles autocomplete from the user's own history.
 - Exercises can be reordered and collapsed while editing.
-- Session type (volume / weight / endurance / recovery) is being removed; it proved unhelpful.
+- Session type (volume / weight / endurance / recovery) was removed; it proved unhelpful.
 
 ## Brand Commitments
 

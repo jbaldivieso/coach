@@ -123,7 +123,7 @@ onUnmounted(() => {
       <div class="clock">
         <b aria-live="off">{{ clock }}</b>
         <div class="of">{{ isOver ? `${formatClock(total)} done` : paused ? "Paused" : `of ${formatClock(total)}` }}</div>
-        <div v-if="!isOver" class="bar"><i :style="{ width: `${progress * 100}%` }" /></div>
+        <div v-if="!isOver" class="bar"><i :style="{ transform: `scaleX(${progress})` }" /></div>
       </div>
       <div class="nextline" :class="{ big: isOver }"><span>{{ isOver ? "Up" : "Next" }}</span>{{ next }}</div>
       <button v-if="!isOver" type="button" class="notelink" @click="emit('note')">
@@ -195,7 +195,8 @@ onUnmounted(() => {
   display: block;
   height: 100%;
   background: var(--k);
-  transition: width 0.25s linear;
+  transform-origin: left;
+  transition: transform 0.25s linear;
 }
 .nextline {
   display: flex;

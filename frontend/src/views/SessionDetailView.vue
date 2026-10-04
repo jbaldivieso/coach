@@ -141,7 +141,7 @@ watch(sessionId, fetchSession, { immediate: true });
 }
 .ss {
   margin: 12px 0 0;
-  border-left: 3px solid var(--k);
+  border-left: 1px dashed var(--muted);
   padding-left: 10px;
 }
 .ss-h {

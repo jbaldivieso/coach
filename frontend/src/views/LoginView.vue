@@ -47,14 +47,6 @@ async function handleSubmit() {
 .brand {
   background: var(--y);
   padding: calc(48px + env(safe-area-inset-top)) var(--gutter) 28px;
-  position: relative;
-}
-.brand::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 6px;
-  background: var(--hazard);
 }
 .brand h1 {
   max-width: var(--content);
