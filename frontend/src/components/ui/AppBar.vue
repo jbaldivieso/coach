@@ -12,6 +12,8 @@ const props = defineProps<{
   back?: RouteLocationRaw | (() => void);
   /** Show an X instead of a back arrow, with the same semantics. */
   close?: RouteLocationRaw | (() => void);
+  /** Let the screen's own color show through (the rest screen). */
+  transparent?: boolean;
 }>();
 
 const router = useRouter();
@@ -57,7 +59,7 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
-  <header class="appbar">
+  <header class="appbar" :class="{ 'is-transparent': transparent }">
     <div class="appbar-inner">
       <button v-if="nav" class="appbar-icon" :aria-label="close ? 'Close' : 'Back'" @click="navigate">
         <Icon :name="close ? 'x' : 'left'" />
@@ -107,6 +109,13 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
   background: var(--y);
   color: var(--k);
   padding-top: env(safe-area-inset-top);
+}
+.appbar.is-transparent {
+  background: transparent;
+  color: inherit;
+}
+.appbar.is-transparent .appbar-icon {
+  color: inherit;
 }
 .appbar-inner {
   display: flex;

@@ -1,379 +1,183 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from "vue";
-import { RouterLink } from "vue-router";
+import { ref, computed, watch, onMounted } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { api } from "@/api/client";
-import type {
-  AutocompleteItem,
-  AutocompleteResponse,
-  SearchResult,
-  SearchResultsResponse,
-  SearchFilter,
-  Set,
-} from "@/types/lifting";
+import type { SearchResponse } from "@/types/lifting";
+import { formatDayDate, formatShortDate, relativeLong, relativeShort, pluralize } from "@/utils/format";
+import AppBar from "@/components/ui/AppBar.vue";
+import Icon from "@/components/ui/Icon.vue";
+import SessionRow from "@/components/SessionRow.vue";
 
-// Search state
-const searchInputRef = ref<HTMLInputElement | null>(null);
-const searchQuery = ref("");
-const autocompleteItems = ref<AutocompleteItem[]>([]);
-const showAutocomplete = ref(false);
-const highlightedIndex = ref(-1);
+const route = useRoute();
+const router = useRouter();
 
-// Filter state
-const sessionFilter = ref<SearchFilter | null>(null);
-const exerciseFilter = ref<SearchFilter | null>(null);
-
-// Results state
-const results = ref<SearchResult[]>([]);
-const total = ref(0);
+const query = ref(typeof route.query.q === "string" ? route.query.q : "");
+const results = ref<SearchResponse | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const input = ref<HTMLInputElement | null>(null);
+let debounce: ReturnType<typeof setTimeout> | null = null;
+let requestId = 0;
 
-// Debounce timer
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-// Computed: active filters for display
-const activeFilters = computed(() => {
-  const filters: SearchFilter[] = [];
-  if (sessionFilter.value) filters.push(sessionFilter.value);
-  if (exerciseFilter.value) filters.push(exerciseFilter.value);
-  return filters;
+/** The top answer: when a matching session title (or else exercise) was last done. */
+const answer = computed(() => {
+  const r = results.value;
+  if (!r) return null;
+  if (r.last_session) {
+    return {
+      lead: `Last session titled “${query.value.trim()}”`,
+      when: relativeLong(r.last_session.date),
+      detail: `${formatDayDate(r.last_session.date)} · ${r.last_session.title}`,
+      to: { name: "session-detail", params: { id: r.last_session.id } },
+    };
+  }
+  const top = r.exercises[0];
+  if (top?.last_date) {
+    return {
+      lead: `Last ${top.title}`,
+      when: relativeLong(top.last_date),
+      detail: `${formatDayDate(top.last_date)} · ${pluralize(top.count, "time")} in all`,
+      to: { name: "exercise-history", params: { title: top.title } },
+    };
+  }
+  return null;
 });
 
-// Computed: both filters active (for responsive column visibility)
-const bothFiltersActive = computed(
-  () => sessionFilter.value !== null && exerciseFilter.value !== null,
-);
-
-// Fetch autocomplete suggestions
-async function fetchAutocomplete(query: string) {
-  if (query.length < 3) {
-    autocompleteItems.value = [];
-    showAutocomplete.value = false;
+async function search() {
+  const q = query.value.trim();
+  router.replace({ query: q ? { q } : {} });
+  if (!q) {
+    results.value = null;
     return;
   }
-
-  const response = await api.get<AutocompleteResponse>(
-    `/api/lifting/search/autocomplete/?q=${encodeURIComponent(query)}`,
-  );
-
-  if (response.data) {
-    // Filter out items that match existing filters
-    let items = response.data.items;
-    if (sessionFilter.value) {
-      items = items.filter((i) => i.type !== "session");
-    }
-    if (exerciseFilter.value) {
-      items = items.filter((i) => i.type !== "exercise");
-    }
-    autocompleteItems.value = items;
-    showAutocomplete.value = items.length > 0;
-    highlightedIndex.value = -1;
-  }
-}
-
-// Fetch search results
-async function fetchResults() {
+  const id = ++requestId;
   loading.value = true;
-  error.value = null;
-
-  const params = new URLSearchParams();
-  if (sessionFilter.value) {
-    params.set("session_title", sessionFilter.value.value);
-  }
-  if (exerciseFilter.value) {
-    params.set("exercise_title", exerciseFilter.value.value);
-  }
-
-  const url = `/api/lifting/search/results/${params.toString() ? "?" + params.toString() : ""}`;
-
-  try {
-    const response = await api.get<SearchResultsResponse>(url);
-    if (response.data) {
-      results.value = response.data.items;
-      total.value = response.data.total;
-    } else {
-      error.value = response.error || "Failed to load results";
-    }
-  } catch {
-    error.value = "Network error. Please try again.";
-  } finally {
-    loading.value = false;
-  }
-}
-
-// Handle input changes with debounce
-function onSearchInput() {
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
-  debounceTimer = setTimeout(() => {
-    fetchAutocomplete(searchQuery.value);
-  }, 300);
-}
-
-// Handle keyboard navigation in autocomplete
-function onKeydown(event: KeyboardEvent) {
-  if (!showAutocomplete.value || autocompleteItems.value.length === 0) {
-    return;
-  }
-
-  if (event.key === "ArrowDown") {
-    event.preventDefault();
-    highlightedIndex.value =
-      (highlightedIndex.value + 1) % autocompleteItems.value.length;
-  } else if (event.key === "ArrowUp") {
-    event.preventDefault();
-    highlightedIndex.value =
-      highlightedIndex.value <= 0
-        ? autocompleteItems.value.length - 1
-        : highlightedIndex.value - 1;
-  } else if (event.key === "Enter" && highlightedIndex.value >= 0) {
-    event.preventDefault();
-    const item = autocompleteItems.value[highlightedIndex.value];
-    if (item) {
-      selectItem(item);
-    }
-  } else if (event.key === "Escape") {
-    showAutocomplete.value = false;
-    highlightedIndex.value = -1;
-  }
-}
-
-// Select an autocomplete item
-function selectItem(item: AutocompleteItem) {
-  const filter: SearchFilter = {
-    type: item.type,
-    id: item.id,
-    label: item.label,
-    value: item.value,
-  };
-
-  if (item.type === "session") {
-    sessionFilter.value = filter;
+  const response = await api.get<SearchResponse>(`/api/lifting/search/?q=${encodeURIComponent(q)}`);
+  if (id !== requestId) return;
+  loading.value = false;
+  if (response.data) {
+    results.value = response.data;
+    error.value = null;
   } else {
-    exerciseFilter.value = filter;
-  }
-
-  // Clear input and hide autocomplete
-  searchQuery.value = "";
-  autocompleteItems.value = [];
-  showAutocomplete.value = false;
-  highlightedIndex.value = -1;
-
-  // Fetch new results
-  fetchResults();
-}
-
-// Remove a filter
-function removeFilter(filter: SearchFilter) {
-  if (filter.type === "session") {
-    sessionFilter.value = null;
-  } else {
-    exerciseFilter.value = null;
-  }
-  fetchResults();
-}
-
-// Get max weight from sets for display
-function getMaxWeight(sets: Set[]): string {
-  const weights = sets.map((s) => s.weight).filter((w) => w !== null) as number[];
-  if (weights.length === 0) {
-    return "bodyweight";
-  }
-  return `${Math.max(...weights)} lbs`;
-}
-
-// Format sets for display
-function formatSets(sets: Set[]): string {
-  return sets
-    .map((s) => {
-      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
-      return `${weightPart} x ${s.reps}`;
-    })
-    .join(", ");
-}
-
-// Get autocomplete item prefix
-function getItemPrefix(type: string): string {
-  return type === "session" ? "Session:" : "Exercise:";
-}
-
-// Close autocomplete when clicking outside
-function onClickOutside(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  if (!target.closest(".autocomplete-container")) {
-    showAutocomplete.value = false;
+    error.value = response.error || "Search failed";
   }
 }
 
-// Watch for filter changes to refetch results
-watch([sessionFilter, exerciseFilter], () => {
-  // Results are fetched in selectItem and removeFilter
+watch(query, () => {
+  if (debounce) clearTimeout(debounce);
+  debounce = setTimeout(search, 220);
 });
 
 onMounted(() => {
-  fetchResults();
-  document.addEventListener("click", onClickOutside);
-  nextTick(() => searchInputRef.value?.focus());
+  if (query.value) search();
+  else input.value?.focus();
 });
 </script>
 
 <template>
-  <div class="container">
-    <section class="section">
-      <h1 class="title">Search</h1>
+  <div class="screen">
+    <AppBar back="/">
+      <template #title>
+        <label class="text-field bar-field">
+          <Icon name="search" size="sm" />
+          <span class="visually-hidden">Search</span>
+          <input
+            ref="input"
+            v-model="query"
+            type="search"
+            placeholder="Session or exercise"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </label>
+      </template>
+    </AppBar>
 
-      <!-- Search input with autocomplete -->
-      <div class="autocomplete-container mb-4">
-        <div class="field">
-          <div class="control">
-            <input
-              ref="searchInputRef"
-              v-model="searchQuery"
-              type="text"
-              class="input"
-              placeholder="Search sessions or exercises..."
-              @input="onSearchInput"
-              @keydown="onKeydown"
-              @focus="showAutocomplete = autocompleteItems.length > 0"
-            />
-          </div>
-        </div>
-
-        <!-- Autocomplete dropdown -->
-        <div v-if="showAutocomplete" class="autocomplete-dropdown box p-0">
-          <div
-            v-for="(item, index) in autocompleteItems"
-            :key="`${item.type}-${item.id ?? index}`"
-            class="autocomplete-item p-3"
-            :class="{ 'is-highlighted': index === highlightedIndex }"
-            @click="selectItem(item)"
-          >
-            <span class="has-text-weight-semibold">{{
-              getItemPrefix(item.type)
-            }}</span>
-            {{ item.label }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Filter pills -->
-      <div v-if="activeFilters.length > 0" class="tags mb-4">
-        <span
-          v-for="filter in activeFilters"
-          :key="`${filter.type}-${filter.id ?? filter.value}`"
-          class="tag is-medium is-primary is-light"
-        >
-          {{ filter.type === "session" ? "Session" : "Exercise" }}:
-          {{ filter.value }}
-          <button
-            class="delete is-small"
-            @click="removeFilter(filter)"
-          ></button>
-        </span>
-      </div>
-
-      <!-- Loading state -->
-      <div v-if="loading" class="has-text-centered py-6">
-        <span class="loader"></span>
-        <p class="mt-3">Searching...</p>
-      </div>
-
-      <!-- Error state -->
-      <div v-else-if="error" class="notification is-danger is-light">
+    <main class="screen-body">
+      <div v-if="error" class="notice is-error">
         {{ error }}
-        <button
-          class="button is-small is-danger is-light ml-3"
-          @click="fetchResults()"
-        >
-          Retry
-        </button>
+        <button class="notice-action" @click="search">Retry</button>
       </div>
-
-      <!-- Empty state -->
-      <div v-else-if="results.length === 0" class="has-text-centered py-6">
-        <p class="is-size-5 has-text-grey">No results found</p>
-      </div>
-
-      <!-- Results table -->
-      <div v-else class="table-container">
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Session</th>
-              <th v-if="!exerciseFilter">Exercise</th>
-              <th>Weight</th>
-              <th :class="{ 'is-hidden-mobile': !bothFiltersActive }">Sets</th>
-              <th :class="{ 'is-hidden-mobile': !bothFiltersActive }">Rest</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="result in results" :key="result.exercise_id">
-              <td>
-                <RouterLink
-                  :to="{
-                    name: 'session-detail',
-                    params: { id: result.session_id },
-                  }"
-                >
-                  <template v-if="sessionFilter">{{
-                    result.session_date
-                  }}</template>
-                  <template v-else
-                    >{{ result.session_date }}:
-                    {{ result.session_title }}</template
-                  >
-                </RouterLink>
-              </td>
-              <td v-if="!exerciseFilter">{{ result.exercise_title }}</td>
-              <td>{{ getMaxWeight(result.sets) }}</td>
-              <td :class="{ 'is-hidden-mobile': !bothFiltersActive }">
-                {{ formatSets(result.sets) }}
-              </td>
-              <td :class="{ 'is-hidden-mobile': !bothFiltersActive }">
-                {{ result.rest_seconds }}s
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="has-text-grey is-size-7">
-          {{ total }} result{{ total !== 1 ? "s" : "" }}
+      <p v-else-if="!query.trim()" class="empty">When did I last… Search a session title or an exercise.</p>
+      <p v-else-if="loading && !results" class="empty">Searching…</p>
+      <template v-else-if="results">
+        <RouterLink v-if="answer" :to="answer.to" class="answer">
+          <span class="small">{{ answer.lead }}</span>
+          <b>{{ answer.when }}</b>
+          <span class="small">{{ answer.detail }}</span>
+        </RouterLink>
+        <p v-if="!results.sessions.length && !results.exercises.length" class="empty">
+          Nothing matches “{{ query.trim() }}”.
         </p>
-      </div>
-    </section>
+
+        <template v-if="results.sessions.length">
+          <h2 class="eyebrow">Sessions</h2>
+          <div class="list">
+            <SessionRow
+              v-for="s in results.sessions"
+              :key="s.id"
+              :title="s.title"
+              :date="s.date"
+              date-caption="month"
+              :to="{ name: 'session-detail', params: { id: s.id } }"
+            >
+              <span class="muted small age">{{ relativeShort(s.date) }}</span>
+            </SessionRow>
+          </div>
+        </template>
+
+        <template v-if="results.exercises.length">
+          <h2 class="eyebrow">Exercises</h2>
+          <div class="list">
+            <RouterLink
+              v-for="e in results.exercises"
+              :key="e.title"
+              :to="{ name: 'exercise-history', params: { title: e.title } }"
+              class="row"
+            >
+              <div class="row-main">
+                <div class="row-title">{{ e.title }}</div>
+                <div class="row-sub">
+                  {{ e.last_date ? `Last ${formatShortDate(e.last_date)} · ` : "" }}{{ pluralize(e.count, "time") }}
+                </div>
+              </div>
+              <Icon name="right" size="sm" class="muted" />
+            </RouterLink>
+          </div>
+        </template>
+      </template>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.autocomplete-container {
-  position: relative;
+.bar-field {
+  flex: 1;
+  min-height: 40px;
+  border-color: var(--k);
 }
-
-.autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  max-height: 300px;
-  overflow-y: auto;
+.answer {
+  display: block;
+  background: var(--k);
+  color: var(--on-k);
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+  margin: 4px 0 6px;
 }
-
-.autocomplete-item {
-  cursor: pointer;
-  border-bottom: 1px solid var(--bulma-border);
+.answer .small {
+  display: block;
+  color: var(--on-k-muted);
 }
-
-.autocomplete-item:last-child {
-  border-bottom: none;
+.answer b {
+  display: block;
+  color: var(--y);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  font-stretch: 85%;
 }
-
-.autocomplete-item:hover,
-.autocomplete-item.is-highlighted {
-  background-color: var(--bulma-scheme-main-bis);
-}
-.table td,
-.table th {
-  border-color: var(--color1);
+.age {
+  white-space: nowrap;
 }
 </style>

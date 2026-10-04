@@ -1,420 +1,272 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { Set } from "@/types/lifting";
+import { useActiveSessionStore } from "@/stores/activeSession";
+import { formatClock } from "@/utils/format";
+import { playAlarm, vibrate } from "@/utils/audio";
+import AppBar from "@/components/ui/AppBar.vue";
+import Btn from "@/components/ui/Btn.vue";
+import Icon from "@/components/ui/Icon.vue";
 
 const props = defineProps<{
-  exerciseName: string;
-  restSeconds: number;
-  sets: Set[];
+  title: string; // "Bench · Rest"
+  next: string; // "Set 4 · 155 × 5"
+  goLabel: string; // "Go to set 4"
+  noteLabel: string; // "Note on Bench"
 }>();
 
 const emit = defineEmits<{
-  close: [];
+  /** Rest is finished or skipped: back to the set. */
+  done: [];
+  /** Hide the rest screen; the timer keeps running. */
+  hide: [];
+  note: [];
 }>();
 
-// Timer state
-const timeRemaining = ref(props.restSeconds);
-const isRunning = ref(true);
-const isComplete = ref(false);
-const isFlashing = ref(false);
-const flashInverted = ref(false);
+const store = useActiveSessionStore();
 
-// Wake lock
+const now = ref(Date.now());
+const flashOn = ref(false);
+let ticker: number | null = null;
+let flashTimer: number | null = null;
 let wakeLock: WakeLockSentinel | null = null;
 
-// Audio context for alarm sound
-let audioContext: AudioContext | null = null;
-let audioElement: HTMLAudioElement | null = null;
+const remaining = computed(() => store.remaining(now.value));
+const total = computed(() => store.rest?.total ?? 0);
+const paused = computed(() => store.rest?.pausedRemaining !== null);
+const isOver = computed(() => store.rest !== null && !paused.value && remaining.value <= 0);
+const progress = computed(() => (total.value > 0 ? Math.min(1, 1 - remaining.value / total.value) : 1));
+// Ceil so "0:00" only shows when it's really over
+const clock = computed(() => formatClock(Math.ceil(remaining.value)));
 
-// Timer interval
-let timerInterval: number | null = null;
-let flashInterval: number | null = null;
-
-const formattedTime = computed(() => {
-  const minutes = Math.floor(timeRemaining.value / 60);
-  const seconds = timeRemaining.value % 60;
-  if (minutes > 0) {
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  }
-  return seconds.toString();
-});
-
-const setsDisplay = computed(() => {
-  return props.sets
-    .map((s) => {
-      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
-      return `${weightPart} x ${s.reps}`;
-    })
-    .join(", ");
-});
-
-async function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-
-  // Initialize and resume audio context early (important for iOS)
-  try {
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-    if (audioContext.state === "suspended") {
-      await audioContext.resume();
-    }
-  } catch (error) {
-    console.log("Failed to initialize audio context:", error);
-  }
-
-  isRunning.value = true;
-  timerInterval = window.setInterval(() => {
-    if (timeRemaining.value > 0) {
-      timeRemaining.value--;
-    } else {
-      completeTimer();
-    }
-  }, 1000);
+function tick() {
+  now.value = Date.now();
 }
 
-function pauseTimer() {
-  isRunning.value = false;
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
+watch(isOver, (over) => {
+  if (!over) return;
+  playAlarm();
+  vibrate();
+  // Flash between yellow and black, ending on black
+  let toggles = 0;
+  flashOn.value = true;
+  if (flashTimer) clearInterval(flashTimer);
+  flashTimer = window.setInterval(() => {
+    flashOn.value = !flashOn.value;
+    if (++toggles >= 9) {
+      clearInterval(flashTimer!);
+      flashTimer = null;
+      flashOn.value = true;
+    }
+  }, 150);
+});
+
+function extend() {
+  if (isOver.value) store.startRest(30);
+  else store.adjustRest(30);
+  flashOn.value = false;
+  tick();
 }
 
-function resumeTimer() {
-  startTimer();
+function adjust(delta: number) {
+  store.adjustRest(delta);
+  tick();
 }
 
 function togglePause() {
-  if (isRunning.value) {
-    pauseTimer();
-  } else {
-    resumeTimer();
-  }
-}
-
-function completeTimer() {
-  pauseTimer();
-  isComplete.value = true;
-  timeRemaining.value = 0;
-
-  // Play alarm sound
-  playAlarmSound();
-
-  // Trigger haptic feedback
-  triggerHapticFeedback();
-
-  // Flash the screen
-  flashScreen();
-}
-
-async function playAlarmSound() {
-  // Try Web Audio API first (better quality)
-  try {
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-
-    // Critical for iOS: resume context if suspended
-    if (audioContext.state === "suspended") {
-      await audioContext.resume();
-    }
-
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.value = 880; // A5 note
-    oscillator.type = "square";
-
-    // Louder volume for iOS
-    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-
-    // Create a more insistent beeping pattern: 5 beeps
-    const beepDuration = 0.2;
-    const beepGap = 0.15;
-
-    for (let i = 0; i < 5; i++) {
-      const startTime = audioContext.currentTime + i * (beepDuration + beepGap);
-      gainNode.gain.setValueAtTime(0.5, startTime);
-      gainNode.gain.setValueAtTime(0, startTime + beepDuration);
-    }
-
-    oscillator.start();
-    oscillator.stop(
-      audioContext.currentTime + 5 * (beepDuration + beepGap) + 0.1,
-    );
-  } catch (error) {
-    console.log("Web Audio API failed:", error);
-    // Fallback to HTMLAudioElement
-    playFallbackSound();
-  }
-}
-
-function playFallbackSound() {
-  try {
-    // Generate a beep sound using Web Audio API and play via audio element
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-
-    // Create a short beep buffer
-    const duration = 0.2;
-    const sampleRate = audioContext.sampleRate;
-    const buffer = audioContext.createBuffer(
-      1,
-      duration * sampleRate,
-      sampleRate,
-    );
-    const data = buffer.getChannelData(0);
-
-    // Generate 880Hz sine wave
-    for (let i = 0; i < buffer.length; i++) {
-      data[i] = Math.sin((2 * Math.PI * 880 * i) / sampleRate) * 0.5;
-    }
-
-    // Play the beep 5 times with gaps
-    let playCount = 0;
-    const playBeep = () => {
-      const source = audioContext!.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext!.destination);
-      source.start();
-
-      playCount++;
-      if (playCount < 5) {
-        setTimeout(playBeep, 350);
-      }
-    };
-    playBeep();
-  } catch (error) {
-    console.log("Fallback audio failed:", error);
-  }
-}
-
-function triggerHapticFeedback() {
-  // Note: iOS Safari does not support the Vibration API
-  // Haptic feedback on iOS relies on the audio playing through the device
-  // and the system's haptic engine responding to certain audio patterns
-  if ("vibrate" in navigator) {
-    // Vibration pattern: vibrate, pause, vibrate, pause, vibrate
-    const didVibrate = navigator.vibrate([200, 100, 200, 100, 200]);
-    console.log("Vibration triggered:", didVibrate);
-  } else {
-    console.log("Vibration API not supported (expected on iOS)");
-  }
-}
-
-function flashScreen() {
-  isFlashing.value = true;
-  let flashCount = 0;
-  const maxFlashes = 10; // 5 inversions = 10 toggles
-
-  flashInterval = window.setInterval(() => {
-    flashInverted.value = !flashInverted.value;
-    flashCount++;
-
-    if (flashCount >= maxFlashes) {
-      if (flashInterval) clearInterval(flashInterval);
-      isFlashing.value = false;
-      flashInverted.value = false;
-    }
-  }, 150);
-}
-
-function handleOk() {
-  cleanup();
-  emit("close");
-}
-
-function handleCancel() {
-  cleanup();
-  emit("close");
-}
-
-function handleExtend() {
-  isComplete.value = false;
-  timeRemaining.value = 30;
-  startTimer();
+  store.toggleRestPause();
+  tick();
 }
 
 async function acquireWakeLock() {
-  if ("wakeLock" in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request("screen");
-    } catch {
-      // Wake lock not available or denied, fail silently
-    }
+  if (!("wakeLock" in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+  } catch {
+    // Not available or denied; the timer still runs
   }
 }
 
 function releaseWakeLock() {
-  if (wakeLock) {
-    wakeLock.release();
-    wakeLock = null;
-  }
+  wakeLock?.release();
+  wakeLock = null;
 }
 
-function cleanup() {
-  if (timerInterval) clearInterval(timerInterval);
-  if (flashInterval) clearInterval(flashInterval);
-  releaseWakeLock();
-  if (audioContext) {
-    audioContext.close();
-    audioContext = null;
-  }
-  if (audioElement) {
-    audioElement.pause();
-    audioElement = null;
-  }
-}
-
-// Handle visibility change to re-acquire wake lock
-function handleVisibilityChange() {
-  if (document.visibilityState === "visible" && isRunning.value) {
+// The wake lock drops when the app is backgrounded; take it again on return,
+// and jump the clock to the right time.
+function onVisibilityChange() {
+  if (document.visibilityState === "visible") {
+    tick();
     acquireWakeLock();
   }
 }
 
 onMounted(() => {
+  // Reopened after rest already ran out (app was backgrounded or killed)
+  if (isOver.value) flashOn.value = true;
   acquireWakeLock();
-  startTimer();
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  ticker = window.setInterval(tick, 250);
+  document.addEventListener("visibilitychange", onVisibilityChange);
 });
 
 onUnmounted(() => {
-  cleanup();
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
-});
-
-// Re-acquire wake lock if timer resumes
-watch(isRunning, (running) => {
-  if (running) {
-    acquireWakeLock();
-  }
+  if (ticker) clearInterval(ticker);
+  if (flashTimer) clearInterval(flashTimer);
+  releaseWakeLock();
+  document.removeEventListener("visibilitychange", onVisibilityChange);
 });
 </script>
 
 <template>
-  <div class="rest-timer-overlay" :class="{ inverted: flashInverted }">
-    <div class="rest-timer-content">
-      <h1 class="exercise-name">{{ exerciseName }}</h1>
-
-      <div class="timer-display">
-        {{ formattedTime }}
+  <div class="rest" :class="{ 'is-over': isOver && flashOn }" role="timer" :aria-label="`Rest, ${clock} left`">
+    <AppBar :title="props.title" small transparent :back="() => emit('hide')" />
+    <main class="rest-body">
+      <div class="clock">
+        <b aria-live="off">{{ clock }}</b>
+        <div class="of">{{ isOver ? `${formatClock(total)} done` : paused ? "Paused" : `of ${formatClock(total)}` }}</div>
+        <div v-if="!isOver" class="bar"><i :style="{ width: `${progress * 100}%` }" /></div>
       </div>
-
-      <div class="timer-controls controls field has-addons">
-        <template v-if="!isComplete">
-          <div class="control">
-            <button class="button is-large control-button" @click="togglePause">
-              {{ isRunning ? "Pause" : "Play" }}
-            </button>
-          </div>
-          <div class="control">
-            <button
-              class="button is-large control-button"
-              @click="handleCancel"
-            >
-              Cancel
-            </button>
-          </div>
-        </template>
-        <template v-else>
-          <div class="control">
-            <button class="button is-large control-button" @click="handleOk">
-              OK
-            </button>
-          </div>
-          <div class="control">
-            <button
-              class="button is-large control-button"
-              @click="handleExtend"
-            >
-              +30
-            </button>
-          </div>
-        </template>
+      <div class="nextline" :class="{ big: isOver }"><span>{{ isOver ? "Up" : "Next" }}</span>{{ next }}</div>
+      <button v-if="!isOver" type="button" class="notelink" @click="emit('note')">
+        <Icon name="pencil" size="sm" />{{ noteLabel }}
+      </button>
+    </main>
+    <footer class="rest-dock">
+      <div v-if="isOver" class="tbtns two">
+        <Btn @click="extend">+30</Btn>
+        <Btn variant="primary" @click="emit('done')">{{ goLabel }}</Btn>
       </div>
-
-      <div class="timer-info">
-        <p>Rest: {{ restSeconds }} seconds</p>
-        <p>Sets so far: {{ setsDisplay || "—" }}</p>
+      <div v-else class="tbtns">
+        <Btn :disabled="remaining <= 0" @click="adjust(-15)">−15</Btn>
+        <Btn @click="extend">+30</Btn>
+        <Btn @click="togglePause">{{ paused ? "Go" : "Pause" }}</Btn>
+        <Btn variant="dark" @click="emit('done')">Skip</Btn>
       </div>
-    </div>
+    </footer>
   </div>
 </template>
 
 <style scoped>
-.rest-timer-overlay {
+.rest {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  background-color: var(--color6);
-  color: var(--color2);
+  inset: 0;
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  transition:
-    background-color 0.1s,
-    color 0.1s;
+  background: var(--y);
+  color: var(--k);
+  transition: background-color 0.08s, color 0.08s;
 }
-
-.rest-timer-overlay.inverted {
-  background-color: var(--color2);
-  color: var(--color6);
-}
-
-.rest-timer-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+.rest-body {
+  flex: 1;
   width: 100%;
-  max-width: 400px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  overflow-y: auto;
 }
-
-.exercise-name {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
+.clock {
   text-align: center;
-  word-break: break-word;
+  margin-top: 6vh;
 }
-
-.timer-display {
-  font-size: 10rem;
+.clock b {
+  display: block;
+  font-size: min(140px, 36vw);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.of {
+  margin-top: 6px;
+  font-size: 20px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  margin-bottom: 2rem;
-  color: var(--bulma-primary-invert);
+  font-stretch: 85%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.bar {
+  margin: 22px 8px 0;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--k);
+  transition: width 0.25s linear;
+}
+.nextline {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: 6vh 8px 0;
+  padding-top: 12px;
+  border-top: 2px solid currentColor;
+  font-size: 18px;
+  font-weight: 600;
+}
+.nextline span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-stretch: 85%;
+}
+.nextline.big {
+  font-size: 24px;
+  font-weight: 800;
+}
+.notelink {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  margin: 8px 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rest-dock {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10px var(--gutter) calc(18px + env(safe-area-inset-bottom));
+}
+.tbtns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.tbtns.two {
+  grid-template-columns: 1fr 2fr;
+}
+.tbtns :deep(.btn) {
+  min-height: 60px;
+  font-size: 17px;
+  font-weight: 800;
+  background: transparent;
+  border: 2px solid var(--k);
+  padding: 0 6px;
+}
+.tbtns :deep(.btn-dark) {
+  background: var(--k);
+  color: var(--y);
 }
 
-.timer-controls {
-  margin-bottom: 3rem;
+/* Rest over: black, with yellow */
+.rest.is-over {
+  background: var(--k);
+  color: var(--y);
 }
-
-.control-button {
-  min-width: 120px;
-  background-color: var(--color1);
-  color: var(--color2);
+.rest.is-over .tbtns :deep(.btn) {
+  border-color: var(--y);
+  color: var(--y);
 }
-
-.timer-info {
-  font-size: 1.1rem;
-  opacity: 0.8;
-}
-
-.timer-info p {
-  margin-bottom: 0.5rem;
+.rest.is-over .tbtns :deep(.btn-primary) {
+  background: var(--y);
+  color: var(--k);
 }
 </style>

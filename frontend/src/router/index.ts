@@ -37,7 +37,13 @@ const router = createRouter({
     {
       path: "/track/:id",
       name: "track",
-      component: () => import("@/views/SessionDetailView.vue"), // TODO(phase 4): TrackView
+      component: () => import("@/views/TrackView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/track/:id/finish",
+      name: "track-finish",
+      component: () => import("@/views/FinishView.vue"),
       meta: { requiresAuth: true },
     },
     // Old URLs, for bookmarks and home-screen history
@@ -48,6 +54,24 @@ const router = createRouter({
       path: "/session/:id",
       name: "session-detail",
       component: () => import("@/views/SessionDetailView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/exercise/:title",
+      name: "exercise-history",
+      component: () => import("@/views/ExerciseHistoryView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/history/year",
+      name: "year",
+      component: () => import("@/views/YearView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/history/:year(\\d+)/:month(\\d+)",
+      name: "month",
+      component: () => import("@/views/MonthView.vue"),
       meta: { requiresAuth: true },
     },
     {
