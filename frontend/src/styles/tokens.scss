@@ -1,0 +1,29 @@
+// Safety signal: yellow means live / act now; black means state;
+// white cards on concrete gray for everything else.
+:root {
+  --y: #ffd400;
+  --k: #161616;
+  --concrete: #e9eae7;
+  --card: #ffffff;
+  --chip: #ecedea;
+  --muted: #55585a;
+  --rule: #d3d4d0;
+  --rule-strong: #c9cac6;
+  --target: #8f9290;
+  --alert: #e0261b;
+  --on-k: #f4f4f2; // body text on black
+  --on-k-muted: #c9cac6;
+  --dim: rgba(22, 22, 22, 0.32);
+
+  --font: "Saira", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gutter: 16px;
+  --content: 608px; // max content width; the app is phone-first
+
+  --r-sm: 4px;
+  --r: 6px;
+  --r-lg: 8px;
+
+  --hazard: repeating-linear-gradient(-45deg, var(--y) 0 6px, var(--k) 6px 12px);
+
+  color-scheme: light;
+}

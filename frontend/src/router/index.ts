@@ -11,23 +11,39 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/sessions/new",
-      name: "create-session",
-      component: () => import("@/views/CreateSessionView.vue"),
+      path: "/start",
+      name: "start-from",
+      component: () => import("@/views/StartFromView.vue"),
       meta: { requiresAuth: true },
     },
     {
-      path: "/sessions/:id/edit",
-      name: "edit-session",
-      component: () => import("@/views/CreateSessionView.vue"),
+      path: "/plan/new",
+      name: "plan-new",
+      component: () => import("@/views/PlanView.vue"),
       meta: { requiresAuth: true },
     },
     {
-      path: "/sessions/:id/copy",
-      name: "copy-session",
-      component: () => import("@/views/CreateSessionView.vue"),
+      path: "/plan/:id",
+      name: "plan-edit",
+      component: () => import("@/views/PlanView.vue"),
       meta: { requiresAuth: true },
     },
+    {
+      path: "/session/:id/edit",
+      name: "session-edit",
+      component: () => import("@/views/PlanView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/track/:id",
+      name: "track",
+      component: () => import("@/views/SessionDetailView.vue"), // TODO(phase 4): TrackView
+      meta: { requiresAuth: true },
+    },
+    // Old URLs, for bookmarks and home-screen history
+    { path: "/sessions/new", redirect: { name: "plan-new" } },
+    { path: "/sessions/:id/copy", redirect: (to) => ({ name: "plan-new", query: { from: to.params.id } }) },
+    { path: "/sessions/:id/edit", redirect: (to) => ({ name: "session-edit", params: { id: to.params.id } }) },
     {
       path: "/session/:id",
       name: "session-detail",

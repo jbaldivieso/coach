@@ -1,12 +1,13 @@
 export interface Set {
-  weight: number | null;
+  weight: number | null; // null means bodyweight
   reps: number;
+  done: boolean;
 }
 
-export interface SetFormData {
-  weight: string; // "" for bodyweight
-  reps: string;
-}
+/** Just the numbers of a set, for display. */
+export type SetValues = Pick<Set, "weight" | "reps">;
+
+export type SessionStatus = "planned" | "active" | "done";
 
 export interface Exercise {
   id: number;
@@ -15,6 +16,7 @@ export interface Exercise {
   rest_seconds: number;
   comments: string;
   position: number;
+  superset_group: number | null;
 }
 
 export interface Session {
@@ -22,7 +24,9 @@ export interface Session {
   title: string;
   date: string;
   comments: string;
-  session_type: string;
+  status: SessionStatus;
+  started_at: string | null;
+  finished_at: string | null;
   exercises: Exercise[];
 }
 
@@ -32,69 +36,59 @@ export interface PaginatedSessions {
   has_more: boolean;
 }
 
-export interface ExerciseFormData {
-  title: string;
-  sets: SetFormData[];
-  rest_seconds: string;
-  comments: string;
-}
-
-export interface ExerciseEditState {
+/** Payload shape for an exercise when saving a whole session. */
+export interface ExercisePayload {
   id?: number;
-  data: ExerciseFormData;
-}
-
-export interface SessionFormData {
   title: string;
-  date: string;
-  session_type: string;
-  comments: string;
-}
-
-export type SessionType = "volume" | "weight" | "endurance" | "recovery";
-
-export const SESSION_TYPES: { value: SessionType; label: string }[] = [
-  { value: "volume", label: "Volume" },
-  { value: "weight", label: "Weight" },
-  { value: "endurance", label: "Endurance" },
-  { value: "recovery", label: "Recovery" },
-];
-
-// Search types
-export interface AutocompleteItem {
-  type: "session" | "exercise";
-  id: number | null;
-  label: string;
-  value: string;
-}
-
-export interface AutocompleteResponse {
-  items: AutocompleteItem[];
-}
-
-export interface SearchResult {
-  exercise_id: number;
-  exercise_title: string;
   sets: Set[];
   rest_seconds: number;
+  comments: string;
+  superset_group: number | null;
+}
+
+// History and search
+
+export interface TitleSuggestion {
+  title: string;
+  count: number;
+  last_date: string | null;
+}
+
+export interface TitleSuggestions {
+  suggestions: TitleSuggestion[];
+}
+
+export interface Outing {
+  exercise_id: number;
   session_id: number;
-  session_date: string;
   session_title: string;
+  date: string;
+  sets: Set[];
+  rest_seconds: number;
+  comments: string;
 }
 
-export interface SearchResultsResponse {
-  items: SearchResult[];
+export interface ExerciseHistory {
+  title: string;
+  items: Outing[];
   total: number;
+  has_more: boolean;
 }
 
-export interface SearchFilter {
-  type: "session" | "exercise";
-  id: number | null;
-  label: string;
-  value: string;
+export interface SessionSummary {
+  id: number;
+  title: string;
+  date: string;
 }
 
-// Calendar types
+export interface SearchResponse {
+  sessions: SessionSummary[];
+  exercises: TitleSuggestion[];
+  last_session: SessionSummary | null;
+}
+
+// Calendar
+
 export interface SessionDate {
   date: string;
   session_id: number;
@@ -104,4 +98,8 @@ export interface CalendarMonth {
   year: number;
   month: number;
   sessions: SessionDate[];
+}
+
+export interface CalendarYear {
+  months: CalendarMonth[];
 }

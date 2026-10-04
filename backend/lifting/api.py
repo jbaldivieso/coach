@@ -242,14 +242,21 @@ def list_sessions(
     limit: int = 10,
     status: str = Session.STATUS_DONE,
     month: Optional[str] = None,
+    q: str = "",
 ):
     """List sessions for the authenticated user with pagination.
 
-    Filters by status (default "done") and optionally by month ("YYYY-MM").
+    Filters by status (default "done"), optionally by month ("YYYY-MM"), and
+    optionally by q, matched against the session title or any exercise title.
     """
     queryset = Session.objects.filter(user=request.user, status=status).prefetch_related(
         "exercises"
     )
+    if q.strip():
+        matching = Session.objects.filter(
+            models.Q(title__icontains=q.strip()) | models.Q(exercises__title__icontains=q.strip())
+        ).values("id")
+        queryset = queryset.filter(id__in=matching)
     if month:
         parsed = _parse_month(month)
         if not parsed:

@@ -1,376 +1,225 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { RouterLink } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { RouterLink, useRouter } from "vue-router";
 import { api } from "@/api/client";
-import type { Session, PaginatedSessions, Set as LiftingSet } from "@/types/lifting";
-import PencilIcon from "@/components/svg/IconPencil.vue";
-import CopyIcon from "@/components/svg/IconCopy.vue";
-import IconPlus from "@/components/svg/IconPlus.vue";
-import IconComment from "@/components/svg/IconComment.vue";
-import IconSearch from "@/components/svg/IconSearch.vue";
+import type { Session, PaginatedSessions } from "@/types/lifting";
+import { todayISO, formatDayDate, pluralize } from "@/utils/format";
+import { currentPosition, groupUnits, roundCount } from "@/utils/session";
+import AppBar from "@/components/ui/AppBar.vue";
+import Btn from "@/components/ui/Btn.vue";
+import Icon from "@/components/ui/Icon.vue";
 import SessionCalendar from "@/components/SessionCalendar.vue";
+import SessionRow from "@/components/SessionRow.vue";
 
-// Data state
-const sessions = ref<Session[]>([]);
-const hasMore = ref(false);
-const total = ref(0);
-
-// UI state
-const loading = ref(false);
-const loadingMore = ref(false);
-const error = ref<string | null>(null);
-const expandedSessionIds = ref<Set<number>>(new Set());
+const router = useRouter();
 
 const PAGE_SIZE = 10;
+const now = new Date();
+const year = now.getFullYear();
+const month = now.getMonth() + 1;
+const monthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-async function fetchSessions(offset: number = 0, append: boolean = false) {
-  const isInitialLoad = offset === 0 && !append;
+const openSessions = ref<Session[]>([]);
+const sessions = ref<Session[]>([]);
+const hasMore = ref(false);
+const loading = ref(true);
+const loadingMore = ref(false);
+const error = ref<string | null>(null);
+const startingId = ref<number | null>(null);
 
-  if (isInitialLoad) {
-    loading.value = true;
+const active = computed(() => openSessions.value.filter((s) => s.status === "active"));
+const planned = computed(() => openSessions.value.filter((s) => s.status === "planned"));
+
+function resumeDetail(session: Session): string {
+  const parts: string[] = [];
+  const position = currentPosition(session.exercises);
+  if (position) {
+    const unit = groupUnits(session.exercises)[position.unitIndex]!;
+    const exercise = session.exercises[position.exerciseIndex]!;
+    parts.push(`${exercise.title} · set ${position.round + 1} of ${roundCount(unit)}`);
   } else {
-    loadingMore.value = true;
+    parts.push("All sets done");
   }
+  if (session.started_at) {
+    const started = new Date(session.started_at);
+    parts.push(`started ${started.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+  }
+  return parts.join(" · ");
+}
+
+function plannedDetail(session: Session): string {
+  const when = session.date === todayISO() ? "Today" : formatDayDate(session.date);
+  return `${when} · ${pluralize(session.exercises.length, "exercise")}`;
+}
+
+async function startPlanned(session: Session) {
+  startingId.value = session.id;
+  await api.fetchCsrfToken();
+  const response = await api.post<Session>(`/api/lifting/sessions/${session.id}/start/`, { date: todayISO() });
+  startingId.value = null;
+  if (response.data) {
+    router.push({ name: "track", params: { id: session.id } });
+  } else {
+    error.value = response.error || "Couldn't start that session";
+  }
+}
+
+async function fetchOpen() {
+  const response = await api.get<Session[]>("/api/lifting/sessions/open/");
+  if (response.data) openSessions.value = response.data;
+}
+
+async function fetchSessions(append = false) {
+  if (append) loadingMore.value = true;
   error.value = null;
-
   try {
-    const response = await api.get<PaginatedSessions>(
-      `/api/lifting/sessions/?offset=${offset}&limit=${PAGE_SIZE}`,
-    );
-
+    const offset = append ? sessions.value.length : 0;
+    const response = await api.get<PaginatedSessions>(`/api/lifting/sessions/?offset=${offset}&limit=${PAGE_SIZE}`);
     if (response.data) {
-      if (append) {
-        sessions.value = [...sessions.value, ...response.data.items];
-      } else {
-        sessions.value = response.data.items;
-      }
+      sessions.value = append ? [...sessions.value, ...response.data.items] : response.data.items;
       hasMore.value = response.data.has_more;
-      total.value = response.data.total;
     } else {
-      error.value = response.error || "Failed to load sessions";
+      error.value = response.error || "Couldn't load sessions";
     }
   } catch {
-    error.value = "Network error. Please try again.";
+    error.value = "Network error. Try again.";
   } finally {
     loading.value = false;
     loadingMore.value = false;
   }
 }
 
-function loadMore() {
-  fetchSessions(sessions.value.length, true);
-}
-
-function toggleExpanded(sessionId: number) {
-  if (expandedSessionIds.value.has(sessionId)) {
-    expandedSessionIds.value.delete(sessionId);
-  } else {
-    expandedSessionIds.value.add(sessionId);
-  }
-  // Trigger reactivity by reassigning
-  expandedSessionIds.value = new Set(expandedSessionIds.value);
-}
-
-function isExpanded(sessionId: number): boolean {
-  return expandedSessionIds.value.has(sessionId);
-}
-
-function formatSets(sets: LiftingSet[]): string {
-  return sets
-    .map((s) => {
-      const weightPart = s.weight !== null ? `${s.weight} lbs` : "bodyweight";
-      return `${weightPart} x ${s.reps}`;
-    })
-    .join(", ");
-}
-
 onMounted(() => {
+  fetchOpen();
   fetchSessions();
 });
 </script>
 
 <template>
-  <div class="container">
-    <section class="section">
-      <!-- Header with title and action buttons -->
-      <div
-        class="is-flex is-justify-content-space-between is-align-items-center mb-5"
-        id="page-head"
+  <div class="screen">
+    <AppBar title="Coach">
+      <template #actions>
+        <RouterLink to="/search" class="bar-action" aria-label="Search"><Icon name="search" /></RouterLink>
+      </template>
+    </AppBar>
+
+    <main class="screen-body">
+      <RouterLink
+        v-for="s in active"
+        :key="s.id"
+        :to="{ name: 'track', params: { id: s.id } }"
+        class="open-card"
       >
-        <h1 class="title mb-0">Sessions</h1>
-        <div class="buttons">
-          <RouterLink :to="{ name: 'search' }" class="button is-primary">
-            <span class="icon">
-              <IconSearch />
-            </span>
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'create-session' }"
-            class="button is-primary"
-          >
-            <span class="icon">
-              <IconPlus />
-            </span>
-          </RouterLink>
-        </div>
+        <Icon name="play" />
+        <span class="open-main">
+          <b>Resume {{ s.title }}</b>
+          <small>{{ resumeDetail(s) }}</small>
+        </span>
+        <Icon name="right" />
+      </RouterLink>
+
+      <div v-for="s in planned" :key="s.id" class="open-card">
+        <RouterLink :to="{ name: 'plan-edit', params: { id: s.id } }" class="open-main">
+          <b>Planned · {{ s.title }}</b>
+          <small>{{ plannedDetail(s) }}</small>
+        </RouterLink>
+        <Btn variant="primary" size="small" :loading="startingId === s.id" @click="startPlanned(s)">Start</Btn>
       </div>
 
-      <div class="home-layout">
-        <!-- Sessions column -->
-        <div class="sessions-column">
-          <!-- Loading state -->
-          <div v-if="loading" class="has-text-centered py-6">
-            <span class="loader"></span>
-            <p class="mt-3">Loading sessions...</p>
+      <SessionCalendar :year="year" :month="month">
+        <template #header="{ count }">
+          <div class="cal-head">
+            <RouterLink to="/history/year" class="cal-month" aria-label="Open the past year">
+              {{ monthLabel }} <Icon name="down" size="sm" />
+            </RouterLink>
+            <span v-if="count !== null" class="muted small">{{ pluralize(count, "session") }}</span>
           </div>
+        </template>
+      </SessionCalendar>
 
-          <!-- Error state -->
-          <div v-else-if="error" class="notification is-danger is-light">
-            {{ error }}
-            <button
-              class="button is-small is-danger is-light ml-3"
-              @click="fetchSessions()"
-            >
-              Retry
-            </button>
-          </div>
-
-          <!-- Empty state -->
-          <div v-else-if="sessions.length === 0" class="has-text-centered py-6">
-            <p class="is-size-5 has-text-grey">No sessions yet</p>
-          </div>
-
-          <!-- Sessions list -->
-          <div v-else id="session-list">
-            <div v-for="session in sessions" :key="session.id" class="box mb-3">
-              <!-- Row 1: Date and Title -->
-              <div
-                class="is-flex is-justify-content-space-between is-align-items-center"
-              >
-                <h2>
-                  <span class="has-text-weight-semibold">{{ session.date }}</span>
-                  <span class="ml-2">{{ session.title }}</span>
-                </h2>
-                <div class="is-flex">
-                  <RouterLink
-                    :to="{ name: 'copy-session', params: { id: session.id } }"
-                    class="button is-small is-ghost"
-                  >
-                    <span class="icon is-small">
-                      <CopyIcon />
-                    </span>
-                  </RouterLink>
-                  <RouterLink
-                    :to="{ name: 'edit-session', params: { id: session.id } }"
-                    class="button is-small is-ghost"
-                  >
-                    <span class="icon is-small">
-                      <PencilIcon />
-                    </span>
-                  </RouterLink>
-                </div>
-              </div>
-
-              <!-- Row 2: Expandable exercises summary -->
-              <div>
-                <a @click="toggleExpanded(session.id)">
-                  <div
-                    :class="['triangle', isExpanded(session.id) ? 'down' : 'right']"
-                  ></div>
-                  <span
-                    >{{ session.exercises.length }} exercise{{
-                      session.exercises.length !== 1 ? "s" : ""
-                    }}</span
-                  >
-                  <span v-if="session.comments" class="icon is-small ml-3">
-                    <IconComment />
-                  </span>
-                </a>
-
-                <!-- Expanded exercise details -->
-                <div v-if="isExpanded(session.id)" class="pl-4">
-                  <!-- Session comments -->
-                  <p
-                    v-if="session.comments"
-                    class="has-text-grey is-size-7 mt-1 mb-3"
-                  >
-                    {{ session.comments }}
-                  </p>
-
-                  <!-- Exercises -->
-                  <div
-                    v-for="exercise in session.exercises"
-                    :key="exercise.id"
-                    class="mt-2"
-                  >
-                    <p>
-                      <strong>{{ exercise.title }}</strong
-                      >: {{ formatSets(exercise.sets) }}
-                      <span class="has-text-grey"
-                        >{{ exercise.rest_seconds }} secs</span
-                      >
-                    </p>
-                    <p v-if="exercise.comments" class="has-text-grey is-size-7">
-                      {{ exercise.comments }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Load more button -->
-            <div v-if="hasMore" class="has-text-centered mt-4">
-              <button
-                class="button"
-                :class="{ 'is-loading': loadingMore }"
-                :disabled="loadingMore"
-                @click="loadMore"
-              >
-                Load more
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Calendar column -->
-        <div class="calendar-column">
-          <div class="calendar-sticky">
-            <SessionCalendar />
-          </div>
-        </div>
+      <h2 class="eyebrow">Recent</h2>
+      <div v-if="error" class="notice is-error">
+        {{ error }}
+        <button class="notice-action" @click="fetchSessions()">Retry</button>
       </div>
-    </section>
+      <div v-else-if="loading" class="list"><div class="empty">Loading…</div></div>
+      <div v-else-if="sessions.length === 0" class="list">
+        <div class="empty">No sessions yet. Start one below.</div>
+      </div>
+      <div v-else class="list">
+        <SessionRow
+          v-for="s in sessions"
+          :key="s.id"
+          :title="s.title"
+          :date="s.date"
+          :exercises="s.exercises"
+          :to="{ name: 'session-detail', params: { id: s.id } }"
+        />
+      </div>
+      <Btn v-if="hasMore" class="load-more" :loading="loadingMore" @click="fetchSessions(true)">Load more</Btn>
+    </main>
 
-    <!-- Swatches with Bulma "primary" variants -->
-    <table class="table" v-if="false">
-      <tbody>
-        <tr>
-          <td><code>--bulma-primary</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-invert</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-invert)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-light</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-light)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-light-invert</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-light-invert)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-dark</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-dark)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-dark-invert</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-dark-invert)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-soft</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-soft)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-bold</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-bold)"
-            ></span>
-          </td>
-        </tr>
-        <tr>
-          <td><code>--bulma-primary-on-scheme</code></td>
-          <td>
-            <span
-              class="bd-color-swatch"
-              style="--background: var(--bulma-primary-on-scheme)"
-            ></span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <footer class="dock">
+      <div class="dock-pair">
+        <Btn to="/plan/new"><Icon name="plus" />Blank</Btn>
+        <Btn to="/start" variant="primary"><Icon name="copy" />Start from…</Btn>
+      </div>
+    </footer>
   </div>
 </template>
+
 <style scoped>
-.bd-color-swatch {
-  width: 1em;
-  height: 1em;
-  background-color: var(--background);
-  display: block;
-  border-radius: 3px;
+.bar-action {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r);
 }
-#page-head .icon {
-  height: 1rem;
-  width: 1rem;
-}
-
-.home-layout {
+.open-card {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 12px;
+  background: var(--k);
+  color: var(--y);
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  min-height: 60px;
 }
-
-.sessions-column {
+.open-main {
   flex: 1;
   min-width: 0;
 }
-
-/* Mobile: calendar above sessions */
-.calendar-column {
-  order: -1;
+.open-main b {
+  display: block;
+  font-size: 16px;
 }
-
-/* Wider screens: side by side, calendar on right */
-@media screen and (min-width: 650px) {
-  .home-layout {
-    flex-direction: row;
-  }
-  .calendar-column {
-    order: 0;
-    width: 280px;
-    flex-shrink: 0;
-  }
-  .calendar-sticky {
-    position: sticky;
-    top: 1rem;
-  }
+.open-main small {
+  display: block;
+  color: var(--on-k);
+  opacity: 0.85;
+  font-size: 12.5px;
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 8px;
+}
+.cal-month {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-stretch: 85%;
+  letter-spacing: 0.04em;
+}
+.load-more {
+  margin-top: 12px;
+  width: 100%;
 }
 </style>

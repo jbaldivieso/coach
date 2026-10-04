@@ -752,6 +752,12 @@ class TestListSessionsFilters:
         response = authenticated_client.get("/api/lifting/sessions/?month=2024-02")
         assert [s["id"] for s in response.json()["items"]] == [feb.id]
 
+    def test_q_matches_title_or_exercise(self, authenticated_client, search_sessions):
+        response = authenticated_client.get("/api/lifting/sessions/?q=squat")
+        assert [s["title"] for s in response.json()["items"]] == ["Lower A"]
+        response = authenticated_client.get("/api/lifting/sessions/?q=a")
+        assert response.json()["total"] == 2  # no duplicates from the exercise join
+
     def test_bad_month(self, authenticated_client):
         response = authenticated_client.get("/api/lifting/sessions/?month=feb")
         assert response.status_code == 400
