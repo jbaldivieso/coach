@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach Flow Wireframes</title>
+<style>
+/* Neutral wireframe sheet: one band per job, phone screens in a scroll-snap strip, a caption under each. */
+:root {
+  --bg: #e9eaec;
+  --fg: #18191c;
+  --muted: #5b5e66;
+  --faint: #73767d;
+  --rule: #cfd1d5;
+  --screen: #ffffff;
+  --well: #f1f2f4;
+  --ink: #18191c;
+  --on-ink: #ffffff;
+  --frame: #121316;
+  --target: #9a9da4;
+  --shadow: rgba(18, 20, 26, .22);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141518; --fg: #e8e9ec; --muted: #a3a6ad; --faint: #94979e; --rule: #2e3036;
+    --screen: #1d1e22; --well: #26282d; --ink: #e8e9ec; --on-ink: #141518; --frame: #050506;
+    --target: #6e7178; --shadow: rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141518; --fg: #e8e9ec; --muted: #a3a6ad; --faint: #94979e; --rule: #2e3036;
+  --screen: #1d1e22; --well: #26282d; --ink: #e8e9ec; --on-ink: #141518; --frame: #050506;
+  --target: #6e7178; --shadow: rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--ink); color: var(--on-ink); }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 40px 16px 96px; }
+@media (min-width: 720px) { .wrap { padding-inline: 32px; } }
+
+.intro { max-width: 68ch; margin-bottom: 48px; }
+.intro h1 { font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 12px; }
+.intro p { margin: 0 0 10px; color: var(--muted); }
+.intro strong { color: var(--fg); }
+
+.band { border-top: 1px solid var(--rule); padding-top: 28px; margin-top: 44px; }
+.band-head { max-width: 68ch; margin-bottom: 20px; }
+.band-head h2 { font-size: 1.4rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+.band-head p { margin: 0; color: var(--muted); }
+
+.strip {
+  display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 8px 4px 20px; margin-inline: -4px; scrollbar-color: var(--rule) transparent;
+}
+figure { margin: 0; flex: 0 0 auto; width: 340px; scroll-snap-align: start; }
+figcaption { margin-top: 14px; font-size: 13.5px; color: var(--muted); max-width: 340px; }
+figcaption b { display: block; color: var(--fg); font-size: 14.5px; margin-bottom: 2px; }
+
+/* Phone */
+.phone {
+  width: 340px; height: 736px; border-radius: 44px; border: 9px solid var(--frame);
+  background: var(--screen); overflow: hidden; position: relative;
+  box-shadow: 0 18px 40px -12px var(--shadow);
+  display: flex; flex-direction: column;
+}
+.status { height: 40px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 13px; font-weight: 600; }
+.status i { width: 64px; height: 6px; border-radius: 3px; background: var(--rule); }
+.scroll { flex: 1; overflow: hidden; padding: 0 16px; position: relative; }
+.dock { flex: 0 0 auto; padding: 10px 16px 22px; border-top: 1px solid var(--rule); background: var(--screen); display: grid; gap: 8px; }
+
+.bar { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-bottom: 6px; }
+.bar h3 { font-size: 22px; margin: 0; flex: 1; letter-spacing: -0.01em; }
+.bar h3.sm { font-size: 17px; }
+.iconbtn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; color: var(--fg); }
+.iconbtn.fill { background: var(--well); }
+.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+.i.sm { width: 16px; height: 16px; }
+
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; border-radius: 14px; font-weight: 600; font-size: 15px;
+  border: 1px solid var(--rule); background: var(--screen); color: var(--fg);
+}
+.btn.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.btn.huge { min-height: 64px; font-size: 19px; border-radius: 18px; }
+.btn.small { min-height: 36px; font-size: 13.5px; border-radius: 10px; padding: 0 12px; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 8px; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.small { font-size: 13px; }
+.note { font-style: italic; color: var(--muted); }
+
+/* Calendar */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 8px; }
+.cal-head b { font-size: 16px; display: flex; align-items: center; gap: 4px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 13.5px; }
+.cal .dow { font-size: 11px; color: var(--faint); font-weight: 600; padding-bottom: 4px; }
+.cal span { height: 34px; display: grid; place-items: center; border-radius: 10px; position: relative; }
+.cal .on { background: var(--ink); color: var(--on-ink); font-weight: 600; }
+.cal .today { outline: 2px solid var(--ink); outline-offset: -2px; font-weight: 700; }
+.cal .out { color: var(--faint); opacity: .5; }
+
+/* Lists */
+.list { display: grid; }
+.row { display: flex; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+.row:last-child { border-bottom: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .t { font-weight: 600; }
+.row .s { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.date { width: 46px; flex: 0 0 auto; font-size: 13px; color: var(--muted); line-height: 1.2; }
+.date b { display: block; font-size: 17px; color: var(--fg); }
+
+.resume { display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--on-ink); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }
+.resume .grow { flex: 1; }
+.resume small { display: block; opacity: .75; font-size: 12.5px; }
+
+.field { border: 1px solid var(--rule); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.field.val { color: var(--fg); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 12.5px; border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; }
+
+/* Plan */
+.ex { border: 1px solid var(--rule); border-radius: 16px; padding: 10px 12px 12px; margin-bottom: 10px; background: var(--screen); }
+.ex-h { display: flex; align-items: center; gap: 6px; }
+.ex-h .name { font-weight: 700; font-size: 16px; flex: 1; }
+.rest { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
+.hist { background: var(--well); border-radius: 10px; padding: 6px 10px; margin: 8px 0 10px; font-size: 12.5px; }
+.hist div { padding: 4px 0; border-bottom: 1px solid var(--rule); }
+.hist div:last-child { border-bottom: 0; }
+.hist .when { color: var(--muted); }
+.hist .sets { font-weight: 600; }
+.hist .c { display: block; font-style: italic; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setrow { display: grid; grid-template-columns: 22px 1fr 14px 1fr 28px; gap: 6px; align-items: center; margin-top: 6px; font-size: 14px; }
+.setrow .n { color: var(--faint); font-size: 12px; text-align: center; }
+.box { border: 1px solid var(--rule); border-radius: 10px; height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: 600; }
+.box em { font-style: normal; font-weight: 400; color: var(--faint); font-size: 12px; }
+.box.changed { border-color: var(--ink); border-width: 2px; }
+.x { color: var(--faint); text-align: center; }
+.addset { margin-top: 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.collapsed { display: flex; align-items: center; gap: 8px; border: 1px solid var(--rule); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+.collapsed .grow { flex: 1; min-width: 0; }
+.collapsed .t { font-weight: 600; }
+.collapsed .s { font-size: 12.5px; color: var(--muted); }
+
+.ss { border: 1.5px dashed var(--muted); border-radius: 18px; padding: 8px 8px 0; margin-bottom: 10px; }
+.ss-h { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 2px 4px 8px; }
+.ss-h .grow { flex: 1; }
+.ss .ex { margin-bottom: 8px; }
+.pair { display: grid; grid-template-columns: 22px 1fr 1fr; gap: 6px; align-items: center; font-size: 13.5px; margin-top: 6px; }
+.pair .h { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.pair .box { height: 36px; font-size: 13.5px; }
+
+/* Track */
+.prog { display: flex; gap: 6px; overflow: hidden; margin: 2px -16px 14px; padding: 0 16px; }
+.prog span { flex: 0 0 auto; font-size: 12.5px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--rule); display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.prog .done { color: var(--fg); }
+.prog .cur { background: var(--ink); color: var(--on-ink); border-color: var(--ink); font-weight: 600; }
+.trk-name { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.trk-sub { font-size: 14px; color: var(--muted); margin: 2px 0 14px; }
+.dial { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; gap: 8px; margin-bottom: 10px; }
+.dial .pm { height: 48px; border-radius: 14px; background: var(--well); display: grid; place-items: center; }
+.dial .v { text-align: center; line-height: 1; }
+.dial .v b { font-size: 48px; white-space: nowrap; font-weight: 800; letter-spacing: -0.03em; }
+.dial .v span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; }
+.ledger { margin-top: 12px; border-top: 1px solid var(--rule); }
+.ledger div { display: grid; grid-template-columns: 52px 1fr 24px; padding: 6px 2px; border-bottom: 1px solid var(--rule); font-size: 14px; align-items: center; }
+.ledger .n { color: var(--muted); font-size: 12.5px; }
+.ledger .tg { color: var(--target); }
+.ledger .now { font-weight: 700; }
+.lastline { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+.timer { text-align: center; margin: 22px 0 10px; }
+.timer b { font-size: 88px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; display: block; }
+.timer span { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.ring { height: 10px; border-radius: 5px; background: var(--well); overflow: hidden; margin: 6px 0 18px; }
+.ring i { display: block; height: 100%; width: 31%; background: var(--ink); border-radius: 5px; }
+.toast { display: flex; align-items: center; gap: 8px; background: var(--well); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
+.toast .grow { flex: 1; }
+.toast u { font-weight: 600; text-underline-offset: 3px; }
+.nextcard { border: 1px solid var(--rule); border-radius: 16px; padding: 12px 14px; margin-top: 12px; }
+.nextcard .t { font-weight: 700; font-size: 17px; }
+
+.round { display: grid; gap: 8px; }
+.rcard { border: 1px solid var(--rule); border-radius: 16px; padding: 10px 12px; }
+.rcard.cur { border: 2px solid var(--ink); }
+.rcard .top { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.rcard .top .grow { flex: 1; }
+.rcard .nm { font-weight: 700; font-size: 17px; margin: 2px 0 6px; color: var(--fg); }
+.rcard .dial { grid-template-columns: 44px 1fr 44px; margin: 0; }
+.rcard .dial .pm { height: 44px; }
+.rcard .dial .v b { font-size: 38px; }
+.mini { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.rcard .top span:last-child { white-space: nowrap; }
+.donebadge { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--fg); }
+
+.warn { border: 1px solid var(--rule); background: var(--well); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; margin: 8px 0; }
+.warn b { display: block; margin-bottom: 2px; }
+.textarea { border: 1px solid var(--rule); border-radius: 12px; height: 76px; padding: 10px 12px; color: var(--faint); font-size: 14px; }
+
+.setc { display: inline-flex; flex-wrap: wrap; gap: 2px; vertical-align: middle; }
+.setc i { font-style: normal; display: inline-flex; flex-direction: column; align-items: center; min-width: 30px; padding: 3px 4px; border-radius: 6px; background: var(--well); color: var(--fg); line-height: 1.15; font-size: 12px; }
+.setc i em { font-style: normal; font-weight: 600; }
+.setc i span { font-weight: 700; }
+.setc i b { font-weight: 400; color: var(--muted); margin-right: 1px; }
+.hist .setc i { background: var(--screen); }
+.outing .setc i, .sx .setc i { font-size: 13.5px; min-width: 36px; padding: 4px 5px; }
+.lastline, .collapsed .s.lbl { display: flex; align-items: center; gap: 8px; }
+.lastline .setc, .collapsed .s.lbl .setc { flex: 1; }
+.hist div { display: block; }
+.hist .when { display: block; margin-bottom: 3px; }
+
+.num { display: inline-block; min-width: 104px; padding: 6px 10px 4px; border: 1px solid var(--rule); border-radius: 14px; }
+.rcard .num { min-width: 84px; padding: 4px 8px 3px; }
+.num.focus { border: 2px solid var(--ink); }
+.caret { display: inline-block; width: 3px; height: .8em; background: var(--ink); margin-left: 2px; vertical-align: -0.05em; }
+.noterow { display: flex; gap: 8px; align-items: flex-start; border: 1px dashed var(--rule); border-radius: 12px; padding: 10px 12px; margin-top: 12px; color: var(--muted); font-size: 14px; }
+.noterow.filled { border-style: solid; color: var(--fg); }
+.noterow small { display: block; color: var(--muted); font-size: 12px; }
+.keypad { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 8px 24px; background: var(--well); }
+.keypad span { height: 46px; border-radius: 8px; background: var(--screen); display: grid; place-items: center; font-size: 22px; font-weight: 500; }
+.keypad span.k2 { background: transparent; }
+.keybar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: var(--well); border-top: 1px solid var(--rule); font-size: 14px; font-weight: 600; }
+
+/* History */
+.chart { border: 1px solid var(--rule); border-radius: 14px; padding: 8px 6px 4px; margin: 4px 0 6px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart text { font-size: 9px; fill: var(--faint); }
+.chart .dot { fill: var(--ink); }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.outing { padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 13.5px; }
+.outing .h { display: flex; justify-content: space-between; color: var(--muted); font-size: 12.5px; }
+.outing .sets { font-weight: 700; font-size: 15px; margin: 1px 0; }
+.outing .c { font-style: italic; color: var(--muted); }
+
+.sx { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.sx .t { font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+.sx .t small { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.sx .sets { font-size: 14px; margin-top: 2px; }
+.sx .c { font-size: 13px; font-style: italic; color: var(--muted); }
+.sx .link { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--faint); }
+.sx-ss { border-left: 1px dashed var(--muted); padding-left: 10px; margin: 6px 0; }
+
+.year { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 10px; margin-top: 8px; }
+.mo b { font-size: 12.5px; display: block; margin-bottom: 4px; }
+.mo .g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.mo .g i { aspect-ratio: 1; border-radius: 2px; background: var(--well); }
+.mo .g i.on { background: var(--ink); }
+.mo .g i.x { background: transparent; }
+.mo.sel { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+
+.res-top { background: var(--well); border-radius: 14px; padding: 12px 14px; margin: 8px 0 6px; }
+.res-top b { font-size: 20px; display: block; }
+
+.ann { margin-top: 64px; max-width: 72ch; }
+.ann h2 { font-size: 1.4rem; margin: 0 0 10px; }
+.ann ul { padding-left: 1.2em; color: var(--muted); }
+.ann li { margin-bottom: 8px; }
+.ann li b { color: var(--fg); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>Coach, flow wireframes</h1>
+    <p>Grayscale on purpose: these mocks settle <strong>what's on each screen and how you get between them</strong>. Visual identity comes later. The numbers come from your own log (Jan 2026), with "today" set to <strong>Fri Jan 23</strong>.</p>
+    <p>The app treats exercise names as plain text. It makes no guesses about equipment and draws no pictograms. Names are kept consistent only by autocomplete, and history is looked up by exact name.</p>
+  </header>
+
+  <!-- ================= HOME ================= -->
+  <section class="band">
+    <div class="band-head">
+      <h2>Home</h2>
+      <p>The calendar stays at the top so you can decide whether to train today. You start a session from here, and it doesn't guess what's next.</p>
+    </div>
+    <div class="strip">
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:12</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><h3>Coach</h3><span class="iconbtn fill"><svg class="i"><use href="#i-search"/></svg></span></div>
+            <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">6 sessions</span></div>
+            <div class="cal">
+              <span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span>
+              <span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span>2</span><span>3</span>
+              <span>4</span><span>5</span><span>6</span><span class="on">7</span><span>8</span><span>9</span><span>10</span>
+              <span class="on">11</span><span>12</span><span>13</span><span>14</span><span>15</span><span class="on">16</span><span>17</span>
+              <span class="on">18</span><span>19</span><span>20</span><span class="on">21</span><span>22</span><span class="today">23</span><span>24</span>
+              <span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span>
+            </div>
+            <div class="label">Recent</div>
+            <div class="list">
+              <div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div>
+              <div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div>
+              <div class="row"><div class="date"><b>16</b>Fri</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div></div>
+              <div class="row"><div class="date"><b>11</b>Sun</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin-ups · Lat raises</div></div></div>
+            </div>
+          </div>
+          <div class="dock">
+            <div class="btns">
+              <span class="btn"><svg class="i"><use href="#i-plus"/></svg>Blank</span>
+              <span class="btn primary"><svg class="i"><use href="#i-copy"/></svg>Start from…</span>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Home</b>The calendar is the first thing you see. Tap a recent session to open it. The two ways to start sit in the bottom dock, where your thumb is.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:58</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><h3>Coach</h3><span class="iconbtn fill"><svg class="i"><use href="#i-search"/></svg></span></div>
+            <div class="resume">
+              <svg class="i"><use href="#i-play"/></svg>
+              <div class="grow"><b>Resume Upper A</b><small>Bench · set 3 of 4 · started 7:31</small></div>
+              <svg class="i"><use href="#i-right"/></svg>
+            </div>
+            <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">7 sessions</span></div>
+            <div class="cal">
+              <span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span>
+              <span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span>2</span><span>3</span>
+              <span>4</span><span>5</span><span>6</span><span class="on">7</span><span>8</span><span>9</span><span>10</span>
+              <span class="on">11</span><span>12</span><span>13</span><span>14</span><span>15</span><span class="on">16</span><span>17</span>
+              <span class="on">18</span><span>19</span><span>20</span><span class="on">21</span><span>22</span><span class="today on">23</span><span>24</span>
+              <span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span>
+            </div>
+            <div class="label">Recent</div>
+            <div class="list">
+              <div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div>
+              <div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Home, mid-session</b>If iOS killed the app, or you just switched away, Resume takes you straight back to the current set. Every set saves as soon as you log it, and your place is restored from the sets marked done.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:13</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Start from…</h3></div>
+            <div class="field"><svg class="i sm"><use href="#i-search"/></svg>Title or exercise</div>
+            <div class="list" style="margin-top:6px">
+              <div class="row"><div class="date"><b>21</b>Jan</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises…</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>18</b>Jan</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg…</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>16</b>Jan</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>11</b>Jan</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin-ups · Lat raises</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>7</b>Jan</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Leg raises on rings</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>1</b>Jan</div><div class="grow"><div class="t">Lower B</div><div class="s">Squats · RDL · Reverse lunge · Calf raises</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+              <div class="row"><div class="date"><b>30</b>Dec</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Start from…</b>Your sessions, newest first, each showing its exercises, so you can tell sessions with the same title apart. Tap one to open Plan with its exercises and sets filled in. Session detail also has "Start from this".</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section class="band">
+    <div class="band-head">
+      <h2>Plan</h2>
+      <p>Today's targets go next to the last three times you did each exercise, looked up by exercise name and pulled from your data, not pasted into comments. You change whatever you want, and nothing progresses on its own.</p>
+    </div>
+    <div class="strip">
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:14</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3></div>
+            <div class="field val" style="margin-bottom:12px"><b>Upper A</b><span class="faint small" style="margin-left:auto">from Jan 18</span></div>
+
+            <div class="ex">
+              <div class="ex-h"><svg class="i faint"><use href="#i-grip"/></svg><span class="name">Bench</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>4:00</span><span class="iconbtn" style="width:28px;height:28px"><svg class="i sm"><use href="#i-more"/></svg></span></div>
+              <div class="hist">
+                <div><span class="when">Jan 21 · Upper B</span> <span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span><span class="c">Slow progress</span></div>
+                <div><span class="when">Jan 18 · Upper A</span> <span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span><span class="c">Doable.</span></div>
+                <div><span class="when">Jan 16 · Upper B</span> <span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span><span class="c">2nd set was all out. 3rd also.</span></div>
+              </div>
+              <div class="setrow"><span class="n">1</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span><svg class="i sm faint"><use href="#i-x"/></svg></div>
+              <div class="setrow"><span class="n">2</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span><svg class="i sm faint"><use href="#i-x"/></svg></div>
+              <div class="setrow"><span class="n">3</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span><svg class="i sm faint"><use href="#i-x"/></svg></div>
+              <div class="setrow"><span class="n">4</span><span class="box changed">155<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span><svg class="i sm faint"><use href="#i-x"/></svg></div>
+              <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+            </div>
+
+            <div class="collapsed"><svg class="i faint"><use href="#i-grip"/></svg><div class="grow"><div class="t">Pull-ups</div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Plan</span><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Jan 18</span><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>9</span></i></span></div></div><svg class="i sm faint"><use href="#i-down"/></svg></div>
+            <div class="collapsed"><svg class="i faint"><use href="#i-grip"/></svg><div class="grow"><div class="t">Incline press</div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Plan</span><span class="setc"><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i></span></div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Jan 18</span><span class="setc"><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>8</span></i></span></div></div><svg class="i sm faint"><use href="#i-down"/></svg></div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge">Start session</span>
+          </div>
+        </div>
+        <figcaption><b>Plan: one exercise open</b>The last 3 outings of "Bench" include your light Upper B days. That's how it should be: you see both kinds of day and decide. You set targets per set; here only set 4 was raised. The other exercises stay collapsed, each on one line comparing the plan with last time.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:16</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3></div>
+            <div class="collapsed"><svg class="i faint"><use href="#i-grip"/></svg><div class="grow"><div class="t">Incline press</div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Plan</span><span class="setc"><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i></span></div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Jan 18</span><span class="setc"><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>8</span></i></span></div></div><svg class="i sm faint"><use href="#i-down"/></svg></div>
+
+            <div class="ss">
+              <div class="ss-h"><svg class="i sm"><use href="#i-link"/></svg><span class="grow">Superset · 3 rounds</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>1:30 after each round</span></div>
+              <div class="ex">
+                <div class="ex-h"><span class="name">A · Rear Delt Flyes</span><span class="iconbtn" style="width:28px;height:28px"><svg class="i sm"><use href="#i-more"/></svg></span></div>
+                <div class="hist">
+                  <div><span class="when">Jan 18</span> <span class="setc"><i><em>20</em><span><b>×</b>10</span></i><i><em>20</em><span><b>×</b>12</span></i><i><em>20</em><span><b>×</b>12</span></i></span><span class="c">3 sets x 12-15 reps; draped over the FID bench at 45…</span></div>
+                </div>
+              </div>
+              <div class="ex">
+                <div class="ex-h"><span class="name">B · Lat raises</span><span class="iconbtn" style="width:28px;height:28px"><svg class="i sm"><use href="#i-more"/></svg></span></div>
+                <div class="hist">
+                  <div><span class="when">Jan 21</span> <span class="setc"><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i></span></div>
+                  <div><span class="when">Jan 16</span> <span class="setc"><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>10</span></i></span></div>
+                  <div><span class="when">Jan 11</span> <span class="setc"><i><em>30</em><span><b>×</b>20</span></i><i><em>30</em><span><b>×</b>12</span></i><i><em>30</em><span><b>×</b>12</span></i></span><span class="c">Accidentally did the first set with 10-lb weights.</span></div>
+                </div>
+              </div>
+              <div class="pair"><span></span><span class="h">A · Flyes</span><span class="h">B · Lat raises</span></div>
+              <div class="pair"><span class="n faint small">1</span><span class="box">20 × 12</span><span class="box">30 × 12</span></div>
+              <div class="pair"><span class="n faint small">2</span><span class="box">20 × 12</span><span class="box">30 × 12</span></div>
+              <div class="pair"><span class="n faint small">3</span><span class="box">20 × 12</span><span class="box">30 × 12</span></div>
+              <div class="addset" style="padding-bottom:10px"><svg class="i sm"><use href="#i-plus"/></svg>Add round</div>
+            </div>
+
+            <div class="collapsed"><svg class="i faint"><use href="#i-grip"/></svg><div class="grow"><div class="t">Leg raises on rings</div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Plan</span><span class="setc"><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>8</span></i></span></div><div class="s lbl"><span style="width:40px;flex:0 0 auto">Jan 18</span><span class="setc"><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>8</span></i></span></div></div><svg class="i sm faint"><use href="#i-down"/></svg></div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge">Start session</span>
+          </div>
+        </div>
+        <figcaption><b>Plan: a superset</b>Choose "Superset with next" from an exercise's menu to link it with the exercise below. A linked pair has one rest time and its sets are planned in rounds, so it can't end up with uneven set counts. "Add round" adds a set to both exercises. Lat raises is new to this session, and its history still shows because history follows the exercise name.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:15</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3></div>
+            <div class="ex">
+              <div class="ex-h"><span class="name">Lat r<span style="border-right:2px solid var(--ink)">&nbsp;</span></span></div>
+              <div class="list small" style="margin:6px 0 8px">
+                <div class="row" style="padding:9px 2px"><div class="grow"><b>Lat raises</b></div><span class="faint">Jan 21 · 11×</span></div>
+                <div class="row" style="padding:9px 2px"><div class="grow"><b>Lat raise (cable)</b></div><span class="faint">Oct 16 · 2×</span></div>
+              </div>
+              <div class="hist">
+                <div class="faint">Pick a name to see its last 3 outings and copy its most recent sets as targets.</div>
+              </div>
+            </div>
+            <div class="ex">
+              <div class="ex-h"><span class="name">Face pulls</span><span class="iconbtn" style="width:28px;height:28px"><svg class="i sm"><use href="#i-more"/></svg></span></div>
+              <div class="hist"><div class="faint">First time. No history yet.</div></div>
+              <div class="setrow"><span class="n">1</span><span class="box"><em>lb</em></span><span class="x">×</span><span class="box"><em>reps</em></span><svg class="i sm faint"><use href="#i-x"/></svg></div>
+              <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+            </div>
+            <span class="btn" style="margin-top:4px"><svg class="i"><use href="#i-plus"/></svg>Add exercise</span>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge">Start session</span>
+          </div>
+        </div>
+        <figcaption><b>Plan: adding an exercise</b>Autocomplete shows how many times and how recently you've used each name, which pushes you toward the consistent one. Picking a name you've used before fills in last time's sets as targets. A new name gets one blank set. ("Lat raise (cable)" is made up for the example.)</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ================= TRACK ================= -->
+  <section class="band">
+    <div class="band-head">
+      <h2>Track</h2>
+      <p>Shows one exercise or superset at a time. Done logs what's on screen and starts the rest timer. A planned target is replaced by what you actually did when you log it, and only actual sets are kept.</p>
+    </div>
+    <div class="strip">
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:41</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+            <div class="prog">
+              <span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span><span>Leg raises…</span>
+            </div>
+            <p class="trk-name">Bench</p>
+            <p class="trk-sub">Set 3 of 4 · rest 4:00</p>
+            <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">150</b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+            <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+            <div class="ledger">
+              <div><span class="n">Set 1</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+              <div><span class="n">Set 2</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+              <div><span class="n">Set 3</span><span class="now">150 × 5</span><span></span></div>
+              <div><span class="n">Set 4</span><span class="tg">155 × 5</span><span></span></div>
+            </div>
+            <div class="lastline"><span style="flex:0 0 auto">Last<br>Jan 21</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span></div>
+            <div class="noterow"><svg class="i sm"><use href="#i-pencil"/></svg><span>Note on Bench…</span></div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done · 150 × 5</span>
+          </div>
+        </div>
+        <figcaption><b>Current set</b>Weight and reps start at the target. ± steps by 5 lb and 1 rep. Tap either number to type it instead. Use these if what you did was different, then hit the big Done button at thumb height. Gray sets are targets, checked sets are saved. Tap a done set to correct it. The strip across the top shows your progress, and you can tap any exercise to jump out of order. The note on this exercise is always one tap away.</figcaption>
+      </figure>
+
+            <figure>
+        <div class="phone">
+          <div class="status"><span>7:52</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+            <div class="prog">
+              <span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span><span>Leg raises…</span>
+            </div>
+            <p class="trk-name">Bench</p>
+            <p class="trk-sub">Set 4 of 4 · target 155 × 5</p>
+            <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num focus">152.5<i class="caret"></i></b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+            <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+          </div>
+          <div class="keybar"><span class="muted">Weight</span><span>Done</span></div>
+          <div class="keypad">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="k2">.</span><span>0</span><span class="k2"><svg class="i"><use href="#i-left"/></svg></span>
+          </div>
+        </div>
+        <figcaption><b>Typing a weight</b>For a change that isn't a multiple of 5, like 152.5 or a dumbbell that comes in odd sizes. Tapping the number selects it, so you just type over it, and the iOS decimal keypad comes up. The big Done is hidden only while the keypad is open.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>7:42</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+            <div class="prog">
+              <span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span><span>Leg raises…</span>
+            </div>
+            <div class="toast"><svg class="i sm"><use href="#i-check"/></svg><span class="grow">Set 3 saved · 150 × 5</span><u>Undo</u></div>
+            <div class="timer"><span>Rest</span><b>2:47</b></div>
+            <div class="ring"><i></i></div>
+            <div class="btns">
+              <span class="btn">−15s</span>
+              <span class="btn">+30s</span>
+            </div>
+            <div class="nextcard">
+              <div class="muted small">Up next</div>
+              <div class="t">Bench · Set 4 of 4</div>
+              <div class="muted">155 × 5</div>
+            </div>
+            <div class="noterow filled"><svg class="i sm"><use href="#i-pencil"/></svg><span><small>Note on Bench</small>Set 3 slow off the chest<i class="caret"></i></span></div>
+          </div>
+          <div class="dock">
+            <span class="btn huge">Skip rest</span>
+          </div>
+        </div>
+        <figcaption><b>Rest</b>Starts as soon as you tap Done, so there's no separate timer button. Undo is right there in case you picked up the phone clumsily. The next set's target is shown so you can load the bar. Rest is when you're most likely to write a note, so the exercise's note field is right here. It saves as you type, and the timer keeps running (the note text is an example). Screen wake lock and the audio cue work as they do today.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>8:02</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+            <div class="prog">
+              <span class="done"><svg class="i sm"><use href="#i-check"/></svg>Bench</span><span class="done"><svg class="i sm"><use href="#i-check"/></svg>Pull-ups</span><span class="cur">Flyes + Lat raises</span><span>Leg raises…</span>
+            </div>
+            <p class="trk-name" style="font-size:22px">Superset</p>
+            <p class="trk-sub">Round 2 of 3 · 1:30 rest after B</p>
+            <div class="round">
+              <div class="rcard">
+                <div class="top"><span class="grow">A · Rear Delt Flyes</span><span class="donebadge"><svg class="i sm"><use href="#i-check"/></svg>20 × 12</span></div>
+              </div>
+              <div class="rcard cur">
+                <div class="top"><span class="grow">B · now</span><span>target 30 × 12</span></div>
+                <div class="nm">Lat raises</div>
+                <div class="mini">
+                  <div class="dial"><span class="pm"><svg class="i sm"><use href="#i-minus"/></svg></span><div class="v"><b class="num">30</b><span>lb</span></div><span class="pm"><svg class="i sm"><use href="#i-plus"/></svg></span></div>
+                  <div class="dial"><span class="pm"><svg class="i sm"><use href="#i-minus"/></svg></span><div class="v"><b class="num">11</b><span>reps</span></div><span class="pm"><svg class="i sm"><use href="#i-plus"/></svg></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="ledger">
+              <div><span class="n">Round 1</span><span>20 × 12 · 30 × 12</span><svg class="i sm"><use href="#i-check"/></svg></div>
+              <div><span class="n">Round 2</span><span class="now">20 × 12 · 30 × 11</span><span></span></div>
+              <div><span class="n">Round 3</span><span class="tg">20 × 12 · 30 × 12</span><span></span></div>
+            </div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done B · start rest</span>
+          </div>
+        </div>
+        <figcaption><b>Superset round</b>Done on A moves straight to B with no rest. Done on B logs it and starts the shared rest. Here you missed one rep on B: one tap on the reps minus, and 11 is what gets saved. Both numbers can be typed, and each exercise in the superset has its own note. Incline press isn't in the strip because you skipped it today.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>8:19</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Finish Upper A</h3></div>
+            <div class="list">
+              <div class="row"><svg class="i sm"><use href="#i-check"/></svg><div class="grow"><div class="t">Bench</div><div class="s"><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>155</em><span><b>×</b>4</span></i></span></div></div></div>
+              <div class="row"><svg class="i sm"><use href="#i-check"/></svg><div class="grow"><div class="t">Pull-ups</div><div class="s"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div></div></div>
+              <div class="row"><svg class="i sm"><use href="#i-check"/></svg><div class="grow"><div class="t">Rear Delt Flyes + Lat raises</div><div class="s">3 rounds</div></div></div>
+              <div class="row"><svg class="i sm"><use href="#i-check"/></svg><div class="grow"><div class="t">Leg raises on rings</div><div class="s"><span class="setc"><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>8</span></i></span> 2 of 3 done</div></div></div>
+            </div>
+            <div class="warn"><b>Not done, will be dropped</b>Incline press (4 sets) · Leg raises on rings, set 3</div>
+            <div class="label">Session comments</div>
+            <div class="textarea">How did it go?</div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge">Finish session</span>
+            <span class="btn">Keep going</span>
+          </div>
+        </div>
+        <figcaption><b>Finish</b>A summary of what actually happened. Planned sets you didn't do are listed before they're dropped, so nothing disappears without you seeing it. Exercise comments can be added on the Track screen at any point. Session comments go here.</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ================= HISTORY ================= -->
+  <section class="band">
+    <div class="band-head">
+      <h2>History</h2>
+      <p>Each kind of question gets its own way in. Tap an exercise name anywhere to see its history. Tap the month to browse the year. Search covers "when did I last…".</p>
+    </div>
+    <div class="strip">
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>21:04</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3>Bench</h3></div>
+            <div class="muted small">25 times since Oct 2025 · last Jan 21</div>
+            <div class="chart">
+              <svg viewBox="0 0 300 118" role="img" aria-label="Heaviest set per Bench session, Nov 30 to Jan 21">
+                <line class="grid" x1="26" y1="20" x2="296" y2="20"/><line class="grid" x1="26" y1="55" x2="296" y2="55"/><line class="grid" x1="26" y1="90" x2="296" y2="90"/>
+                <text x="0" y="23">150</text><text x="0" y="58">132</text><text x="0" y="93">115</text>
+                <circle class="dot" cx="34" cy="20" r="4"/><circle class="dot" cx="60" cy="90" r="4"/><circle class="dot" cx="86" cy="30" r="4"/>
+                <circle class="dot" cx="112" cy="71" r="4"/><circle class="dot" cx="138" cy="30" r="4"/><circle class="dot" cx="164" cy="51" r="4"/>
+                <circle class="dot" cx="190" cy="30" r="4"/><circle class="dot" cx="216" cy="90" r="4"/><circle class="dot" cx="242" cy="90" r="4"/>
+                <circle class="dot" cx="268" cy="20" r="4"/><circle class="dot" cx="292" cy="90" r="4"/>
+                <text x="30" y="112">Dec</text><text x="180" y="112">Jan</text>
+              </svg>
+            </div>
+            <div class="muted small" style="margin-bottom:4px">Heaviest set per session. Heavy and light days both show up.</div>
+            <div class="outing"><div class="h"><span>Wed Jan 21 · Upper B</span><span>2 days ago</span></div><div class="sets"><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span></div><div class="c">Slow progress</div></div>
+            <div class="outing"><div class="h"><span>Sun Jan 18 · Upper A</span><span>5 days</span></div><div class="sets"><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span></div><div class="c">Doable.</div></div>
+            <div class="outing"><div class="h"><span>Fri Jan 16 · Upper B</span><span>1 wk</span></div><div class="sets"><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span></div><div class="c">2nd set was all out. 3rd also.</div></div>
+            <div class="outing"><div class="h"><span>Sun Jan 11 · Upper B</span><span>2 wk</span></div><div class="sets"><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>8</span></i><i><em>115</em><span><b>×</b>8</span></i></span></div><div class="c">Pretty gassed by this point.</div></div>
+          </div>
+        </div>
+        <figcaption><b>Exercise history</b>You get here by tapping any exercise name: in Plan, Track, session detail, or search. One row per outing, with its comment. The chart just plots the heaviest set and doesn't try to tell you what a trend means.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>21:06</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Sun Jan 18 · Upper A</h3><span class="iconbtn"><svg class="i"><use href="#i-pencil"/></svg></span></div>
+            <div class="sx"><div class="t"><span class="link">Bench</span><small>rest 4:00</small></div><div class="sets"><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span></div><div class="c">Doable.</div></div>
+            <div class="sx"><div class="t"><span class="link">Pull-ups</span><small>rest 3:00</small></div><div class="sets"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>9</span></i></span></div><div class="c">10-lb dumbbell held btw thighs. Easier than expected!</div></div>
+            <div class="sx"><div class="t"><span class="link">Incline press</span><small>rest 3:00</small></div><div class="sets"><span class="setc"><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>10</span></i><i><em>75</em><span><b>×</b>8</span></i></span></div><div class="c">Incline 60 degrees. Using barbell.</div></div>
+            <div class="sx"><div class="t"><span class="link">Rear Delt Flyes</span><small>rest 1:00</small></div><div class="sets"><span class="setc"><i><em>20</em><span><b>×</b>10</span></i><i><em>20</em><span><b>×</b>12</span></i><i><em>20</em><span><b>×</b>12</span></i></span></div><div class="c">3 sets x 12-15 reps; draped over the FID bench at 45…</div></div>
+            <div class="sx"><div class="t"><span class="link">Leg raises on rings</span><small>rest 2:00</small></div><div class="sets"><span class="setc"><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>9</span></i><i><em>BW</em><span><b>×</b>8</span></i></span></div><div class="c">Raise knees, raise legs</div></div>
+          </div>
+          <div class="dock">
+            <span class="btn primary huge"><svg class="i"><use href="#i-copy"/></svg>Start from this</span>
+          </div>
+        </div>
+        <figcaption><b>Session detail</b>The way in for "copy a specific past day". Every exercise name links to its history. Editing is still available from the pencil but isn't the main action. In a superset, the two exercises appear together under one rest.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>21:08</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3>Past year</h3></div>
+            <div class="muted small">Tap a month to open it.</div>
+            <div class="year">
+              <div class="mo"><b>Feb</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Mar</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Apr</b><div class="g"><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>May</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Jun</b><div class="g"><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Jul</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Aug</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Sep</b><div class="g"><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="mo"><b>Oct</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i></div></div>
+              <div class="mo"><b>Nov</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div></div>
+              <div class="mo"><b>Dec</b><div class="g"><i class="x"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i></div></div>
+              <div class="mo sel"><b>Jan</b><div class="g"><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            </div>
+            <div class="muted small" style="margin-top:16px">Before Oct 2025 there are no sessions, so the earlier months are empty.</div>
+          </div>
+        </div>
+        <figcaption><b>Year view</b>Tap the month name on the home calendar to get here. It answers "what was I doing a year ago" by showing training days across twelve months. Tap a month to drill into it.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>21:09</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3>December 2025</h3></div>
+            <div class="cal-head"><span class="iconbtn fill" style="width:32px;height:32px"><svg class="i sm"><use href="#i-left"/></svg></span><span class="muted small">6 sessions</span><span class="iconbtn fill" style="width:32px;height:32px"><svg class="i sm"><use href="#i-right"/></svg></span></div>
+            <div class="cal"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="out">30</span><span>1</span><span>2</span><span class="on">3</span><span>4</span><span>5</span><span>6</span><span>7</span><span class="on">8</span><span>9</span><span>10</span><span class="on">11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span class="on">18</span><span class="on">19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span class="on">30</span><span>31</span><span class="out">1</span><span class="out">2</span><span class="out">3</span></div>
+            <div class="label">Sessions</div>
+            <div class="list"><div class="row"><div class="date"><b>30</b>Tue</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press</div></div></div><div class="row"><div class="date"><b>19</b>Fri</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Press</div></div></div><div class="row"><div class="date"><b>18</b>Thu</div><div class="grow"><div class="t">Lower A</div><div class="s">Squats · RDL · Reverse lunge · Calf raises</div></div></div><div class="row"><div class="date"><b>11</b>Thu</div><div class="grow"><div class="t">Upper B</div><div class="s">Bench · Chin-ups · Calf raises · Knee raises on rings</div></div></div><div class="row"><div class="date"><b>8</b>Mon</div><div class="grow"><div class="t">Light Upper A</div><div class="s">Bench · Chin-ups</div></div></div><div class="row"><div class="date"><b>3</b>Wed</div><div class="grow"><div class="t">Light Upper</div><div class="s">Bench · Pull-ups · Lat raises</div></div></div></div>
+          </div>
+        </div>
+        <figcaption><b>Month</b>You get here from the year view: the same calendar as Home, with that month's sessions listed underneath, oldest at the bottom. Swipe or use the arrows to move between months. Tapping a session opens its detail page.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone">
+          <div class="status"><span>21:10</span><i></i></div>
+          <div class="scroll">
+            <div class="bar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><div class="field val" style="flex:1"><svg class="i sm"><use href="#i-search"/></svg>lower</div></div>
+            <div class="res-top"><span class="muted small">Last session titled "lower"</span><b>22 days ago</b><span class="muted small">Thu Jan 1 · Lower B</span></div>
+            <div class="label">Sessions</div>
+            <div class="list">
+              <div class="row"><div class="date"><b>1</b>Jan</div><div class="grow"><div class="t">Lower B</div><div class="s">Squats · RDL · Reverse lunge · Calf raises</div></div><span class="faint small">3 wk</span></div>
+              <div class="row"><div class="date"><b>18</b>Dec</div><div class="grow"><div class="t">Lower A</div><div class="s">Squats · RDL · Reverse lunge · Calf raises</div></div><span class="faint small">5 wk</span></div>
+              <div class="row"><div class="date"><b>12</b>Nov</div><div class="grow"><div class="t">Lower A</div><div class="s">Squats · RDL · …</div></div><span class="faint small">10 wk</span></div>
+              <div class="row"><div class="date"><b>5</b>Nov</div><div class="grow"><div class="t">Lower A</div><div class="s">Squats · RDL · …</div></div><span class="faint small">11 wk</span></div>
+            </div>
+            <div class="label">Exercises</div>
+            <div class="list">
+              <div class="row"><div class="grow"><div class="t">Lower back extension</div><div class="s">Last Dec 18 · 4 times</div></div><svg class="i sm faint"><use href="#i-right"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Search: "when did I last…"</b>Matches session titles and exercise names, newest first, each showing how long ago. The top line answers the question before you scroll. ("Lower back extension" is a made-up result for the example.)</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="ann">
+    <h2>Notes for review</h2>
+    <ul>
+      <li><b>Name drift is real.</b> Your log has "Chin ups" and "Chin-ups", and "Incline Bench" alongside "Incline press". History looks up the exact name, so these show up as separate exercises. The autocomplete counts are meant to nudge you toward one spelling. One option: match names ignoring case and punctuation, so "Chin ups" and "Chin-ups" merge without the app guessing anything else.</li>
+      <li><b>Sets are shown one by one.</b> Every set appears as its own weight × reps, everywhere, so a change in weight partway through an exercise is always visible.</li>
+      <li><b>Skipping and reordering in Track.</b> Tapping an exercise in the progress strip jumps to it. Changing the order mid-session would go through a menu, so a stray drag can't reorder things.</li>
+      <li><b>No tab bar.</b> Home is the hub, and history is reached by tapping things. With so few places to go, a tab bar would mostly be chrome.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

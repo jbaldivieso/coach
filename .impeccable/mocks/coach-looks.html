@@ -1,0 +1,766 @@
+<title>Coach Looks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow+Semi+Condensed:wght@500;600;700&family=Big+Shoulders+Display:wght@600;800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Doto:wght@700;900&family=Overpass:wght@400;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@500;700;800&display=swap">
+<style>
+/* Layout: a neutral review sheet; each look is a band with its idea on the left and three phone screens in a snap strip. */
+:root {
+  --bg: #e7e8ea;
+  --fg: #1b1c1f;
+  --muted: #5d6067;
+  --rule: #c9cbcf;
+  --phone: #111214;
+  --shadow: rgba(20, 22, 28, .28);
+  --shell-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181b; --fg: #e9eaec; --muted: #9a9da5; --rule: #2c2e33; --phone: #050506; --shadow: rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17181b; --fg: #e9eaec; --muted: #9a9da5; --rule: #2c2e33; --phone: #050506; --shadow: rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--shell-font); }
+.wrap { max-width: 1340px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+.intro p { max-width: 62ch; color: var(--muted); margin: 0; }
+.look { border-top: 1px solid var(--rule); margin-top: 48px; padding-top: 32px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; }
+@media (max-width: 900px) { .look { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+.meta h2 { font-size: 24px; line-height: 1.15; margin: 0 0 4px; letter-spacing: -0.01em; display: flex; gap: 10px; align-items: baseline; }
+.meta h2 .num { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+.meta .idea { margin: 8px 0 16px; }
+.meta dl { margin: 0; display: grid; gap: 10px; }
+.meta dt { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.meta dd { margin: 2px 0 0; }
+.chips { display: flex; gap: 6px; margin: 16px 0 0; flex-wrap: wrap; }
+.chips i { width: 28px; height: 28px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.35); }
+.phones { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 20px; min-width: 0; }
+.phones figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; }
+.phones figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; padding-left: 8px; }
+.phone { width: 320px; height: 680px; border-radius: 46px; padding: 10px; background: var(--phone); box-shadow: 0 24px 40px -18px var(--shadow), 0 2px 6px rgba(0,0,0,.15); }
+.screen { width: 300px; height: 660px; border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.sb { height: 44px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font: 600 14px/1 var(--shell-font); }
+.batt { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; opacity: .9; }
+.batt::after { content: ""; position: absolute; inset: 1.5px 6px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+.dropped { border-top: 1px solid var(--rule); margin-top: 56px; padding-top: 24px; color: var(--muted); }
+.dropped h2 { font-size: 16px; color: var(--fg); margin: 0 0 8px; }
+.dropped ul { margin: 0; padding-left: 18px; max-width: 75ch; }
+::selection { background: #3b5bdb; color: #fff; }
+.phones::-webkit-scrollbar { height: 6px; }
+.phones::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ============ 1. MUNICH '72 ============ */
+.lA { --ground: #ffffff; --ink: #163257; --blue: #3f97d6; --green: #26935a; --silver: #b4bcc4; --orange: #ef7d12; --lb: #e4f1fa;
+  background: var(--ground); color: var(--ink); font-family: Archivo, "Helvetica Neue", Arial, sans-serif; font-variation-settings: "wdth" 100; }
+.lA .tab { font-variant-numeric: tabular-nums; }
+.a-bands { display: grid; grid-template-columns: repeat(4, 1fr); height: 8px; flex: none; }
+.a-bands i:nth-child(1) { background: var(--blue); } .a-bands i:nth-child(2) { background: var(--green); }
+.a-bands i:nth-child(3) { background: var(--silver); } .a-bands i:nth-child(4) { background: var(--orange); }
+.a-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 6px; }
+.a-brand { font-weight: 800; font-size: 15px; letter-spacing: .02em; font-variation-settings: "wdth" 112; }
+.a-tile { width: 40px; height: 40px; display: grid; place-items: center; background: var(--blue); color: #fff; }
+.a-tiles { display: flex; gap: 4px; }
+.a-sess { padding: 4px 18px 14px; }
+.a-sess h3 { font-size: 34px; font-weight: 800; line-height: 1; margin: 0; letter-spacing: -0.02em; font-variation-settings: "wdth" 88; }
+.a-sess p { margin: 6px 0 0; font-size: 13px; opacity: .75; }
+.a-ex { margin: 0 18px; }
+.a-exhead { display: flex; gap: 12px; align-items: center; }
+.a-picto { width: 52px; height: 52px; flex: none; display: grid; place-items: center; }
+.a-picto svg, .a-minis svg { color: #fff; } .a-picto svg { width: 40px; height: 40px; }
+.a-picto.blue { background: var(--blue); } .a-picto.green { background: var(--green); } .a-picto.silver { background: var(--silver); } .a-picto.orange { background: var(--orange); }
+.a-exhead h4 { margin: 0; font-size: 20px; font-weight: 750; line-height: 1.1; }
+.a-exhead p { margin: 2px 0 0; font-size: 13px; opacity: .75; }
+.a-last { margin: 12px 0 10px; font-size: 13px; padding: 8px 10px; background: #f0f2f4; }
+.a-sets { display: grid; gap: 3px; }
+.a-row { display: grid; grid-template-columns: 26px 1fr 18px 1fr 26px; align-items: center; height: 44px; padding: 0 10px; background: var(--lb); font-size: 20px; font-weight: 650; }
+.a-row .n { font-size: 12px; font-weight: 700; opacity: .6; }
+.a-row .x { opacity: .5; text-align: center; font-size: 16px; }
+.a-row .ok { color: var(--blue); }
+.a-row.cur { background: #fff; box-shadow: inset 0 0 0 3px var(--orange); height: 56px; }
+.a-in { font-size: 28px; font-weight: 800; border-bottom: 3px solid var(--ink); width: 64px; line-height: 1.1; }
+.a-hdr { display: grid; grid-template-columns: 26px 1fr 18px 1fr 26px; padding: 0 10px 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .6; font-weight: 700; }
+.a-go { margin-top: 12px; width: 100%; height: 56px; background: var(--orange); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.a-next { display: flex; gap: 12px; align-items: center; margin: 10px 18px 0; padding-top: 10px; border-top: 2px solid #eef0f2; }
+.a-next .a-picto { width: 36px; height: 36px; } .a-next .a-picto svg { width: 28px; height: 28px; }
+.a-next b { display: block; font-size: 15px; } .a-next span { font-size: 12px; opacity: .7; }
+.a-timer { background: var(--blue); color: #fff; }
+.a-timer .a-bands { height: 12px; }
+.a-tbody { flex: 1; display: flex; flex-direction: column; padding: 28px 22px 28px; }
+.a-tbody .big-picto { width: 96px; height: 96px; background: #fff; display: grid; place-items: center; }
+.a-tbody .big-picto svg { width: 76px; height: 76px; }
+.a-tbody h4 { font-size: 26px; font-weight: 800; margin: 18px 0 0; line-height: 1; }
+.a-tbody .rest { margin: 6px 0 0; font-size: 14px; opacity: .85; }
+.a-clock { font-size: 128px; font-weight: 800; line-height: .9; margin-top: auto; letter-spacing: -0.04em; font-variation-settings: "wdth" 80; }
+.a-drain { height: 12px; background: rgba(255,255,255,.3); margin: 18px 0 12px; position: relative; }
+.a-drain::before { content: ""; position: absolute; inset: 0 30% 0 0; background: #fff; animation: a-drain 30s linear infinite; }
+@keyframes a-drain { from { right: 30%; } to { right: 100%; } }
+.a-nextset { font-size: 16px; margin: 0 0 24px; } .a-nextset b { font-size: 20px; }
+.a-ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.a-ctrls button { height: 60px; background: #fff; color: var(--ink); font-weight: 800; font-size: 18px; }
+.a-ctrls button + button { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px #fff; }
+.a-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 0 18px 16px; }
+.a-week div { aspect-ratio: 1; background: #f0f2f4; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; }
+.a-week div.t { background: var(--blue); color: #fff; } .a-week div.t2 { background: var(--green); color: #fff; }
+.a-week div.today { box-shadow: inset 0 0 0 3px var(--orange); }
+.a-list { margin: 0 18px; display: grid; }
+.a-li { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; padding: 12px 0; border-top: 2px solid #eef0f2; align-items: center; }
+.a-li .d { font-weight: 800; font-size: 22px; line-height: .95; font-variation-settings: "wdth" 80; }
+.a-li .d small { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; opacity: .6; }
+.a-li b { font-size: 16px; display: block; margin-bottom: 5px; }
+.a-minis { display: flex; gap: 3px; }
+.a-minis i { width: 20px; height: 20px; display: grid; place-items: center; }
+.a-minis svg { width: 16px; height: 16px; }
+.a-acts { display: flex; gap: 2px; color: var(--blue); }
+.a-acts button { width: 34px; height: 40px; display: grid; place-items: center; }
+.a-h1 { font-size: 34px; font-weight: 800; margin: 2px 18px 12px; letter-spacing: -0.02em; line-height: 1; font-variation-settings: "wdth" 88; }
+
+/* ============ 2. BUMPER ============ */
+.lB { --rubber: #131313; --ink: #efece6; --dim: #9b978f; --red: #d42a2a; --blue: #2363c4; --yellow: #f2c12e; --green: #2f8c4a; --white: #f1f1ee; --steel: #8d9297; --seam: #262626;
+  background-color: var(--rubber); color: var(--ink); font-family: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  background-image: radial-gradient(rgba(255,255,255,.07) 0.8px, transparent 1.2px), radial-gradient(rgba(255,255,255,.04) 0.8px, transparent 1.2px);
+  background-size: 7px 7px, 11px 11px; background-position: 0 0, 3px 5px; }
+.lB .disp { font-family: "Big Shoulders Display", Impact, sans-serif; }
+.lB .tab { font-variant-numeric: tabular-nums; }
+.b-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; }
+.b-brand { font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 900; font-size: 22px; letter-spacing: .12em; }
+.b-sq { width: 44px; height: 44px; border-radius: 10px; background: #222; display: grid; place-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.b-sess { padding: 2px 18px 12px; }
+.b-sess h3 { margin: 0; font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 900; font-size: 46px; line-height: .9; text-transform: uppercase; letter-spacing: .01em; }
+.b-sess p { margin: 4px 0 0; color: var(--dim); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.b-card { margin: 0 12px; background: #1c1c1c; border-radius: 14px; padding: 14px 14px 12px; box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 8px 16px -8px rgba(0,0,0,.8); }
+.b-card h4 { margin: 0; font-size: 24px; font-weight: 800; font-family: "Big Shoulders Display", Impact, sans-serif; text-transform: uppercase; letter-spacing: .02em; display: flex; justify-content: space-between; align-items: baseline; }
+.b-card h4 span { font-family: "Barlow Semi Condensed", sans-serif; font-size: 13px; color: var(--dim); font-weight: 600; letter-spacing: .06em; }
+.b-last { font-size: 13px; color: var(--dim); margin: 4px 0 10px; }
+.b-set { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; height: 46px; border-top: 1px solid var(--seam); }
+.b-bar { display: flex; align-items: center; height: 40px; }
+.b-bar .sleeve { width: 14px; height: 6px; background: #6d7176; border-radius: 1px; }
+.b-bar .collar { width: 4px; height: 14px; background: #9ba0a5; border-radius: 1px; }
+.b-bar .shaft { flex: 1; height: 4px; background: #5a5d61; }
+.b-bar .p { width: 9px; border-radius: 2px; margin-left: 1px; }
+.p.red { background: var(--red); height: 38px; } .p.blue { background: var(--blue); height: 38px; } .p.yellow { background: var(--yellow); height: 38px; }
+.p.green { background: var(--green); height: 38px; } .p.white { background: var(--white); height: 26px; width: 6px !important; } .p.steel { background: var(--steel); height: 20px; width: 5px !important; }
+.b-num { font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 800; font-size: 28px; display: flex; align-items: baseline; gap: 6px; }
+.b-num small { font-family: "Barlow Semi Condensed", sans-serif; font-size: 13px; color: var(--dim); font-weight: 600; margin-left: auto; letter-spacing: .04em; }
+.b-set.cur { height: auto; padding: 10px 0 4px; grid-template-columns: 1fr; gap: 8px; }
+.b-cur-top { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; }
+.b-cur-top .b-num { font-size: 42px; color: var(--yellow); white-space: nowrap; }
+.b-loadnote { margin: 0; font-size: 14px; color: var(--dim); font-weight: 600; }
+.b-loadnote b { color: var(--ink); }
+.b-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.b-steps button { height: 44px; border-radius: 10px; background: #2a2a2a; font-weight: 700; font-size: 16px; }
+.b-go { margin: 12px 0 0; width: 100%; height: 58px; border-radius: 14px; background: var(--yellow); color: #111; font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 900; font-size: 24px; text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.b-queue { margin: 10px 12px 0; display: grid; gap: 6px; }
+.b-q { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1a1a1a; border-radius: 12px; font-weight: 700; font-size: 17px; text-transform: uppercase; letter-spacing: .02em; }
+.b-q .dot { width: 14px; height: 14px; border-radius: 50%; }
+.b-q span { margin-left: auto; color: var(--dim); font-size: 14px; }
+.b-timer { align-items: stretch; }
+.b-tbody { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 18px 26px; }
+.b-tbody h4 { margin: 8px 0 18px; font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 900; font-size: 30px; text-transform: uppercase; letter-spacing: .04em; }
+.b-plate { width: 248px; height: 248px; border-radius: 50%; background: var(--red); position: relative; display: grid; place-items: center;
+  box-shadow: inset 0 0 0 10px #b92222, inset 0 0 0 11px rgba(0,0,0,.25), 0 18px 30px -12px rgba(0,0,0,.9); }
+.b-plate .ring { position: absolute; inset: 22px; border-radius: 50%; animation: b-spin 40s linear infinite; }
+.b-plate .ring svg { width: 100%; height: 100%; }
+@keyframes b-spin { to { transform: rotate(360deg); } }
+.b-hub { width: 132px; height: 132px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #c9ccd0, #8a8f94 70%); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.5), inset 0 0 0 6px rgba(0,0,0,.12); color: #151515; }
+.b-hub b { font-family: "Big Shoulders Display", Impact, sans-serif; font-size: 58px; font-weight: 900; line-height: 1; letter-spacing: -0.01em; }
+.b-nextline { margin: 26px 0 0; text-align: center; font-size: 15px; color: var(--dim); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.b-nextline b { display: block; color: var(--ink); font-family: "Big Shoulders Display", Impact, sans-serif; font-size: 34px; font-weight: 800; letter-spacing: .02em; }
+.b-load { display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 6px; }
+.b-ctrls { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+.b-ctrls button { height: 58px; border-radius: 14px; background: #262626; font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: .06em; }
+.b-ctrls button:first-child { background: var(--ink); color: #111; }
+.b-li { margin: 0 12px 8px; background: #1b1b1b; border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.b-li .t { font-family: "Big Shoulders Display", Impact, sans-serif; font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1; }
+.b-li .d { color: var(--dim); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.b-li .acts { grid-row: span 2; display: flex; gap: 4px; color: var(--dim); }
+.b-li .acts button { width: 36px; height: 40px; display: grid; place-items: center; }
+.b-li .top { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--seam); padding-top: 8px; margin-top: 4px; font-size: 14px; color: var(--dim); font-weight: 600; }
+.b-li .top .b-bar { width: 64px; height: 26px; }
+.b-li .top .p { height: 24px !important; width: 6px; }
+.b-li .top b { color: var(--ink); font-size: 15px; }
+
+/* ============ 3. ATTEMPT BOARD ============ */
+.lC { --black: #09090a; --panel: #141416; --amber: #ffb21a; --amberdim: #3b2a0a; --light: #f6f5ef; --red: #e3262d; --label: #8c8c93; --seam: #232327;
+  background: var(--black); color: var(--light); font-family: "Sofia Sans Extra Condensed", "Arial Narrow", sans-serif; }
+.lC .led { font-family: Doto, ui-monospace, monospace; font-weight: 900; color: var(--amber); text-shadow: 0 0 8px rgba(255,178,26,.45); font-variant-numeric: tabular-nums; }
+.c-top { display: flex; justify-content: space-between; align-items: center; padding: 6px 16px 10px; border-bottom: 1px solid var(--seam); }
+.c-top .brand { font-weight: 800; font-size: 22px; letter-spacing: .14em; text-transform: uppercase; }
+.c-top .brand span { color: var(--amber); }
+.c-btn { width: 42px; height: 42px; border: 1px solid #34343a; border-radius: 4px; display: grid; place-items: center; background: #18181b; }
+.c-sess { padding: 12px 16px 10px; display: flex; justify-content: space-between; align-items: end; }
+.c-sess h3 { margin: 0; font-size: 34px; line-height: .9; text-transform: uppercase; font-weight: 800; letter-spacing: .02em; }
+.c-sess p { margin: 0; color: var(--label); font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; text-align: right; line-height: 1.1; }
+.c-ex { margin: 0 10px; background: var(--panel); border: 1px solid var(--seam); border-radius: 6px; padding: 12px 10px; }
+.c-ex h4 { margin: 0 4px 2px; font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; align-items: baseline; }
+.c-ex h4 span { font-size: 15px; color: var(--label); letter-spacing: .1em; }
+.c-last { margin: 0 4px 10px; font-size: 15px; color: var(--label); letter-spacing: .04em; font-weight: 500; }
+.c-grid { display: grid; grid-template-columns: repeat(3, 1fr) 40px; gap: 6px; }
+.c-cell { background: #0c0c0d; border: 1px solid #26262b; border-radius: 4px; padding: 6px 4px 8px; text-align: center; }
+.c-cell .lbl { font-size: 13px; color: var(--label); font-weight: 700; letter-spacing: .12em; }
+.c-cell .w { font-size: 30px; line-height: 1.05; display: block; }
+.c-cell .r { font-size: 16px; color: var(--label); font-weight: 700; letter-spacing: .06em; }
+.c-lights { display: flex; justify-content: center; gap: 5px; margin-top: 6px; }
+.c-lights i { width: 12px; height: 12px; border-radius: 50%; background: #2a2a2e; }
+.c-lights.good i { background: var(--light); box-shadow: 0 0 6px rgba(255,255,240,.7); }
+.c-cell.now { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber), 0 0 18px -4px rgba(255,178,26,.6); }
+.c-cell.now .lbl { color: var(--amber); }
+.c-cell.add { display: grid; place-items: center; color: var(--label); border-style: dashed; }
+.c-adjust { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 10px; }
+.c-adjust button { height: 44px; border-radius: 4px; background: #1d1d21; border: 1px solid #2e2e33; font-weight: 800; font-size: 18px; letter-spacing: .06em; }
+.c-go { margin-top: 10px; width: 100%; height: 56px; border-radius: 4px; background: var(--amber); color: #111; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: .12em; }
+.c-board { margin: 12px 10px 0; border-top: 1px solid var(--seam); }
+.c-brow { display: grid; grid-template-columns: 1fr repeat(3, 44px); gap: 4px; align-items: center; height: 38px; border-bottom: 1px solid var(--seam); padding: 0 4px; }
+.c-brow b { font-size: 19px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.c-brow .led { font-size: 17px; text-align: right; opacity: .55; }
+.c-timer .c-tbody { flex: 1; display: flex; flex-direction: column; padding: 20px 14px 24px; }
+.c-tlabel { font-size: 18px; color: var(--label); font-weight: 700; letter-spacing: .2em; text-transform: uppercase; text-align: center; }
+.c-tname { font-size: 36px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; text-align: center; margin: 2px 0 20px; line-height: 1; }
+.c-clockbox { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 26px 0 22px; text-align: center; box-shadow: inset 0 2px 12px rgba(0,0,0,.9); }
+.c-clockbox .led { font-size: 100px; line-height: .9; letter-spacing: .02em; }
+.c-clockbox .led .colon { animation: c-blink 1s steps(1) infinite; }
+@keyframes c-blink { 50% { opacity: .15; } }
+.c-up { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--seam); border-radius: 6px; }
+.c-up div { padding: 10px 12px; text-align: center; }
+.c-up div + div { border-left: 1px solid var(--seam); }
+.c-up .lbl { font-size: 14px; color: var(--label); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.c-up .led { font-size: 34px; display: block; line-height: 1.1; }
+.c-reflights { display: flex; justify-content: center; gap: 18px; margin: 22px 0 0; }
+.c-reflights i { width: 30px; height: 30px; border-radius: 50%; background: #222226; box-shadow: inset 0 2px 4px rgba(0,0,0,.7); }
+.c-ctrls { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.c-ctrls button { height: 58px; border-radius: 4px; background: #1d1d21; border: 1px solid #34343a; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: .14em; }
+.c-ctrls button.stop { color: var(--red); border-color: #4a1d1f; }
+.c-list { margin: 0 10px; }
+.c-lhead { display: grid; grid-template-columns: 54px 1fr 56px; gap: 6px; font-size: 13px; color: var(--label); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; padding: 0 4px 6px; border-bottom: 1px solid var(--seam); }
+.c-lrow { display: grid; grid-template-columns: 54px 1fr 56px; gap: 6px; padding: 10px 4px; border-bottom: 1px solid var(--seam); align-items: start; }
+.c-lrow .date { font-size: 20px; line-height: 1; }
+.c-lrow .date small { display: block; font-family: "Sofia Sans Extra Condensed", sans-serif; color: var(--label); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-shadow: none; margin-top: 3px; }
+.c-lrow .title { font-size: 21px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; line-height: 1; }
+.c-lrow .tops { margin-top: 5px; font-size: 15px; color: var(--label); font-weight: 600; letter-spacing: .03em; line-height: 1.3; }
+.c-lrow .tops b { color: var(--light); font-weight: 700; }
+.c-lrow .acts { display: flex; flex-direction: column; gap: 4px; align-items: end; color: var(--label); }
+.c-lrow .acts button { width: 40px; height: 32px; display: grid; place-items: center; border: 1px solid #2c2c31; border-radius: 4px; }
+
+/* ============ 4. LINE MAP ============ */
+.lD { --night: #0f1e3a; --night2: #142849; --porcelain: #f3f1eb; --muted: #93a3c3; --scarlet: #e8412f; --cobalt: #4d8dff; --amber: #f5a623; --green: #25b061;
+  background: var(--night); color: var(--porcelain); font-family: Overpass, "Helvetica Neue", Arial, sans-serif; }
+.lD .tab { font-variant-numeric: tabular-nums; }
+.d-top { display: flex; justify-content: space-between; align-items: center; padding: 6px 18px 4px; }
+.d-brand { font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.d-brand i { width: 22px; height: 22px; border-radius: 50%; border: 5px solid var(--scarlet); background: var(--porcelain); }
+.d-route { margin: 10px 18px 0; }
+.d-route h3 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.05; }
+.d-route p { margin: 2px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.d-strip { display: flex; align-items: center; margin: 14px 0 6px; }
+.d-strip .seg { height: 6px; flex: 1; }
+.d-strip .stop { width: 14px; height: 14px; border-radius: 50%; background: var(--porcelain); border: 3px solid var(--night); box-shadow: 0 0 0 2px var(--porcelain); flex: none; z-index: 1; }
+.d-strip .stop.here { width: 20px; height: 20px; border: 5px solid var(--scarlet); box-shadow: none; }
+.d-striplbl { display: grid; grid-template-columns: repeat(4, 1fr); font-size: 11px; color: var(--muted); font-weight: 700; }
+.d-striplbl span:first-child { color: var(--porcelain); }
+.d-line { position: relative; margin: 16px 18px 0 18px; padding-left: 40px; }
+.d-line::before { content: ""; position: absolute; left: 11px; top: 10px; bottom: 26px; width: 8px; border-radius: 4px; background: var(--scarlet); }
+.d-line .badge { position: absolute; left: 0; top: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--scarlet); display: grid; place-items: center; font-size: 12px; font-weight: 800; z-index: 1; }
+.d-line h4 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.2; }
+.d-line .note { margin: 2px 0 8px; font-size: 13px; color: var(--muted); }
+.d-st { position: relative; height: 40px; display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; }
+.d-st::before { content: ""; position: absolute; left: -36px; width: 22px; height: 6px; background: var(--scarlet); }
+.d-st::after { content: ""; position: absolute; left: -34px; width: 14px; height: 14px; border-radius: 50%; background: var(--porcelain); border: 3px solid var(--scarlet); box-sizing: content-box; display: none; }
+.d-st .lbl { font-size: 12px; color: var(--muted); font-weight: 700; width: 38px; text-transform: uppercase; letter-spacing: .06em; }
+.d-st.cur { height: auto; padding: 8px 0; align-items: flex-start; flex-direction: column; gap: 6px; }
+.d-st.cur::before { display: none; }
+.d-st.cur::after { display: block; top: 10px; left: -38px; width: 18px; height: 18px; border-width: 5px; }
+.d-st.cur .lbl { color: var(--porcelain); width: auto; }
+.d-inputs { display: flex; gap: 8px; align-items: center; }
+.d-inputs span.box { min-width: 86px; height: 52px; border-radius: 10px; background: var(--porcelain); color: var(--night); display: flex; align-items: baseline; justify-content: center; gap: 4px; padding-top: 10px; font-size: 28px; font-weight: 800; }
+.d-inputs span.box small { font-size: 12px; color: #5b6b8a; }
+.d-st.add { color: var(--muted); font-size: 15px; }
+.d-st.add::before { background: transparent; border-top: 3px dashed var(--scarlet); height: 0; }
+.d-go { margin: 6px 0 0; height: 50px; border-radius: 25px; background: var(--scarlet); padding: 0 20px; font-weight: 800; font-size: 17px; display: inline-flex; align-items: center; gap: 8px; }
+.d-xfer { margin: 14px 18px 0; padding: 10px 12px; border-radius: 10px; background: var(--night2); display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.d-xfer .roundel { width: 26px; height: 26px; border-radius: 50%; background: var(--cobalt); display: grid; place-items: center; font-size: 11px; font-weight: 800; flex: none; }
+.d-xfer b { display: block; font-size: 15px; }
+.d-xfer span { color: var(--muted); }
+.d-timer .d-tbody { flex: 1; display: flex; flex-direction: column; padding: 18px 20px 26px; }
+.d-tbadge { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
+.d-tbadge i { width: 34px; height: 34px; border-radius: 50%; background: var(--scarlet); display: grid; place-items: center; font-style: normal; font-size: 13px; }
+.d-tlabel { margin: 36px 0 0; color: var(--muted); font-size: 16px; font-weight: 600; }
+.d-clock { font-size: 112px; font-weight: 800; line-height: .95; letter-spacing: -0.03em; }
+.d-track { position: relative; height: 60px; margin: 30px 6px 0; }
+.d-track .rail { position: absolute; left: 0; right: 0; top: 18px; height: 8px; border-radius: 4px; background: var(--scarlet); }
+.d-track .s { position: absolute; top: 10px; width: 24px; height: 24px; border-radius: 50%; background: var(--porcelain); border: 5px solid var(--scarlet); }
+.d-track .s.a { left: 0; } .d-track .s.b { right: 0; }
+.d-track .train { position: absolute; top: 14px; left: 10%; width: 16px; height: 16px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px rgba(245,166,35,.25); animation: d-go 30s linear infinite; }
+@keyframes d-go { from { left: 10%; } to { left: 88%; } }
+.d-track .tl { position: absolute; top: 40px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.d-track .tl.b { right: 0; color: var(--porcelain); }
+.d-nextset { margin-top: 12px; font-size: 15px; color: var(--muted); }
+.d-nextset b { display: block; color: var(--porcelain); font-size: 26px; }
+.d-ctrls { margin-top: auto; display: flex; gap: 10px; }
+.d-ctrls button { flex: 1; height: 56px; border-radius: 28px; background: var(--porcelain); color: var(--night); font-weight: 800; font-size: 18px; }
+.d-ctrls button + button { background: transparent; color: var(--porcelain); box-shadow: inset 0 0 0 2px rgba(243,241,235,.4); }
+.d-h1 { font-size: 30px; font-weight: 800; margin: 8px 18px 4px; line-height: 1.1; }
+.d-legend { margin: 0 18px 12px; display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.d-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.d-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.d-li { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 12px 18px; border-top: 1px solid rgba(147,163,195,.18); align-items: center; }
+.d-li .t { font-size: 18px; font-weight: 800; }
+.d-li .t small { font-size: 13px; color: var(--muted); font-weight: 600; margin-right: 6px; }
+.d-li .acts { display: flex; gap: 2px; color: var(--muted); grid-row: span 2; }
+.d-li .acts button { width: 36px; height: 40px; display: grid; place-items: center; }
+.d-mini { display: flex; align-items: center; }
+.d-mini i { width: 12px; height: 12px; border-radius: 50%; background: var(--porcelain); border: 3px solid; box-sizing: content-box; flex: none; }
+.d-mini b { height: 4px; width: 22px; }
+
+/* ============ 5. FULL FRAME ============ */
+.lE { --cobalt: #2338e0; --cobalt-deep: #1626a8; --tomato: #ff5a36; --lime: #d6f23d; --pink: #ff86cf; --ink: #0d0d0d; --paper: #ffffff;
+  font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif; font-variation-settings: "opsz" 24; }
+.lE .tab { font-variant-numeric: tabular-nums; }
+.e-field { background: var(--cobalt); color: var(--paper); }
+.e-head { display: flex; justify-content: space-between; align-items: center; padding: 4px 20px 0; font-size: 14px; font-weight: 600; }
+.e-head .count { display: flex; gap: 4px; }
+.e-head .count i { width: 18px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.35); }
+.e-head .count i.on { background: #fff; }
+.e-title { padding: 18px 20px 0; }
+.e-title h3 { margin: 0; font-size: 40px; font-weight: 800; line-height: .95; letter-spacing: -0.03em; font-variation-settings: "opsz" 96, "wdth" 80; }
+.e-title p { margin: 8px 0 0; font-size: 14px; opacity: .8; }
+.e-main { flex: 1; position: relative; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; }
+.e-setlbl { font-size: 15px; font-weight: 600; opacity: .85; }
+.e-weight { font-size: 132px; font-weight: 800; line-height: .82; letter-spacing: -0.045em; font-variation-settings: "opsz" 96, "wdth" 75; margin: 6px 0 0; }
+.e-weight small { font-size: 22px; letter-spacing: 0; font-weight: 600; opacity: .8; margin-left: 4px; }
+.e-reps { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; font-variation-settings: "opsz" 96, "wdth" 75; margin-top: 6px; }
+.e-reps small { font-size: 22px; font-weight: 600; opacity: .8; letter-spacing: 0; }
+.e-prev { display: flex; gap: 6px; margin-top: 18px; flex-wrap: wrap; }
+.e-prev span { padding: 6px 10px; border-radius: 16px; background: rgba(255,255,255,.16); font-size: 14px; font-weight: 600; }
+.e-rail { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; }
+.e-rail button { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; }
+.e-rail button.hot { background: #fff; color: var(--cobalt); }
+.e-rail .ico { width: 24px; height: 24px; }
+.e-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 20px; }
+.e-steps button { height: 46px; border-radius: 23px; background: rgba(255,255,255,.16); font-weight: 700; font-size: 16px; }
+.e-done { margin: 10px 20px 0; height: 58px; border-radius: 29px; background: #fff; color: var(--cobalt); font-weight: 800; font-size: 19px; }
+.e-peek { margin-top: 14px; background: var(--tomato); color: var(--ink); height: 62px; padding: 12px 20px 0; display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-radius: 22px 22px 0 0; }
+.e-peek span { opacity: .7; font-weight: 600; }
+.e-timer { background: var(--cobalt-deep); color: #fff; }
+.e-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: var(--cobalt); animation: e-rise 30s linear infinite; }
+@keyframes e-rise { from { height: 62%; } to { height: 100%; } }
+.e-timer > *:not(.e-fill) { position: relative; }
+.e-tbody { flex: 1; display: flex; flex-direction: column; padding: 18px 20px 30px; }
+.e-tbody .lbl { font-size: 15px; font-weight: 600; opacity: .85; }
+.e-tbody h4 { margin: 2px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variation-settings: "opsz" 96, "wdth" 80; }
+.e-tclock { margin-top: auto; font-size: 150px; font-weight: 800; line-height: .8; letter-spacing: -0.05em; font-variation-settings: "opsz" 96, "wdth" 75; }
+.e-tnext { margin: 18px 0 0; font-size: 16px; } .e-tnext b { font-size: 24px; display: block; font-weight: 800; }
+.e-hint { margin-top: 22px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: .85; }
+.e-hint button { height: 44px; padding: 0 18px; border-radius: 22px; background: rgba(255,255,255,.18); font-weight: 700; }
+.e-home { background: var(--paper); color: var(--ink); }
+.e-hh { display: flex; justify-content: space-between; align-items: end; padding: 10px 20px 14px; }
+.e-hh h3 { margin: 0; font-size: 44px; font-weight: 800; letter-spacing: -0.04em; line-height: .9; font-variation-settings: "opsz" 96, "wdth" 78; }
+.e-hh .btns { display: flex; gap: 8px; }
+.e-hh .btns button { width: 46px; height: 46px; border-radius: 50%; background: #efefef; display: grid; place-items: center; }
+.e-hh .btns button.go { background: var(--ink); color: #fff; }
+.e-card { margin: 0 12px 8px; border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: 1fr; }
+.e-card .top { padding: 14px 16px 12px; display: flex; justify-content: space-between; align-items: start; }
+.e-card .top b { font-size: 24px; font-weight: 800; display: block; letter-spacing: -0.02em; line-height: 1; font-variation-settings: "opsz" 96, "wdth" 85; }
+.e-card .top small { font-size: 13px; font-weight: 600; opacity: .75; }
+.e-card .acts { display: flex; gap: 2px; }
+.e-card .acts button { width: 36px; height: 36px; display: grid; place-items: center; }
+.e-card .strip { display: flex; height: 10px; }
+.e-card .strip i { flex: 1; }
+.e-card.c1 { background: var(--cobalt); color: #fff; }
+.e-card.c2 { background: var(--lime); color: var(--ink); }
+.e-card.c3 { background: #f0f0f0; color: var(--ink); }
+.e-card.c4 { background: var(--pink); color: var(--ink); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2h4"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <!-- Aicher-style lift pictograms: round caps, 45/90 degree limbs -->
+    <symbol id="p-bench" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"><path d="M16 31h20l5 8M21 31V15M7 15h28"/><path d="M8 37h30" stroke-width="3"/></g><circle cx="10" cy="31" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M9 10v10M33 10v10"/></g></symbol>
+    <symbol id="p-row" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"><path d="M17 19l14 6 3 15M31 25l-4 15M21 21v11M9 32h24"/></g><circle cx="12" cy="16" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M11 27v10M31 27v10"/></g></symbol>
+    <symbol id="p-pull" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"><path d="M6 7h36M17 7l5 13M31 7l-5 13M24 21v12l-4 9M24 33l4 9"/></g><circle cx="24" cy="15" r="4.5" fill="currentColor"/></symbol>
+    <symbol id="p-ohp" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"><path d="M9 7h30M16 7l8 15 8-15M24 22v12l-5 9M24 34l5 9"/></g><circle cx="24" cy="16" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M10 3v8M38 3v8"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>Five looks for Coach</h1>
+    <p>Each look shows the same sample session (Upper A, Thursday 1 October, partway through bench press) on three screens: logging a set, resting, and the session list. The weights and dates are sample data. Swipe sideways through the screens on a phone.</p>
+  </header>
+
+  <!-- ===================== 1. MUNICH '72 ===================== -->
+  <section class="look" id="munich">
+    <div class="meta">
+      <h2><span class="num">1</span> Munich ’72</h2>
+      <p class="idea">Based on Otl Aicher’s identity for the 1972 Olympics: flat bright color, square tiles, and a drawn pictogram for each lift. Each exercise gets a pictogram and a color, so you can spot it across the room.</p>
+      <dl>
+        <dt>Type</dt><dd>Archivo, a grotesque with a width axis. It narrows for big numbers and widens for the wordmark.</dd>
+        <dt>Why it fits</dt><dd>Pictograms make exercises recognizable without reading. It’s daylight-bright, with no hint of a dark-mode gym-bro look.</dd>
+        <dt>Risk</dt><dd>A white ground can glare in a dim gym. Each new exercise needs a pictogram, or a fallback for ones without.</dd>
+      </dl>
+      <div class="chips"><i style="background:#3f97d6"></i><i style="background:#26935a"></i><i style="background:#b4bcc4"></i><i style="background:#ef7d12"></i><i style="background:#163257"></i><i style="background:#fff"></i></div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen lA">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="a-bands"><i></i><i></i><i></i><i></i></div>
+          <div class="a-top"><span class="a-brand">COACH</span><div class="a-tiles"><button class="a-tile" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button></div></div>
+          <div class="a-sess"><h3>Upper A</h3><p>Thursday 1 October · 4 exercises</p></div>
+          <div class="a-ex">
+            <div class="a-exhead"><div class="a-picto blue"><svg><use href="#p-bench"/></svg></div><div><h4>Bench Press</h4><p>Rest 120 s between sets</p></div></div>
+            <p class="a-last">Last time: 150 × 8, 160 × 6, 170 × 4</p>
+            <div class="a-hdr"><span>Set</span><span>lb</span><span></span><span>Reps</span><span></span></div>
+            <div class="a-sets tab">
+              <div class="a-row"><span class="n">1</span><span>155</span><span class="x">×</span><span>8</span><svg class="ico ok"><use href="#i-check"/></svg></div>
+              <div class="a-row"><span class="n">2</span><span>165</span><span class="x">×</span><span>6</span><svg class="ico ok"><use href="#i-check"/></svg></div>
+              <div class="a-row cur"><span class="n">3</span><span class="a-in">175</span><span class="x">×</span><span class="a-in">5</span><svg class="ico"><use href="#i-plus"/></svg></div>
+            </div>
+            <button class="a-go"><svg class="ico"><use href="#i-timer"/></svg>Start rest · 2:00</button>
+          </div>
+          <div class="a-next"><div class="a-picto green"><svg><use href="#p-row"/></svg></div><div><b>Barbell Row</b><span>3 × 10 at 135</span></div></div>
+          <div class="a-next"><div class="a-picto silver"><svg><use href="#p-pull"/></svg></div><div><b>Pull-ups</b><span>3 sets, bodyweight</span></div></div>
+        </div></div>
+        <figcaption>Logging a set</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lA a-timer">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="a-bands"><i></i><i></i><i></i><i></i></div>
+          <div class="a-tbody">
+            <div class="big-picto" style="background:#fff"><svg style="color:var(--blue)"><use href="#p-bench"/></svg></div>
+            <h4>Bench Press</h4>
+            <p class="rest">Resting · 2:00 between sets</p>
+            <div class="a-clock tab">1:24</div>
+            <div class="a-drain"></div>
+            <p class="a-nextset">Next: set 3 &nbsp;<b class="tab">175 × 5</b></p>
+            <div class="a-ctrls"><button>Pause</button><button>Cancel</button></div>
+          </div>
+        </div></div>
+        <figcaption>Rest timer</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lA">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="a-bands"><i></i><i></i><i></i><i></i></div>
+          <div class="a-top"><span class="a-brand">COACH</span><div class="a-tiles"><button class="a-tile" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button><button class="a-tile" style="background:var(--orange)" aria-label="New session"><svg class="ico"><use href="#i-plus"/></svg></button></div></div>
+          <h3 class="a-h1">Sessions</h3>
+          <div class="a-week tab">
+            <div class="t"><span>M</span>28</div><div class="t2"><span>T</span>29</div><div><span>W</span>30</div><div class="t today"><span>T</span>1</div><div><span>F</span>2</div><div><span>S</span>3</div><div><span>S</span>4</div>
+          </div>
+          <div class="a-list">
+            <div class="a-li"><div class="d tab">1<small>Oct</small></div><div><b>Upper A</b><div class="a-minis"><i style="background:var(--blue)"><svg><use href="#p-bench"/></svg></i><i style="background:var(--green)"><svg><use href="#p-row"/></svg></i><i style="background:var(--silver)"><svg><use href="#p-pull"/></svg></i><i style="background:var(--orange)"><svg><use href="#p-ohp"/></svg></i></div></div><div class="a-acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="a-li"><div class="d tab">29<small>Sep</small></div><div><b>Lower A</b><div class="a-minis"><i style="background:var(--green)"><svg><use href="#p-ohp"/></svg></i><i style="background:var(--silver)"><svg><use href="#p-row"/></svg></i><i style="background:var(--blue)"><svg><use href="#p-pull"/></svg></i></div></div><div class="a-acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="a-li"><div class="d tab">28<small>Sep</small></div><div><b>Upper B</b><div class="a-minis"><i style="background:var(--orange)"><svg><use href="#p-ohp"/></svg></i><i style="background:var(--silver)"><svg><use href="#p-pull"/></svg></i><i style="background:var(--blue)"><svg><use href="#p-bench"/></svg></i></div></div><div class="a-acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="a-li"><div class="d tab">24<small>Sep</small></div><div><b>Upper A</b><div class="a-minis"><i style="background:var(--blue)"><svg><use href="#p-bench"/></svg></i><i style="background:var(--green)"><svg><use href="#p-row"/></svg></i><i style="background:var(--silver)"><svg><use href="#p-pull"/></svg></i><i style="background:var(--orange)"><svg><use href="#p-ohp"/></svg></i></div></div><div class="a-acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+          </div>
+        </div></div>
+        <figcaption>Session list</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== 2. BUMPER ===================== -->
+  <section class="look" id="bumper">
+    <div class="meta">
+      <h2><span class="num">2</span> Bumper</h2>
+      <p class="idea">Uses the competition plate color code: red 55, blue 45, yellow 35, green 25, white 10. Every set shows the plates you load on each side, so the color tells you what goes on the bar.</p>
+      <dl>
+        <dt>Type</dt><dd>Big Shoulders Display, cut like stamped plate lettering, with Barlow Semi Condensed for labels.</dd>
+        <dt>Why it fits</dt><dd>Plate math is something you actually do between sets. Rubber black is easy on the eyes in a dim gym.</dd>
+        <dt>Risk</dt><dd>It assumes barbell lifts. Dumbbell and bodyweight work have no plates, so they fall back to plain numbers.</dd>
+      </dl>
+      <div class="chips"><i style="background:#131313"></i><i style="background:#d42a2a"></i><i style="background:#2363c4"></i><i style="background:#f2c12e"></i><i style="background:#2f8c4a"></i><i style="background:#f1f1ee"></i></div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen lB">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="b-top"><span class="b-brand">COACH</span><button class="b-sq" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button></div>
+          <div class="b-sess"><h3>Upper A</h3><p>Thu 1 Oct · 4 lifts</p></div>
+          <div class="b-card">
+            <h4>Bench Press <span>REST 2:00</span></h4>
+            <p class="b-last">Last time: 150×8 · 160×6 · 170×4</p>
+            <div class="b-set"><div class="b-bar"><i class="sleeve"></i><i class="p red"></i><i class="collar"></i><i class="shaft"></i></div><div class="b-num tab">155 × 8<small>55 / side</small></div></div>
+            <div class="b-set"><div class="b-bar"><i class="sleeve"></i><i class="p red"></i><i class="p steel"></i><i class="collar"></i><i class="shaft"></i></div><div class="b-num tab">165 × 6<small>55 + 5</small></div></div>
+            <div class="b-set cur">
+              <div class="b-cur-top"><div class="b-bar"><i class="sleeve"></i><i class="p red"></i><i class="p white"></i><i class="collar"></i><i class="shaft"></i></div><div class="b-num tab">175 × 5</div></div>
+              <p class="b-loadnote">Load <b>55 + 10</b> each side</p>
+              <div class="b-steps"><button>−5</button><button>+5</button><button>−1 rep</button><button>+1 rep</button></div>
+            </div>
+            <button class="b-go"><svg class="ico"><use href="#i-timer"/></svg>Rest 2:00</button>
+          </div>
+          <div class="b-queue">
+            <div class="b-q"><i class="dot" style="background:var(--blue)"></i>Barbell Row<span class="tab">3 × 10 · 135</span></div>
+            <div class="b-q"><i class="dot" style="background:#555"></i>Pull-ups<span>BW</span></div>
+          </div>
+        </div></div>
+        <figcaption>Logging a set</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lB b-timer">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="b-tbody">
+            <h4>Bench Press</h4>
+            <div class="b-plate">
+              <div class="ring"><svg viewBox="0 0 200 200"><defs><path id="b-circ" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/></defs><text font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="15" letter-spacing="2" fill="rgba(255,255,255,.85)"><textPath href="#b-circ" textLength="530" lengthAdjust="spacing">55 LB · REST 2:00 · 55 LB · REST 2:00 · 55 LB · REST 2:00 ·</textPath></text></svg></div>
+              <div class="b-hub"><b class="tab">1:24</b></div>
+            </div>
+            <p class="b-nextline">Next set<b class="tab">175 × 5</b></p>
+            <div class="b-load"><div class="b-bar" style="width:90px"><i class="sleeve"></i><i class="p red"></i><i class="p white"></i><i class="collar"></i><i class="shaft"></i></div><span style="color:var(--dim);font-weight:600">add a 10 each side</span></div>
+            <div class="b-ctrls"><button>Pause</button><button>Cancel</button></div>
+          </div>
+        </div></div>
+        <figcaption>Rest timer</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lB">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="b-top"><span class="b-brand">COACH</span><div style="display:flex;gap:8px"><button class="b-sq" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button><button class="b-sq" style="background:var(--yellow);color:#111" aria-label="New session"><svg class="ico"><use href="#i-plus"/></svg></button></div></div>
+          <div class="b-sess"><h3>Sessions</h3><p>4 this fortnight</p></div>
+          <div class="b-li"><span class="t">Upper A</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div><span class="d">Thu 1 Oct · 4 lifts</span>
+            <div class="top"><div class="b-bar"><i class="sleeve"></i><i class="p red"></i><i class="p white"></i><i class="collar"></i><i class="shaft"></i></div>Bench top set <b class="tab">175 × 5</b></div></div>
+          <div class="b-li"><span class="t">Lower A</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div><span class="d">Tue 29 Sep · 3 lifts</span>
+            <div class="top"><div class="b-bar"><i class="sleeve"></i><i class="p red"></i><i class="p red"></i><i class="p yellow"></i><i class="collar"></i><i class="shaft"></i></div>Squat top set <b class="tab">225 × 5</b></div></div>
+          <div class="b-li"><span class="t">Upper B</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div><span class="d">Mon 28 Sep · 3 lifts</span>
+            <div class="top"><div class="b-bar"><i class="sleeve"></i><i class="p green"></i><i class="collar"></i><i class="shaft"></i></div>Press top set <b class="tab">95 × 6</b></div></div>
+        </div></div>
+        <figcaption>Session list</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== 3. ATTEMPT BOARD ===================== -->
+  <section class="look" id="board">
+    <div class="meta">
+      <h2><span class="num">3</span> Attempt Board</h2>
+      <p class="idea">Based on the scoreboard at a powerlifting meet. Each set is an attempt card with amber LED numbers and three referee lights that turn white when the set is logged. The rest timer is the platform clock.</p>
+      <dl>
+        <dt>Type</dt><dd>Doto, a dot-matrix face, for every number. Sofia Sans Extra Condensed for labels, like on a scoreboard.</dd>
+        <dt>Why it fits</dt><dd>Planned, current, and done sets are each obvious at arm’s length. It reads well in a dark gym.</dd>
+        <dt>Risk</dt><dd>Dot-matrix numbers are harder to read below about 18px, so small dates need care. It also leans theatrical for a quiet tool.</dd>
+      </dl>
+      <div class="chips"><i style="background:#09090a"></i><i style="background:#141416"></i><i style="background:#ffb21a"></i><i style="background:#f6f5ef"></i><i style="background:#e3262d"></i></div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen lC">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="c-top"><span class="brand">Coach<span>·</span></span><button class="c-btn" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button></div>
+          <div class="c-sess"><h3>Upper A</h3><p>Thu<br>01 Oct</p></div>
+          <div class="c-ex">
+            <h4>Bench Press <span>Rest 2:00</span></h4>
+            <p class="c-last">Last: 150×8 · 160×6 · 170×4</p>
+            <div class="c-grid">
+              <div class="c-cell"><span class="lbl">SET 1</span><span class="w led">155</span><span class="r">× 8</span><div class="c-lights good"><i></i><i></i><i></i></div></div>
+              <div class="c-cell"><span class="lbl">SET 2</span><span class="w led">165</span><span class="r">× 6</span><div class="c-lights good"><i></i><i></i><i></i></div></div>
+              <div class="c-cell now"><span class="lbl">SET 3</span><span class="w led">175</span><span class="r" style="color:var(--amber)">× 5</span><div class="c-lights"><i></i><i></i><i></i></div></div>
+              <div class="c-cell add" aria-label="Add set"><svg class="ico"><use href="#i-plus"/></svg></div>
+            </div>
+            <div class="c-adjust"><button>−5</button><button>+5</button><button>−1</button><button>+1</button></div>
+            <button class="c-go">Good lift · start clock</button>
+          </div>
+          <div class="c-board">
+            <div class="c-brow"><b>Barbell Row</b><span class="led">135</span><span class="led">135</span><span class="led">135</span></div>
+            <div class="c-brow"><b>Pull-ups</b><span class="led">BW</span><span class="led">BW</span><span class="led">BW</span></div>
+            <div class="c-brow"><b>Overhead Press</b><span class="led">85</span><span class="led">90</span><span class="led">95</span></div>
+          </div>
+        </div></div>
+        <figcaption>Logging a set</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lC c-timer">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="c-tbody">
+            <div class="c-tlabel">Rest</div>
+            <div class="c-tname">Bench Press</div>
+            <div class="c-clockbox"><span class="led">1<span class="colon">:</span>24</span></div>
+            <div class="c-up">
+              <div><span class="lbl">Next attempt</span><span class="led">175</span></div>
+              <div><span class="lbl">Reps</span><span class="led">5</span></div>
+            </div>
+            <div class="c-reflights"><i></i><i></i><i></i></div>
+            <div class="c-ctrls"><button>Pause</button><button class="stop">Cancel</button></div>
+          </div>
+        </div></div>
+        <figcaption>Rest timer</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lC">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="c-top"><span class="brand">Coach<span>·</span></span><div style="display:flex;gap:6px"><button class="c-btn" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button><button class="c-btn" style="background:var(--amber);color:#111;border-color:var(--amber)" aria-label="New session"><svg class="ico"><use href="#i-plus"/></svg></button></div></div>
+          <div class="c-sess"><h3>Results</h3><p>Top sets</p></div>
+          <div class="c-list">
+            <div class="c-lhead"><span>Date</span><span>Session</span><span></span></div>
+            <div class="c-lrow"><span class="date led">01<small>OCT</small></span><div><div class="title">Upper A</div><div class="tops">Bench <b>175</b> · Row <b>135</b> · Pull-up <b>BW</b> · Press <b>95</b></div></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="c-lrow"><span class="date led">29<small>SEP</small></span><div><div class="title">Lower A</div><div class="tops">Squat <b>225</b> · RDL <b>185</b> · Lunge <b>40</b></div></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="c-lrow"><span class="date led">28<small>SEP</small></span><div><div class="title">Upper B</div><div class="tops">Press <b>95</b> · Chin-up <b>BW</b> · Incline <b>50</b></div></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+            <div class="c-lrow"><span class="date led">24<small>SEP</small></span><div><div class="title">Upper A</div><div class="tops">Bench <b>170</b> · Row <b>135</b> · Pull-up <b>BW</b> · Press <b>90</b></div></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div>
+          </div>
+        </div></div>
+        <figcaption>Session list</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== 4. LINE MAP ===================== -->
+  <section class="look" id="linemap">
+    <div class="meta">
+      <h2><span class="num">4</span> Line Map</h2>
+      <p class="idea">A session drawn as a transit map. Each exercise is a colored line and each set is a stop on it. Your current set is the big interchange, and switching exercises is a transfer. An exercise keeps the same color in every session.</p>
+      <dl>
+        <dt>Type</dt><dd>Overpass, which is based on Highway Gothic road signage, with tabular figures throughout.</dd>
+        <dt>Why it fits</dt><dd>Where you are in the session is always visible. The fixed exercise colors make the history list easy to scan.</dd>
+        <dt>Risk</dt><dd>The map idea only works if it stays strict. A loose version turns into dots and lines on a dark blue app.</dd>
+      </dl>
+      <div class="chips"><i style="background:#0f1e3a"></i><i style="background:#f3f1eb"></i><i style="background:#e8412f"></i><i style="background:#4d8dff"></i><i style="background:#f5a623"></i><i style="background:#25b061"></i></div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen lD">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="d-top"><span class="d-brand"><i></i>Coach</span><button aria-label="Menu" style="width:40px;height:40px;display:grid;place-items:center"><svg class="ico"><use href="#i-menu"/></svg></button></div>
+          <div class="d-route">
+            <h3>Upper A</h3><p>Thursday 1 October</p>
+            <div class="d-strip"><i class="stop here"></i><i class="seg" style="background:var(--scarlet)"></i><i class="stop"></i><i class="seg" style="background:var(--cobalt)"></i><i class="stop"></i><i class="seg" style="background:var(--amber)"></i><i class="stop"></i><i class="seg" style="background:var(--green)"></i></div>
+            <div class="d-striplbl"><span>Bench</span><span>Row</span><span>Pull-ups</span><span>Press</span></div>
+          </div>
+          <div class="d-line">
+            <span class="badge">BP</span>
+            <h4>Bench Press</h4>
+            <p class="note">Rest 2:00 · last time 150×8, 160×6, 170×4</p>
+            <div class="d-st tab"><span class="lbl">Set 1</span>155 × 8</div>
+            <div class="d-st tab"><span class="lbl">Set 2</span>165 × 6</div>
+            <div class="d-st cur"><span class="lbl">Set 3 · you are here</span>
+              <div class="d-inputs tab"><span class="box">175<small>lb</small></span>×<span class="box">5<small>reps</small></span></div>
+              <button class="d-go"><svg class="ico"><use href="#i-timer"/></svg>Log & rest 2:00</button>
+            </div>
+            <div class="d-st add"><span class="lbl"></span>Add a stop</div>
+          </div>
+          <div class="d-xfer"><span class="roundel">BR</span><div><b>Change here for Barbell Row</b><span>3 stops · 135 lb</span></div></div>
+        </div></div>
+        <figcaption>Logging a set</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lD d-timer">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="d-tbody">
+            <div class="d-tbadge"><i>BP</i>Bench Press</div>
+            <p class="d-tlabel">Next set in</p>
+            <div class="d-clock tab">1:24</div>
+            <div class="d-track"><i class="rail"></i><i class="s a"></i><i class="train"></i><i class="s b"></i><span class="tl" style="left:0">Set 2</span><span class="tl b">Set 3</span></div>
+            <p class="d-nextset">Set 3 <b class="tab">175 × 5</b></p>
+            <div class="d-ctrls"><button>Pause</button><button>Cancel</button></div>
+          </div>
+        </div></div>
+        <figcaption>Rest timer</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lD">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="d-top"><span class="d-brand"><i></i>Coach</span><div style="display:flex;gap:2px"><button aria-label="Search" style="width:40px;height:40px;display:grid;place-items:center"><svg class="ico"><use href="#i-search"/></svg></button><button aria-label="New session" style="width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:var(--scarlet)"><svg class="ico"><use href="#i-plus"/></svg></button></div></div>
+          <h3 class="d-h1">Sessions</h3>
+          <div class="d-legend"><span><i style="background:var(--scarlet)"></i>Bench</span><span><i style="background:var(--cobalt)"></i>Row</span><span><i style="background:var(--amber)"></i>Pull-ups</span><span><i style="background:var(--green)"></i>Press</span><span><i style="background:#b57cf0"></i>Squat</span></div>
+          <div class="d-li"><span class="t"><small class="tab">Thu 1 Oct</small>Upper A</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div>
+            <div class="d-mini"><i style="border-color:var(--scarlet)"></i><b style="background:var(--scarlet)"></b><i style="border-color:var(--cobalt)"></i><b style="background:var(--cobalt)"></b><i style="border-color:var(--amber)"></i><b style="background:var(--amber)"></b><i style="border-color:var(--green)"></i></div></div>
+          <div class="d-li"><span class="t"><small class="tab">Tue 29 Sep</small>Lower A</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div>
+            <div class="d-mini"><i style="border-color:#b57cf0"></i><b style="background:#b57cf0"></b><i style="border-color:#7fd3e6"></i><b style="background:#7fd3e6"></b><i style="border-color:#f0e070"></i></div></div>
+          <div class="d-li"><span class="t"><small class="tab">Mon 28 Sep</small>Upper B</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div>
+            <div class="d-mini"><i style="border-color:var(--green)"></i><b style="background:var(--green)"></b><i style="border-color:var(--amber)"></i><b style="background:var(--amber)"></b><i style="border-color:var(--scarlet)"></i></div></div>
+          <div class="d-li"><span class="t"><small class="tab">Thu 24 Sep</small>Upper A</span><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div>
+            <div class="d-mini"><i style="border-color:var(--scarlet)"></i><b style="background:var(--scarlet)"></b><i style="border-color:var(--cobalt)"></i><b style="background:var(--cobalt)"></b><i style="border-color:var(--amber)"></i><b style="background:var(--amber)"></b><i style="border-color:var(--green)"></i></div></div>
+        </div></div>
+        <figcaption>Session list</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== 5. FULL FRAME ===================== -->
+  <section class="look" id="fullframe">
+    <div class="meta">
+      <h2><span class="num">5</span> Full Frame</h2>
+      <p class="idea">One exercise fills the whole screen in its own color, with the current set in very large numbers. Swipe up to move to the next exercise. During rest, the screen slowly fills with color until it’s time for the next set.</p>
+      <dl>
+        <dt>Type</dt><dd>Bricolage Grotesque, condensed down its width axis for numbers you can read from a bench.</dd>
+        <dt>Why it fits</dt><dd>It’s the most glanceable option. The phone shows one thing at a time, which matches the gym.</dd>
+        <dt>Risk</dt><dd>It’s the biggest structural change. Planning a session and reordering exercises need a separate list mode.</dd>
+      </dl>
+      <div class="chips"><i style="background:#2338e0"></i><i style="background:#ff5a36"></i><i style="background:#d6f23d"></i><i style="background:#ff86cf"></i><i style="background:#0d0d0d"></i><i style="background:#fff"></i></div>
+    </div>
+    <div class="phones">
+      <figure>
+        <div class="phone"><div class="screen lE e-field">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="e-head"><span>Upper A</span><span class="count"><i class="on"></i><i></i><i></i><i></i></span></div>
+          <div class="e-title"><h3>Bench Press</h3><p>Last time 150×8 · 160×6 · 170×4</p></div>
+          <div class="e-main">
+            <span class="e-setlbl">Set 3 of 3</span>
+            <div class="e-weight tab">175<small>lb</small></div>
+            <div class="e-reps tab">× 5 <small>reps</small></div>
+            <div class="e-prev tab"><span>155 × 8</span><span>165 × 6</span></div>
+            <div class="e-rail">
+              <button class="hot" aria-label="Start rest"><svg class="ico"><use href="#i-timer"/></svg></button>
+              <button aria-label="Add set"><svg class="ico"><use href="#i-plus"/></svg></button>
+              <button aria-label="Comment"><svg class="ico"><use href="#i-note"/></svg></button>
+              <button aria-label="All exercises"><svg class="ico"><use href="#i-list"/></svg></button>
+            </div>
+          </div>
+          <div class="e-steps"><button>−5</button><button>+5</button><button>−1</button><button>+1</button></div>
+          <button class="e-done">Log set · rest 2:00</button>
+          <div class="e-peek"><b>Barbell Row</b><span>Swipe up</span></div>
+        </div></div>
+        <figcaption>Logging a set</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lE e-timer">
+          <div class="e-fill"></div>
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="e-tbody">
+            <span class="lbl">Resting</span>
+            <h4>Bench Press</h4>
+            <div class="e-tclock tab">1:24</div>
+            <p class="e-tnext">Next: set 3<b class="tab">175 × 5</b></p>
+            <div class="e-hint"><span>Tap anywhere to pause</span><button>Cancel</button></div>
+          </div>
+        </div></div>
+        <figcaption>Rest timer</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen lE e-home">
+          <div class="sb"><span>9:41</span><span class="batt"></span></div>
+          <div class="e-hh"><h3>Sessions</h3><div class="btns"><button aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button><button class="go" aria-label="New session"><svg class="ico"><use href="#i-plus"/></svg></button></div></div>
+          <div class="e-card c1"><div class="top"><div><b>Upper A</b><small>Thu 1 Oct · 4 exercises</small></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div><div class="strip"><i style="background:#2338e0;filter:brightness(1.4)"></i><i style="background:var(--tomato)"></i><i style="background:var(--lime)"></i><i style="background:var(--pink)"></i></div></div>
+          <div class="e-card c2"><div class="top"><div><b>Lower A</b><small>Tue 29 Sep · 3 exercises</small></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div><div class="strip"><i style="background:#0d0d0d"></i><i style="background:var(--tomato)"></i><i style="background:var(--cobalt)"></i></div></div>
+          <div class="e-card c4"><div class="top"><div><b>Upper B</b><small>Mon 28 Sep · 3 exercises</small></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div><div class="strip"><i style="background:var(--lime)"></i><i style="background:var(--cobalt)"></i><i style="background:var(--tomato)"></i></div></div>
+          <div class="e-card c3"><div class="top"><div><b>Upper A</b><small>Thu 24 Sep · 4 exercises</small></div><div class="acts"><button aria-label="Copy"><svg class="ico"><use href="#i-copy"/></svg></button><button aria-label="Edit"><svg class="ico"><use href="#i-pencil"/></svg></button></div></div><div class="strip"><i style="background:var(--cobalt)"></i><i style="background:var(--tomato)"></i><i style="background:var(--lime)"></i><i style="background:var(--pink)"></i></div></div>
+        </div></div>
+        <figcaption>Session list</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="dropped">
+    <h2>Considered and dropped</h2>
+    <ul>
+      <li><strong>Graphite console:</strong> a dark developer-tool look. It’s close to what Coach looks like now and to every other dark app, so it doesn’t change enough.</li>
+      <li><strong>Star atlas:</strong> lovely, but a set has nothing to do with a star chart. The idea would just be decoration.</li>
+      <li><strong>Botanical folio:</strong> comparing the same thing across time is a good fit for progression, but cream plates and engraved italics don’t belong in a gym.</li>
+      <li><strong>Type specimen:</strong> a weight axis that thickens with the weight lifted is a fun joke, but not a look you could live with.</li>
+    </ul>
+  </section>
+</div>

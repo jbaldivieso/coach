@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach Looks, Round Two</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800;900&family=Rubik:wght@400;500;600;700&family=Saira:wdth,wght@75..100,400..800&display=swap"><style>
+:root{--page:#e4e5e8;--pfg:#18191c;--pmuted:#5b5e66;--prule:#c8cacf;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#141518;--pfg:#e8e9ec;--pmuted:#a3a6ad;--prule:#2e3036;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#141518;--pfg:#e8e9ec;--pmuted:#a3a6ad;--prule:#2e3036;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--pfg);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,sans-serif}
+.wrap{max-width:1480px;margin:0 auto;padding:40px 16px 96px}
+@media(min-width:720px){.wrap{padding-inline:32px}}
+.intro{max-width:68ch;margin-bottom:24px}
+.intro h1{font-size:2rem;line-height:1.1;letter-spacing:-.02em;margin:0 0 12px}
+.intro p{margin:0 0 10px;color:var(--pmuted)}
+.intro strong{color:var(--pfg)}
+.look{border-top:1px solid var(--prule);padding-top:28px;margin-top:40px;display:grid;gap:20px}
+@media(min-width:1400px){.look{grid-template-columns:280px 1fr;align-items:start}}
+.look-head h2{font-size:1.5rem;margin:0 0 6px;letter-spacing:-.01em}
+.look-head .lin{color:var(--pmuted);font-size:14px;margin:0 0 12px}
+.look-head p{margin:0 0 10px;max-width:60ch}
+.look-head .risk{color:var(--pmuted);font-size:14px}
+.look-head .risk b{color:var(--pfg)}
+.sw{display:flex;gap:6px;margin:10px 0 6px}.sw i{width:28px;height:28px;border-radius:6px;border:1px solid var(--prule)}
+.fontname{font-size:13px;color:var(--pmuted)}
+.strip{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 16px;margin-inline:-4px}
+.strip>div{scroll-snap-align:start}
+
+/* ---------- phone, themed by variables ---------- */
+.phone{--bg:#f2f2f7;--surface:#fff;--ink:#111;--muted:#6d6d72;--line:#e3e3e8;--accent:#0a6cff;--accent-ink:#fff;--now:#eef4ff;--done:#22b455;--target:#a1a1a6;--chip:#f0f0f4;--r:14px;--font:-apple-system,system-ui,sans-serif;--num:var(--font);--numw:700;--brandw:800;
+ width:340px;height:736px;flex:0 0 auto;border-radius:44px;border:9px solid #111214;background:var(--bg);color:var(--ink);overflow:hidden;position:relative;display:flex;flex-direction:column;font-family:var(--font);font-variant-numeric:tabular-nums;box-shadow:0 18px 40px -14px rgba(0,0,0,.35)}
+.status{height:40px;flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:6px 26px 0;font-size:13px;font-weight:600}
+.status i{width:64px;height:6px;border-radius:3px;background:currentColor;opacity:.2}
+.appbar{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-height:50px;padding:0 14px}
+.appbar h3{margin:0;flex:1;font-size:17px;font-weight:700}
+.appbar h3.brand{font-size:26px;font-weight:var(--brandw);letter-spacing:-.02em}
+.tag{font-size:12px;color:var(--muted)}
+.iconbtn{width:38px;height:38px;display:grid;place-items:center;border-radius:12px}
+.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.i.sm{width:16px;height:16px}
+.scroll{flex:1;overflow:hidden;padding:4px 14px 0}
+.card{background:var(--surface);border-radius:var(--r);margin-bottom:10px}
+.dock{flex:0 0 auto;padding:10px 14px 22px;background:var(--bg)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:calc(var(--r) - 2px);font-weight:600;font-size:15px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.huge{min-height:60px;font-size:18px;font-weight:700}
+.btn.small{min-height:34px;font-size:14px;padding:0 12px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:16px 4px 6px}
+.calcard{padding:10px 10px 8px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin:0 4px 6px}.cal-head b{display:flex;align-items:center;gap:4px;font-size:16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:13.5px}
+.cal .dow{font-size:11px;color:var(--muted);font-weight:600;padding-bottom:3px}
+.cal span{height:33px;display:grid;place-items:center;border-radius:10px}
+.cal .on{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.cal .today{box-shadow:inset 0 0 0 2px var(--ink);font-weight:800}
+.cal .out{opacity:.35}
+.list{padding:0 12px}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.row .grow{flex:1;min-width:0}.row .t{font-weight:700}.row .s{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.date{width:40px;flex:0 0 auto;font-size:12px;color:var(--muted);line-height:1.15}.date b{display:block;font-size:18px;color:var(--ink);font-family:var(--num);font-weight:var(--numw)}
+.titlefield{font-size:22px;font-weight:800;padding:4px 4px 10px;letter-spacing:-.01em}
+.ex{padding:12px}
+.ex-h{display:flex;align-items:center}.ex-h .name{flex:1;font-weight:800;font-size:19px}
+.rest{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--muted)}
+.hist{margin:10px 0 12px;border-radius:calc(var(--r) - 4px);background:var(--chip);padding:6px 10px}
+.hist-label,.plan-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:4px 0}
+.hist>div:not(.hist-label){padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.hist .when{display:block;color:var(--muted);margin-bottom:3px}
+.hist .c{display:block;font-style:italic;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.setc{display:inline-flex;flex-wrap:wrap;gap:2px}
+.setc i{font-style:normal;display:inline-flex;flex-direction:column;align-items:center;min-width:30px;padding:3px 4px;border-radius:6px;background:var(--surface);line-height:1.15;font-size:12px;font-family:var(--num)}
+.setc i em{font-style:normal;font-weight:700}.setc i span{font-weight:600}.setc i b{font-weight:400;color:var(--muted)}
+.collapsed .setc i{background:var(--chip)}
+.setrow{display:grid;grid-template-columns:20px 1fr 14px 1fr;gap:6px;align-items:center;margin-top:6px}
+.setrow .n{font-size:12px;color:var(--muted);text-align:center}
+.box{height:40px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-weight:700;font-family:var(--num);font-size:16px}
+.box em{font-style:normal;font-weight:400;font-size:12px;color:var(--muted);font-family:var(--font)}
+.box.changed{border:2px solid var(--accent)}
+.x{color:var(--muted);text-align:center}
+.addset{display:flex;gap:4px;align-items:center;font-size:13px;font-weight:700;margin-top:10px;color:var(--accent-text,var(--accent))}
+.collapsed{display:flex;align-items:center;gap:8px;padding:10px 12px}.collapsed .grow{flex:1}.collapsed .t{font-weight:700;margin-bottom:3px}
+.prog{flex:0 0 auto;display:flex;gap:6px;overflow:hidden;padding:0 14px 10px}
+.prog span{flex:0 0 auto;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.prog .cur{background:var(--accent);color:var(--accent-ink)}
+.trk{padding:14px 14px 10px}
+.trk-name{margin:0;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.trk-sub{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.dial{display:grid;grid-template-columns:50px 1fr 50px;align-items:center;gap:8px;margin-bottom:8px}
+.pm{height:50px;border-radius:12px;background:var(--chip);display:grid;place-items:center;color:var(--accent-text,var(--accent))}
+.v{text-align:center;line-height:1}
+.num{display:inline-block;min-width:110px;font-family:var(--num);font-weight:var(--numw);font-size:52px;letter-spacing:-.03em;padding:4px 8px 2px;border-radius:12px;border:1px solid var(--line)}
+.v span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:4px}
+.ledger{padding:2px 12px}
+.lr{display:grid;grid-template-columns:52px 1fr 22px;align-items:center;height:38px;border-bottom:1px solid var(--line);font-family:var(--num);font-size:15.5px}
+.lr:last-child{border:0}.lr .n{font-family:var(--font);font-size:12.5px;color:var(--muted)}
+.lr.done .i{color:var(--done)}.lr.now{font-weight:800;background:var(--now);margin:0 -12px;padding:0 12px}
+.lr.tg{color:var(--target)}
+.noterow{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:14px;padding:6px 4px}
+
+/* ---------- Safety signal ---------- */
+.t-signal{--bg:#e6e7e4;--surface:#fff;--ink:#161616;--muted:#5f6264;--line:#d5d6d2;--accent:#161616;--accent-ink:#ffd400;--now:#ffd400;--done:#161616;--target:#9a9c9b;--chip:#ecedea;--r:6px;--font:"Saira",sans-serif;--num:"Saira",sans-serif;--numw:700;--brandw:800}
+.t-signal .appbar{background:#ffd400;margin-bottom:10px}
+.t-signal .status{background:#ffd400}
+.t-signal .appbar h3{text-transform:uppercase;letter-spacing:.04em;font-stretch:condensed}
+.t-signal .appbar h3.brand{letter-spacing:.02em;font-size:28px}
+.t-signal .btn.primary{background:#ffd400;color:#161616;border:2px solid #161616}
+.t-signal .btn.huge{text-transform:uppercase;letter-spacing:.05em}
+.t-signal .label,.t-signal .hist-label,.t-signal .plan-label,.t-signal .v span{letter-spacing:.14em}
+.t-signal .cal .on{background:#161616;color:#ffd400}
+.t-signal .prog .cur{background:#161616;color:#ffd400}
+.t-signal .trk-name{text-transform:uppercase;font-size:34px;letter-spacing:0}
+.t-signal .lr.now{background:#ffd400}
+.t-signal .num{border:2px solid #161616}
+.t-signal .box.changed{border:2px solid #161616;background:#ffd400}
+.t-signal .titlefield{text-transform:uppercase;letter-spacing:.02em}
+.t-signal .pm{color:#161616}
+.t-signal .addset{color:#161616}
+
+/* ---------- Sports page ---------- */
+.t-sports{--bg:#ecece7;--surface:#fafaf7;--ink:#141414;--muted:#626260;--line:#cfcfc9;--accent:#141414;--accent-ink:#fafaf7;--now:#f4dcdf;--done:#c8102e;--target:#9b9b96;--chip:#efefea;--r:2px;--font:"Libre Franklin",sans-serif;--num:"Libre Franklin",sans-serif;--numw:800;--brandw:900}
+.t-sports .appbar{border-bottom:3px solid #141414;box-shadow:0 2px 0 #ecece7,0 3px 0 #141414;margin:0 14px 12px;padding:0}
+.t-sports .appbar h3.brand{font-size:32px;letter-spacing:-.04em;text-transform:uppercase}
+.t-sports .appbar h3.brand::after{content:" Sports";font-size:12px;letter-spacing:.12em;color:#c8102e;vertical-align:middle;margin-left:4px}
+.t-sports .card{border-top:2px solid #141414}
+.t-sports .label{color:#c8102e;letter-spacing:.14em;border-bottom:1px solid #141414;margin:16px 0 0;padding-bottom:4px}
+.t-sports .label+.card{border-top:0}
+.t-sports .cal .on{background:#141414;color:#fafaf7;border-radius:0}
+.t-sports .cal .today{box-shadow:inset 0 0 0 2px #c8102e;color:#c8102e}
+.t-sports .trk-name{font-size:40px;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.t-sports .trk-sub{font-weight:600;color:#c8102e;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.t-sports .num{border:0;border-bottom:3px solid #141414;border-radius:0}
+.t-sports .pm{border-radius:2px;color:#141414}
+.t-sports .prog span{border-radius:0;background:transparent;border-bottom:2px solid transparent;padding:6px 4px;color:#626260}
+.t-sports .prog .cur{background:transparent;color:#141414;border-color:#c8102e}
+.t-sports .lr.now{background:#141414;color:#fafaf7}.t-sports .lr.now .n{color:#fafaf7}
+.t-sports .hist{background:transparent;border-top:1px solid #141414;border-radius:0;padding:4px 0}
+.t-sports .setc i{border-radius:0;border:1px solid #cfcfc9;background:#fafaf7}
+.t-sports .btn{border-radius:2px}
+.t-sports .btn.primary{background:#141414}
+.t-sports .box{border-radius:0}
+.t-sports .box.changed{border:2px solid #c8102e}
+.t-sports .titlefield{font-size:28px;font-weight:900;letter-spacing:-.03em}
+.t-sports .ex-h .name{font-size:22px;font-weight:900;letter-spacing:-.02em}
+
+/* ---------- Whiteboard ---------- */
+.t-board{--bg:#d9dce0;--surface:#fdfdfd;--ink:#1b1d21;--muted:#646973;--line:#e1e4e8;--accent:#1f56c4;--accent-ink:#fff;--now:#fdecea;--done:#1d8a4a;--target:#9aa0aa;--chip:#eef0f3;--r:18px;--font:"Rubik",sans-serif;--num:"Rubik",sans-serif;--numw:600;--brandw:700}
+.t-board .scroll{background:#fdfdfd;margin:0 8px;border-radius:14px 14px 0 0;box-shadow:inset 0 0 0 1px #c3c8cf;padding-top:10px}
+.t-board .card{box-shadow:none;border-radius:0;border-bottom:2px solid #eef0f3;margin-bottom:0}
+.t-board .appbar h3.brand{color:#1f56c4}
+.t-board .cal .on{background:transparent;color:#1f56c4;box-shadow:inset 0 0 0 2.5px #1f56c4;border-radius:50%}
+.t-board .cal .today{background:#d7322b;color:#fff;box-shadow:none;border-radius:50%}
+.t-board .label{color:#1f56c4}
+.t-board .prog span{background:#fdfdfd;box-shadow:0 2px 4px rgba(0,0,0,.18);color:#1b1d21}
+.t-board .prog .cur{background:#d7322b;color:#fff}
+.t-board .trk-name{font-size:32px}
+.t-board .lr.now{background:transparent;color:#d7322b;box-shadow:inset 3px 0 0 #d7322b}
+.t-board .num{border:2.5px solid #1f56c4;border-radius:16px}
+.t-board .pm{border-radius:50%;background:#fdfdfd;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.t-board .btn.primary{background:#d7322b;border-color:#d7322b}
+.t-board .hist{background:#f4f6f9}
+.t-board .box.changed{border:2.5px solid #d7322b}
+.t-board .dock{background:#d9dce0}
+.t-board .titlefield{color:#1f56c4}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></symbol>
+</svg>
+<div class="wrap">
+ <header class="intro">
+  <h1>Coach looks, round two</h1>
+  <p>Your feedback: <strong>the category standard was the clearest</strong> but needs its own color and type. <strong>The pad had character</strong> but its hierarchy was too flat. So all four looks below keep the standard look's structure (cards, clear headings, huge numbers for the current set) and differ in palette, type and a few treatments.</p>
+  <p>Each is shown on Home, Plan and Track using your own Jan 2026 data. The category standard is last, as the baseline.</p>
+ </header>
+ 
+<section class="look">
+ <div class="look-head">
+  <h2>Safety signal</h2>
+  <p class="lin">Gym equipment and floor markings: safety yellow, black, stenciled DIN-style type.</p>
+  <p>Uses the standard look's structure. One safety yellow marks what's live: the app bar, the current set and the Done button. Everything else is black on a cool concrete gray.</p>
+  <p>It belongs in a gym, and yellow on black reads at arm's length under any lighting. The yellow only ever means 'this one, now', so the hierarchy reads from across the room.</p>
+  <div class="sw"><i style="background:#e6e7e4"></i><i style="background:#ffffff"></i><i style="background:#161616"></i><i style="background:#ffd400"></i><i style="background:#6b6e70"></i></div>
+  <div class="fontname">Type: Saira</div>
+  <p class="risk"><b>Risk:</b> If yellow spreads beyond 'live' it starts to feel like a hazard sign. It needs discipline.</p>
+ </div>
+ <div class="strip">
+  <div class="t-signal" style="display:contents">
+<div class="phone t-signal"><div class="status"><span>7:12</span><i></i></div>
+ <div class="appbar"><h3 class="brand">Coach</h3><span class="iconbtn"><svg class="i"><use href="#i-search"/></svg></span></div>
+ <div class="scroll">
+  <div class="card calcard">
+   <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">6 sessions</span></div>
+   <div class="cal"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span class="">2</span><span class="">3</span><span class="">4</span><span class="">5</span><span class="">6</span><span class="on">7</span><span class="">8</span><span class="">9</span><span class="">10</span><span class="on">11</span><span class="">12</span><span class="">13</span><span class="">14</span><span class="">15</span><span class="on">16</span><span class="">17</span><span class="on">18</span><span class="">19</span><span class="">20</span><span class="on">21</span><span class="">22</span><span class="today">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="">29</span><span class="">30</span><span class="">31</span></div>
+  </div>
+  <div class="label">Recent</div>
+  <div class="card list"><div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>16</b>Fri</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div></div></div>
+ </div>
+ <div class="dock"><div class="btns"><span class="btn"><svg class="i"><use href="#i-plus"/></svg>Blank</span><span class="btn primary"><svg class="i"><use href="#i-copy"/></svg>Start from…</span></div></div>
+</div>
+<div class="phone t-signal"><div class="status"><span>7:14</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3><span class="tag">from Jan 18</span></div>
+ <div class="scroll">
+  <div class="titlefield">Upper A</div>
+  <div class="card ex">
+   <div class="ex-h"><span class="name">Bench</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>4:00</span></div>
+   <div class="hist"><div class="hist-label">Last 3 times</div><div><span class="when">Jan 21 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span><span class="c">Slow progress</span></div><div><span class="when">Jan 18 · Upper A</span><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span><span class="c">Doable.</span></div><div><span class="when">Jan 16 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span><span class="c">2nd set was all out. 3rd also.</span></div></div>
+   <div class="plan-label">Today</div>
+   <div class="setrow"><span class="n">1</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">2</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">3</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">4</span><span class="box changed">155<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div>
+   <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+  </div>
+  <div class="card collapsed"><div class="grow"><div class="t">Pull-ups</div><div class="s"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div></div><svg class="i sm"><use href="#i-down"/></svg></div>
+ </div>
+ <div class="dock"><span class="btn primary huge">Start session</span></div>
+</div>
+<div class="phone t-signal"><div class="status"><span>7:41</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+ <div class="prog"><span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span></div>
+ <div class="scroll">
+  <div class="card trk">
+   <p class="trk-name">Bench</p>
+   <p class="trk-sub">Set 3 of 4 · rest 4:00</p>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">150</b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+  </div>
+  <div class="card ledger">
+   <div class="lr done"><span class="n">Set 1</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr done"><span class="n">Set 2</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr now"><span class="n">Set 3</span><span>150 × 5</span><span></span></div>
+   <div class="lr tg"><span class="n">Set 4</span><span>155 × 5</span><span></span></div>
+  </div>
+  <div class="noterow"><svg class="i sm"><use href="#i-pencil"/></svg>Note on Bench…</div>
+ </div>
+ <div class="dock"><span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done · 150 × 5</span></div>
+</div></div>
+ </div>
+</section>
+<section class="look">
+ <div class="look-head">
+  <h2>Sports page</h2>
+  <p class="lin">Newspaper sports section: Franklin Gothic headlines, agate box-score tables, a red section flag.</p>
+  <p>The paper log's love of numbers, given a proper newspaper hierarchy: heavy headlines, thick-and-thin rules, and dense box-score sets underneath.</p>
+  <p>It fixes the pad's flatness with real typographic steps (headline, deck, table). The box-score style suits history and the last-3 comparison.</p>
+  <div class="sw"><i style="background:#ededE8"></i><i style="background:#fbfbf8"></i><i style="background:#141414"></i><i style="background:#c8102e"></i><i style="background:#6a6a66"></i></div>
+  <div class="fontname">Type: Libre Franklin</div>
+  <p class="risk"><b>Risk:</b> Newsprint and rules can tip into nostalgia or 'editorial' if the rules are too fussy.</p>
+ </div>
+ <div class="strip">
+  <div class="t-sports" style="display:contents">
+<div class="phone t-sports"><div class="status"><span>7:12</span><i></i></div>
+ <div class="appbar"><h3 class="brand">Coach</h3><span class="iconbtn"><svg class="i"><use href="#i-search"/></svg></span></div>
+ <div class="scroll">
+  <div class="card calcard">
+   <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">6 sessions</span></div>
+   <div class="cal"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span class="">2</span><span class="">3</span><span class="">4</span><span class="">5</span><span class="">6</span><span class="on">7</span><span class="">8</span><span class="">9</span><span class="">10</span><span class="on">11</span><span class="">12</span><span class="">13</span><span class="">14</span><span class="">15</span><span class="on">16</span><span class="">17</span><span class="on">18</span><span class="">19</span><span class="">20</span><span class="on">21</span><span class="">22</span><span class="today">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="">29</span><span class="">30</span><span class="">31</span></div>
+  </div>
+  <div class="label">Recent</div>
+  <div class="card list"><div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>16</b>Fri</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div></div></div>
+ </div>
+ <div class="dock"><div class="btns"><span class="btn"><svg class="i"><use href="#i-plus"/></svg>Blank</span><span class="btn primary"><svg class="i"><use href="#i-copy"/></svg>Start from…</span></div></div>
+</div>
+<div class="phone t-sports"><div class="status"><span>7:14</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3><span class="tag">from Jan 18</span></div>
+ <div class="scroll">
+  <div class="titlefield">Upper A</div>
+  <div class="card ex">
+   <div class="ex-h"><span class="name">Bench</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>4:00</span></div>
+   <div class="hist"><div class="hist-label">Last 3 times</div><div><span class="when">Jan 21 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span><span class="c">Slow progress</span></div><div><span class="when">Jan 18 · Upper A</span><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span><span class="c">Doable.</span></div><div><span class="when">Jan 16 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span><span class="c">2nd set was all out. 3rd also.</span></div></div>
+   <div class="plan-label">Today</div>
+   <div class="setrow"><span class="n">1</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">2</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">3</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">4</span><span class="box changed">155<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div>
+   <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+  </div>
+  <div class="card collapsed"><div class="grow"><div class="t">Pull-ups</div><div class="s"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div></div><svg class="i sm"><use href="#i-down"/></svg></div>
+ </div>
+ <div class="dock"><span class="btn primary huge">Start session</span></div>
+</div>
+<div class="phone t-sports"><div class="status"><span>7:41</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+ <div class="prog"><span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span></div>
+ <div class="scroll">
+  <div class="card trk">
+   <p class="trk-name">Bench</p>
+   <p class="trk-sub">Set 3 of 4 · rest 4:00</p>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">150</b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+  </div>
+  <div class="card ledger">
+   <div class="lr done"><span class="n">Set 1</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr done"><span class="n">Set 2</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr now"><span class="n">Set 3</span><span>150 × 5</span><span></span></div>
+   <div class="lr tg"><span class="n">Set 4</span><span>155 × 5</span><span></span></div>
+  </div>
+  <div class="noterow"><svg class="i sm"><use href="#i-pencil"/></svg>Note on Bench…</div>
+ </div>
+ <div class="dock"><span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done · 150 × 5</span></div>
+</div></div>
+ </div>
+</section>
+<section class="look">
+ <div class="look-head">
+  <h2>Whiteboard</h2>
+  <p class="lin">The gym's own whiteboard: white enamel, aluminum frame, marker blue/red/green, round magnets.</p>
+  <p>White enamel with marker colors doing defined jobs: blue for structure, red for 'now', green for 'done'. Round magnet pills for the exercise strip.</p>
+  <p>Lifters plan on whiteboards. It's as clear as the standard look but with its own color language, and the marker colors carry state instead of decorating.</p>
+  <div class="sw"><i style="background:#fdfdfd"></i><i style="background:#d9dce0"></i><i style="background:#1b1d21"></i><i style="background:#1f56c4"></i><i style="background:#d7322b"></i><i style="background:#1d8a4a"></i></div>
+  <div class="fontname">Type: Rubik</div>
+  <p class="risk"><b>Risk:</b> Three colors need strict roles, or it turns into a children's app.</p>
+ </div>
+ <div class="strip">
+  <div class="t-board" style="display:contents">
+<div class="phone t-board"><div class="status"><span>7:12</span><i></i></div>
+ <div class="appbar"><h3 class="brand">Coach</h3><span class="iconbtn"><svg class="i"><use href="#i-search"/></svg></span></div>
+ <div class="scroll">
+  <div class="card calcard">
+   <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">6 sessions</span></div>
+   <div class="cal"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span class="">2</span><span class="">3</span><span class="">4</span><span class="">5</span><span class="">6</span><span class="on">7</span><span class="">8</span><span class="">9</span><span class="">10</span><span class="on">11</span><span class="">12</span><span class="">13</span><span class="">14</span><span class="">15</span><span class="on">16</span><span class="">17</span><span class="on">18</span><span class="">19</span><span class="">20</span><span class="on">21</span><span class="">22</span><span class="today">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="">29</span><span class="">30</span><span class="">31</span></div>
+  </div>
+  <div class="label">Recent</div>
+  <div class="card list"><div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>16</b>Fri</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div></div></div>
+ </div>
+ <div class="dock"><div class="btns"><span class="btn"><svg class="i"><use href="#i-plus"/></svg>Blank</span><span class="btn primary"><svg class="i"><use href="#i-copy"/></svg>Start from…</span></div></div>
+</div>
+<div class="phone t-board"><div class="status"><span>7:14</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3><span class="tag">from Jan 18</span></div>
+ <div class="scroll">
+  <div class="titlefield">Upper A</div>
+  <div class="card ex">
+   <div class="ex-h"><span class="name">Bench</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>4:00</span></div>
+   <div class="hist"><div class="hist-label">Last 3 times</div><div><span class="when">Jan 21 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span><span class="c">Slow progress</span></div><div><span class="when">Jan 18 · Upper A</span><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span><span class="c">Doable.</span></div><div><span class="when">Jan 16 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span><span class="c">2nd set was all out. 3rd also.</span></div></div>
+   <div class="plan-label">Today</div>
+   <div class="setrow"><span class="n">1</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">2</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">3</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">4</span><span class="box changed">155<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div>
+   <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+  </div>
+  <div class="card collapsed"><div class="grow"><div class="t">Pull-ups</div><div class="s"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div></div><svg class="i sm"><use href="#i-down"/></svg></div>
+ </div>
+ <div class="dock"><span class="btn primary huge">Start session</span></div>
+</div>
+<div class="phone t-board"><div class="status"><span>7:41</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+ <div class="prog"><span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span></div>
+ <div class="scroll">
+  <div class="card trk">
+   <p class="trk-name">Bench</p>
+   <p class="trk-sub">Set 3 of 4 · rest 4:00</p>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">150</b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+  </div>
+  <div class="card ledger">
+   <div class="lr done"><span class="n">Set 1</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr done"><span class="n">Set 2</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr now"><span class="n">Set 3</span><span>150 × 5</span><span></span></div>
+   <div class="lr tg"><span class="n">Set 4</span><span>155 × 5</span><span></span></div>
+  </div>
+  <div class="noterow"><svg class="i sm"><use href="#i-pencil"/></svg>Note on Bench…</div>
+ </div>
+ <div class="dock"><span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done · 150 × 5</span></div>
+</div></div>
+ </div>
+</section>
+<section class="look">
+ <div class="look-head">
+  <h2>Category standard</h2>
+  <p class="lin">Strong, Hevy, Apple Fitness: iOS grouped cards, system font, one blue.</p>
+  <p>What the category ships, done well. Included as a baseline: the three looks above keep this structure and change its color and type.</p>
+  <p>The clearest of the first round's options. That clarity is the bar the other three have to match.</p>
+  <div class="sw"><i style="background:#f2f2f7"></i><i style="background:#ffffff"></i><i style="background:#111111"></i><i style="background:#0a6cff"></i><i style="background:#22b455"></i></div>
+  <div class="fontname">Type: iOS system font (SF Pro)</div>
+  <p class="risk"><b>Risk:</b> Looks like every other tracker, by design.</p>
+ </div>
+ <div class="strip">
+  <div class="t-canon" style="display:contents">
+<div class="phone t-canon"><div class="status"><span>7:12</span><i></i></div>
+ <div class="appbar"><h3 class="brand">Coach</h3><span class="iconbtn"><svg class="i"><use href="#i-search"/></svg></span></div>
+ <div class="scroll">
+  <div class="card calcard">
+   <div class="cal-head"><b>January 2026 <svg class="i sm"><use href="#i-down"/></svg></b><span class="muted small">6 sessions</span></div>
+   <div class="cal"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="out">28</span><span class="out">29</span><span class="out">30</span><span class="out">31</span><span class="on">1</span><span class="">2</span><span class="">3</span><span class="">4</span><span class="">5</span><span class="">6</span><span class="on">7</span><span class="">8</span><span class="">9</span><span class="">10</span><span class="on">11</span><span class="">12</span><span class="">13</span><span class="">14</span><span class="">15</span><span class="on">16</span><span class="">17</span><span class="on">18</span><span class="">19</span><span class="">20</span><span class="on">21</span><span class="">22</span><span class="today">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="">29</span><span class="">30</span><span class="">31</span></div>
+  </div>
+  <div class="label">Recent</div>
+  <div class="card list"><div class="row"><div class="date"><b>21</b>Wed</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Pull-ups · Lat raises · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>18</b>Sun</div><div class="grow"><div class="t">Upper A</div><div class="s">Bench · Pull-ups · Incline press · Rear Delt Flyes · Leg raises on rings</div></div></div><div class="row"><div class="date"><b>16</b>Fri</div><div class="grow"><div class="t">Upper B</div><div class="s">Incline Bench · Bench · Chin ups · Lat raises</div></div></div></div>
+ </div>
+ <div class="dock"><div class="btns"><span class="btn"><svg class="i"><use href="#i-plus"/></svg>Blank</span><span class="btn primary"><svg class="i"><use href="#i-copy"/></svg>Start from…</span></div></div>
+</div>
+<div class="phone t-canon"><div class="status"><span>7:14</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-x"/></svg></span><h3 class="sm">Plan · Fri Jan 23</h3><span class="tag">from Jan 18</span></div>
+ <div class="scroll">
+  <div class="titlefield">Upper A</div>
+  <div class="card ex">
+   <div class="ex-h"><span class="name">Bench</span><span class="rest"><svg class="i sm"><use href="#i-clock"/></svg>4:00</span></div>
+   <div class="hist"><div class="hist-label">Last 3 times</div><div><span class="when">Jan 21 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>7</span></i></span><span class="c">Slow progress</span></div><div><span class="when">Jan 18 · Upper A</span><span class="setc"><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i><i><em>150</em><span><b>×</b>5</span></i></span><span class="c">Doable.</span></div><div><span class="when">Jan 16 · Upper B</span><span class="setc"><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>10</span></i><i><em>115</em><span><b>×</b>9</span></i></span><span class="c">2nd set was all out. 3rd also.</span></div></div>
+   <div class="plan-label">Today</div>
+   <div class="setrow"><span class="n">1</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">2</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">3</span><span class="box">150<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div><div class="setrow"><span class="n">4</span><span class="box changed">155<em>lb</em></span><span class="x">×</span><span class="box">5<em>reps</em></span></div>
+   <div class="addset"><svg class="i sm"><use href="#i-plus"/></svg>Add set</div>
+  </div>
+  <div class="card collapsed"><div class="grow"><div class="t">Pull-ups</div><div class="s"><span class="setc"><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i><i><em>10</em><span><b>×</b>10</span></i></span></div></div><svg class="i sm"><use href="#i-down"/></svg></div>
+ </div>
+ <div class="dock"><span class="btn primary huge">Start session</span></div>
+</div>
+<div class="phone t-canon"><div class="status"><span>7:41</span><i></i></div>
+ <div class="appbar"><span class="iconbtn"><svg class="i"><use href="#i-left"/></svg></span><h3 class="sm">Upper A</h3><span class="btn small">Finish</span></div>
+ <div class="prog"><span class="cur">Bench</span><span>Pull-ups</span><span>Incline press</span><span>Flyes + Lat raises</span></div>
+ <div class="scroll">
+  <div class="card trk">
+   <p class="trk-name">Bench</p>
+   <p class="trk-sub">Set 3 of 4 · rest 4:00</p>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">150</b><span>lb</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+   <div class="dial"><span class="pm"><svg class="i"><use href="#i-minus"/></svg></span><div class="v"><b class="num">5</b><span>reps</span></div><span class="pm"><svg class="i"><use href="#i-plus"/></svg></span></div>
+  </div>
+  <div class="card ledger">
+   <div class="lr done"><span class="n">Set 1</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr done"><span class="n">Set 2</span><span>150 × 5</span><svg class="i sm"><use href="#i-check"/></svg></div>
+   <div class="lr now"><span class="n">Set 3</span><span>150 × 5</span><span></span></div>
+   <div class="lr tg"><span class="n">Set 4</span><span>155 × 5</span><span></span></div>
+  </div>
+  <div class="noterow"><svg class="i sm"><use href="#i-pencil"/></svg>Note on Bench…</div>
+ </div>
+ <div class="dock"><span class="btn primary huge"><svg class="i"><use href="#i-check"/></svg>Done · 150 × 5</span></div>
+</div></div>
+ </div>
+</section>
+</div></body></html>

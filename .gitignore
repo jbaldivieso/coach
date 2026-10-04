@@ -55,3 +55,8 @@ coverage/
 # Misc
 sample_activity_*.json
 *.log
+
+# Impeccable scratch
+.impeccable/review/
+.impeccable/mocks/decision/
+.impeccable/questions/
