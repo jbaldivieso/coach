@@ -53,17 +53,29 @@ function onFocus() {
   if (props.suggestOnFocus || props.modelValue.trim()) refresh(props.modelValue);
 }
 
+// Set while a pick blurs the input: the parent has the picked value, but
+// props.modelValue still holds what was typed until it re-renders.
+let picking = false;
+
 function onBlur() {
   open.value = false;
+  if (picking) {
+    picking = false;
+    return; // pick already reported the value
+  }
   emit("commit", props.modelValue.trim());
 }
 
 function pick(suggestion: TitleSuggestion) {
+  if (debounce) clearTimeout(debounce);
+  requestId++; // drop any search still in flight
   emit("update:modelValue", suggestion.title);
   emit("pick", suggestion);
   suggestions.value = [];
   open.value = false;
+  picking = document.activeElement === input.value;
   input.value?.blur();
+  picking = false;
 }
 
 function onKeydown(event: KeyboardEvent) {
