@@ -154,6 +154,7 @@ onMounted(() => {
 <style scoped>
 .bar-field {
   flex: 1;
+  min-width: 0; /* let the input shrink so ⋯ stays on screen on narrow phones */
   min-height: 40px;
   border-color: var(--k);
 }
