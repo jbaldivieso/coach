@@ -7,6 +7,10 @@
 html {
   -webkit-text-size-adjust: 100%;
   background: var(--concrete);
+  // Nothing in the app scrolls sideways at the page level (Bulma used to set
+  // this). Also stops horizontal swipes rubber-banding the whole page.
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
