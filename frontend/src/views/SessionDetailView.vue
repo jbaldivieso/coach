@@ -163,7 +163,7 @@ watch(sessionId, fetchSession, { immediate: true });
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 4px;
+  height: 5px;
   background: var(--hazard);
 }
 .ss-h .small {

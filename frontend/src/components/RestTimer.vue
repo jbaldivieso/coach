@@ -46,9 +46,10 @@ watch(isOver, (over) => {
   if (!over) return;
   playAlarm();
   vibrate();
-  // Flash between yellow and black, ending on black
-  let toggles = 0;
+  // Flash between yellow and black, ending on black; with reduced motion, just go black
   flashOn.value = true;
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  let toggles = 0;
   if (flashTimer) clearInterval(flashTimer);
   flashTimer = window.setInterval(() => {
     flashOn.value = !flashOn.value;

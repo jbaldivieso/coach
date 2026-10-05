@@ -1,0 +1,480 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T00:00:00Z",
+  "title": "Design System: Coach",
+  "extensions": {
+    "colorMeta": {
+      "signal-yellow": {
+        "role": "primary",
+        "displayName": "Signal Yellow",
+        "cssVar": "--y",
+        "tonalRamp": [
+          "oklch(15% 0.181 94)",
+          "oklch(25% 0.181 94)",
+          "oklch(35% 0.181 94)",
+          "oklch(45% 0.181 94)",
+          "oklch(55% 0.181 94)",
+          "oklch(65% 0.181 94)",
+          "oklch(80% 0.181 94)",
+          "oklch(95% 0.181 94)"
+        ]
+      },
+      "signal-black": {
+        "role": "secondary",
+        "displayName": "Signal Black",
+        "cssVar": "--k",
+        "tonalRamp": [
+          "oklch(15% 0 90)",
+          "oklch(25% 0 90)",
+          "oklch(35% 0 90)",
+          "oklch(45% 0 90)",
+          "oklch(55% 0 90)",
+          "oklch(65% 0 90)",
+          "oklch(80% 0 90)",
+          "oklch(95% 0 90)"
+        ]
+      },
+      "alert": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "cssVar": "--alert",
+        "tonalRamp": [
+          "oklch(15% 0.2 29)",
+          "oklch(25% 0.2 29)",
+          "oklch(35% 0.2 29)",
+          "oklch(45% 0.2 29)",
+          "oklch(55% 0.2 29)",
+          "oklch(65% 0.2 29)",
+          "oklch(80% 0.2 29)",
+          "oklch(95% 0.2 29)"
+        ]
+      },
+      "concrete": {
+        "role": "neutral",
+        "displayName": "Concrete",
+        "cssVar": "--concrete",
+        "tonalRamp": [
+          "oklch(15% 0.004 122)",
+          "oklch(25% 0.004 122)",
+          "oklch(35% 0.004 122)",
+          "oklch(45% 0.004 122)",
+          "oklch(55% 0.004 122)",
+          "oklch(65% 0.004 122)",
+          "oklch(80% 0.004 122)",
+          "oklch(95% 0.004 122)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "cssVar": "--card",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(80% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "chip": {
+        "role": "neutral",
+        "displayName": "Chip Gray",
+        "cssVar": "--chip",
+        "tonalRamp": [
+          "oklch(15% 0.004 120)",
+          "oklch(25% 0.004 120)",
+          "oklch(35% 0.004 120)",
+          "oklch(45% 0.004 120)",
+          "oklch(55% 0.004 120)",
+          "oklch(65% 0.004 120)",
+          "oklch(80% 0.004 120)",
+          "oklch(95% 0.004 120)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "cssVar": "--muted",
+        "tonalRamp": [
+          "oklch(15% 0.005 237)",
+          "oklch(25% 0.005 237)",
+          "oklch(35% 0.005 237)",
+          "oklch(45% 0.005 237)",
+          "oklch(55% 0.005 237)",
+          "oklch(65% 0.005 237)",
+          "oklch(80% 0.005 237)",
+          "oklch(95% 0.005 237)"
+        ]
+      },
+      "target": {
+        "role": "neutral",
+        "displayName": "Target Gray",
+        "cssVar": "--target",
+        "tonalRamp": [
+          "oklch(15% 0.005 157)",
+          "oklch(25% 0.005 157)",
+          "oklch(35% 0.005 157)",
+          "oklch(45% 0.005 157)",
+          "oklch(55% 0.005 157)",
+          "oklch(65% 0.005 157)",
+          "oklch(80% 0.005 157)",
+          "oklch(95% 0.005 157)"
+        ],
+        "note": "Shipped at #686b69 for 4.5:1 on concrete; the comp's #8f9290 failed contrast."
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "cssVar": "--rule",
+        "tonalRamp": [
+          "oklch(15% 0.006 118)",
+          "oklch(25% 0.006 118)",
+          "oklch(35% 0.006 118)",
+          "oklch(45% 0.006 118)",
+          "oklch(55% 0.006 118)",
+          "oklch(65% 0.006 118)",
+          "oklch(80% 0.006 118)",
+          "oklch(95% 0.006 118)"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Rule Strong",
+        "cssVar": "--rule-strong",
+        "tonalRamp": [
+          "oklch(15% 0.006 118)",
+          "oklch(25% 0.006 118)",
+          "oklch(35% 0.006 118)",
+          "oklch(45% 0.006 118)",
+          "oklch(55% 0.006 118)",
+          "oklch(65% 0.006 118)",
+          "oklch(80% 0.006 118)",
+          "oklch(95% 0.006 118)"
+        ]
+      },
+      "on-black": {
+        "role": "neutral",
+        "displayName": "On Black",
+        "cssVar": "--on-k",
+        "tonalRamp": [
+          "oklch(15% 0.003 110)",
+          "oklch(25% 0.003 110)",
+          "oklch(35% 0.003 110)",
+          "oklch(45% 0.003 110)",
+          "oklch(55% 0.003 110)",
+          "oklch(65% 0.003 110)",
+          "oklch(80% 0.003 110)",
+          "oklch(95% 0.003 110)"
+        ]
+      },
+      "on-black-muted": {
+        "role": "neutral",
+        "displayName": "On Black Muted",
+        "cssVar": "--on-k-muted",
+        "tonalRamp": [
+          "oklch(15% 0.006 118)",
+          "oklch(25% 0.006 118)",
+          "oklch(35% 0.006 118)",
+          "oklch(45% 0.006 118)",
+          "oklch(55% 0.006 118)",
+          "oklch(65% 0.006 118)",
+          "oklch(80% 0.006 118)",
+          "oklch(95% 0.006 118)"
+        ]
+      },
+      "dim": {
+        "role": "neutral",
+        "displayName": "Dim Scrim",
+        "cssVar": "--dim",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(80% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The rest clock only.",
+        "fontStretch": "75%"
+      },
+      "dial": {
+        "displayName": "Dial",
+        "purpose": "Stepper numbers on Track (48px) and Plan (30px). Regular width."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "App bar titles (19px compact); Track exercise name at 36px/24px.",
+        "fontStretch": "80%",
+        "textTransform": "uppercase"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Exercise names on cards; sheet titles at 22px.",
+        "fontStretch": "85%",
+        "textTransform": "uppercase"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text and data; inputs at 16px; secondary 13px.",
+        "fontVariantNumeric": "tabular-nums"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Small buttons, inline actions, ledger names, units.",
+        "fontStretch": "85%",
+        "textTransform": "uppercase"
+      },
+      "section-label": {
+        "displayName": "Section Label",
+        "purpose": "The heading that names a list section; never a tag above another heading.",
+        "fontStretch": "80%",
+        "textTransform": "uppercase"
+      }
+    },
+    "fontLoading": "Google Fonts: Saira wdth 75..100, wght 400..800, display=swap",
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 10px 24px rgba(0, 0, 0, 0.25)",
+        "purpose": "Menus, autocomplete, and update prompt floating above the page; always with a 2px black border."
+      },
+      {
+        "name": "selected-ring",
+        "value": "inset 0 0 0 2px #161616",
+        "purpose": "Selected set chip on yellow."
+      },
+      {
+        "name": "error-ring",
+        "value": "inset 0 0 0 2px #e0261b",
+        "purpose": "Invalid collapsed exercise card."
+      }
+    ],
+    "focus": {
+      "value": "outline: 3px solid #161616; outline-offset: 2px",
+      "purpose": "Global :focus-visible ring."
+    },
+    "patterns": {
+      "hazard": "repeating-linear-gradient(-45deg, #ffd400 0 6px, #161616 6px 12px)"
+    },
+    "motion": [
+      {
+        "name": "press",
+        "value": "transform 0.08s ease-out",
+        "purpose": "Button press scales to 0.98."
+      },
+      {
+        "name": "fill",
+        "value": "background-color 0.12s",
+        "purpose": "Button fill changes."
+      },
+      {
+        "name": "rest-flip",
+        "value": "background-color 0.08s, color 0.08s",
+        "purpose": "Rest screen yellow to black."
+      },
+      {
+        "name": "rest-bar",
+        "value": "transform 0.25s linear",
+        "purpose": "Rest progress bar (scaleX)."
+      },
+      {
+        "name": "sheet",
+        "value": "transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); opacity 0.2s ease-out",
+        "purpose": "Bottom sheet rises 40px and fades in."
+      },
+      {
+        "name": "calendar-load",
+        "value": "opacity 0.15s",
+        "purpose": "Calendar dims to 55% while loading."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation/transition-duration: 0.01ms under prefers-reduced-motion: reduce",
+        "purpose": "Global override."
+      }
+    ],
+    "layout": {
+      "gutter": "16px",
+      "content": "608px",
+      "sheetMaxWidth": "640px",
+      "appBarHeight": "56px + env(safe-area-inset-top)",
+      "dockPadding": "10px gutter calc(14px + env(safe-area-inset-bottom))",
+      "minTarget": "44px",
+      "rowMinHeight": "52px",
+      "setChipColumns": 6
+    },
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button (huge)",
+      "kind": "button",
+      "refersTo": "button-primary-huge",
+      "description": "The screen's one main action, in the dock.",
+      "html": "<button class=\"ds-btn ds-btn-primary ds-btn-huge\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg>Done · 115 × 10</button>",
+      "css": ".ds-btn { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 6px; border: 1.5px solid var(--k, #161616); background: var(--card, #fff); color: var(--k, #161616); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.08s ease-out, background-color 0.12s; } .ds-btn:active { transform: scale(0.98); } .ds-btn:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.45; } .ds-btn-primary { background: var(--y, #ffd400); border-width: 2px; } .ds-btn-huge { min-height: 64px; font-size: 19px; font-weight: 800; text-transform: uppercase; font-stretch: 85%; letter-spacing: 0.06em; width: 100%; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default button: white, black border.",
+      "html": "<button class=\"ds-btn\">+ Blank</button>",
+      "css": ".ds-btn { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 6px; border: 1.5px solid var(--k, #161616); background: var(--card, #fff); color: var(--k, #161616); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.08s ease-out, background-color 0.12s; } .ds-btn:active { transform: scale(0.98); } .ds-btn:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.45; }"
+    },
+    {
+      "name": "Dark Button",
+      "kind": "button",
+      "refersTo": "button-dark",
+      "description": "Strong non-primary action (Skip on Rest).",
+      "html": "<button class=\"ds-btn ds-btn-dark\">Skip</button>",
+      "css": ".ds-btn { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 6px; border: 1.5px solid var(--k, #161616); background: var(--card, #fff); color: var(--k, #161616); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.08s ease-out, background-color 0.12s; } .ds-btn:active { transform: scale(0.98); } .ds-btn:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.45; } .ds-btn-dark { background: var(--k, #161616); color: var(--y, #ffd400); border-width: 2px; }"
+    },
+    {
+      "name": "App Bar",
+      "kind": "nav",
+      "refersTo": "app-bar",
+      "description": "Sticky yellow bar: back, condensed-caps title, actions, the menu always last.",
+      "html": "<header class=\"ds-appbar\"><button class=\"ds-appbar-icon\" aria-label=\"Back\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m15 5-7 7 7 7\"/></svg></button><h1 class=\"ds-appbar-title\">Upper B</h1><button class=\"ds-appbar-icon\" aria-label=\"Menu\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h.01M12 12h.01M19 12h.01\"/></svg><i class=\"ds-unread\"></i></button></header>",
+      "css": ".ds-appbar { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 0 8px 0 6px; background: var(--y, #ffd400); color: var(--k, #161616); } .ds-appbar-title { flex: 1; margin: 0; font-size: 28px; font-weight: 800; line-height: 1.1; text-transform: uppercase; font-stretch: 80%; letter-spacing: 0.03em; } .ds-appbar-icon { position: relative; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; border-radius: 6px; color: inherit; cursor: pointer; } .ds-appbar-icon:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-appbar-icon:active { background: var(--k, #161616); color: var(--y, #ffd400); } .ds-unread { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--alert, #e0261b); box-shadow: 0 0 0 2px var(--y, #ffd400); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "text-field",
+      "description": "White field, quiet border, black on focus, red on error.",
+      "html": "<label class=\"ds-field\"><input placeholder=\"Exercise name\"></label>",
+      "css": ".ds-field { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: flex; align-items: center; min-height: 46px; padding: 0 12px; background: var(--card, #fff); border: 1.5px solid var(--rule-strong, #c9cac6); border-radius: 6px; } .ds-field:focus-within { border-color: var(--k, #161616); box-shadow: 0 0 0 1px var(--k, #161616); } .ds-field input { flex: 1; border: 0; background: transparent; font: inherit; font-size: 16px; padding: 10px 0; outline: none; color: var(--k, #161616); }"
+    },
+    {
+      "name": "Set Chips",
+      "kind": "chip",
+      "refersTo": "set-chip",
+      "description": "Fixed six-column grid of weight-over-reps tiles; set N lines up across rows.",
+      "html": "<div class=\"ds-setchips\"><button class=\"ds-chip\"><em>115</em><span><b>×</b>10</span></button><button class=\"ds-chip is-selected\"><em>120</em><span><b>×</b>8</span></button><button class=\"ds-chip\"><em>120</em><span><b>×</b>8</span></button></div>",
+      "css": ".ds-setchips { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; width: 100%; font-variant-numeric: tabular-nums; } .ds-chip { display: flex; flex-direction: column; align-items: center; min-height: 44px; padding: 6px 2px 5px; border: 0; border-radius: 5px; background: var(--chip, #ecedea); color: var(--k, #161616); font: inherit; font-size: 13.5px; line-height: 1.2; cursor: pointer; } .ds-chip em { font-style: normal; font-weight: 800; } .ds-chip span { font-weight: 600; } .ds-chip b { font-weight: 400; color: var(--muted, #55585a); } .ds-chip:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-chip.is-selected { background: var(--y, #ffd400); box-shadow: inset 0 0 0 2px var(--k, #161616); }"
+    },
+    {
+      "name": "Stepper (large)",
+      "kind": "custom",
+      "refersTo": "stepper-number",
+      "description": "Track dial: minus, big tappable number, plus; unit beneath.",
+      "html": "<div class=\"ds-stepper\"><button class=\"ds-pm\" aria-label=\"Less\">−</button><div class=\"ds-val\"><button class=\"ds-num\">115</button><span class=\"ds-unit\">lb</span></div><button class=\"ds-pm\" aria-label=\"More\">+</button></div>",
+      "css": ".ds-stepper { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; display: grid; grid-template-columns: 56px 1fr 56px; gap: 8px; align-items: center; } .ds-pm { height: 56px; background: var(--card, #fff); border: 1.5px solid var(--rule-strong, #c9cac6); border-radius: 6px; font-size: 24px; color: var(--k, #161616); cursor: pointer; } .ds-pm:active { background: var(--chip, #ecedea); } .ds-val { display: flex; flex-direction: column; align-items: center; } .ds-num { width: 140px; padding: 8px 10px 6px; font: inherit; font-size: 48px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; background: var(--card, #fff); border: 2px solid var(--k, #161616); border-radius: 6px; color: var(--k, #161616); cursor: text; } .ds-num:focus { background: var(--y, #ffd400); outline: none; } .ds-pm:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-unit { margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--muted, #55585a); text-transform: uppercase; letter-spacing: 0.16em; font-stretch: 85%; }"
+    },
+    {
+      "name": "Superset Header",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Black header with hazard tape across the top; the only striped element in the app.",
+      "html": "<div class=\"ds-ss\"><div class=\"ds-ss-h\">Superset · A + B</div><div class=\"ds-ss-body\">Incline Bench · Bench</div></div>",
+      "css": ".ds-ss { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--card, #fff); border: 2px solid var(--k, #161616); border-radius: 10px; overflow: hidden; } .ds-ss-h { position: relative; background: var(--k, #161616); color: var(--y, #ffd400); padding: 12px 10px 8px; font-size: 12.5px; font-weight: 800; text-transform: uppercase; font-stretch: 85%; letter-spacing: 0.04em; } .ds-ss-h::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 5px; background: repeating-linear-gradient(-45deg, #ffd400 0 6px, #161616 6px 12px); } .ds-ss-body { padding: 10px; }"
+    },
+    {
+      "name": "List Card with Rows",
+      "kind": "card",
+      "refersTo": "list-card",
+      "description": "White list on concrete; date column, bold title, muted sub-line.",
+      "html": "<div class=\"ds-list\"><a class=\"ds-row\" href=\"#\"><span class=\"ds-date\"><b>4</b>Sun</span><span class=\"ds-main\"><b>Upper B</b><small>Incline Bench · Bench</small></span></a><a class=\"ds-row\" href=\"#\"><span class=\"ds-date\"><b>21</b>Jan</span><span class=\"ds-main\"><b>Lower A</b><small>Squat · RDL</small></span></a></div>",
+      "css": ".ds-list { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--card, #fff); border-radius: 8px; padding: 0 12px; color: var(--k, #161616); font-variant-numeric: tabular-nums; } .ds-row { display: flex; gap: 10px; align-items: center; min-height: 52px; padding: 11px 0; border-bottom: 1px solid var(--rule, #d3d4d0); color: inherit; text-decoration: none; } .ds-row:last-child { border-bottom: 0; } .ds-row:focus-visible { outline: 3px solid var(--k, #161616); outline-offset: 2px; } .ds-date { width: 46px; font-size: 13px; color: var(--muted, #55585a); line-height: 1.2; } .ds-date b { display: block; font-size: 17px; font-weight: 800; color: var(--k, #161616); } .ds-main b { display: block; font-weight: 700; } .ds-main small { display: block; font-size: 13px; color: var(--muted, #55585a); }"
+    },
+    {
+      "name": "Rest Screen",
+      "kind": "custom",
+      "refersTo": "rest-screen",
+      "description": "Full-screen yellow timer; flips to black with yellow when rest is over.",
+      "html": "<div class=\"ds-rest\"><div class=\"ds-clock\"><b>1:24</b><div class=\"ds-of\">of 2:00</div><div class=\"ds-bar\"><i style=\"transform: scaleX(0.3)\"></i></div></div><div class=\"ds-next\"><span>Next</span>Bench · 115 × 10</div></div>",
+      "css": ".ds-rest { font-family: 'Saira', system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--y, #ffd400); color: var(--k, #161616); padding: 24px 16px; transition: background-color 0.08s, color 0.08s; } .ds-rest:hover { background: var(--k, #161616); color: var(--y, #ffd400); } .ds-clock { text-align: center; } .ds-clock b { display: block; font-size: 120px; font-weight: 800; font-stretch: 75%; line-height: 0.9; letter-spacing: -0.02em; } .ds-of { margin-top: 6px; font-size: 20px; font-weight: 700; font-stretch: 85%; letter-spacing: 0.04em; text-transform: uppercase; } .ds-bar { margin: 22px 8px 0; height: 14px; background: rgba(0,0,0,0.14); border-radius: 2px; overflow: hidden; } .ds-bar i { display: block; height: 100%; background: currentColor; transform-origin: left; } .ds-next { display: flex; gap: 10px; align-items: baseline; margin: 24px 8px 0; padding-top: 12px; border-top: 2px solid currentColor; font-size: 18px; font-weight: 600; } .ds-next span { font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; font-stretch: 85%; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Safety Signal",
+    "overview": "Coach is read at arm's length, mid-set, with one chalky thumb. The visual system borrows from industrial safety signage: a concrete-gray ground, white cards that hold content, black for anything that is state, and one high-visibility yellow that means \"live, act now.\" Nothing decorates. Every color and every stripe carries a meaning the lifter can read in a glance.\n\nThe type is a single variable family, Saira, used two ways: names and labels squeezed into condensed uppercase, numbers and comments left at regular width so a weight or rep count reads instantly. Density is high but legible: rows are at least 44px tall, primary actions are 64px, and the big numbers on the Track and Rest screens are the largest things on any screen.\n\nDepth is flat. Borders and fills do the work; shadows appear only under things that float over the page (menus, autocomplete). The one pattern element in the app is hazard tape, reserved for supersets.",
+    "keyCharacteristics": [
+      "Concrete ground, white cards, black state, yellow signal.",
+      "One variable family (Saira), condensed caps for names, regular-width tabular numerals for data.",
+      "Sticky yellow app bar on top, sticky concrete dock with the screen's main action on the bottom.",
+      "Flat surfaces with crisp black borders on anything active or tappable-primary.",
+      "Hazard tape marks supersets and nothing else.",
+      "Fast, short motion; reduced motion respected."
+    ],
+    "rules": [
+      {
+        "name": "The Signal Rule",
+        "body": "Yellow means live or act now. It never decorates, never fills a section just to add color, and never marks something that is merely selected in the past. If nothing on the screen needs the lifter right now, the only yellow is the app bar.",
+        "section": "colors"
+      },
+      {
+        "name": "The State Rule",
+        "body": "Black means \"this is state\": done, current, linked, toggled on. A new indicator of state is black (with yellow or on-black text), not a new color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ground Rule",
+        "body": "Concrete is the ground; white cards hold content. Don't put cards on white or content directly on concrete without a card unless it is a heading, a section label, or the Track ledger.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Line Rule",
+        "body": "Red is for errors, destructive actions, and the unread dot. It is never a highlight, a brand accent, or a warning about something that is not wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Widths Rule",
+        "body": "Names and labels are condensed caps; numbers, comments, and free text stay regular width and mixed case. Never set a number in condensed caps, and never set a user's comment in caps.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Body text is tabular (`font-variant-numeric: tabular-nums`) everywhere so columns of weights and reps line up.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thumb Rule",
+        "body": "The action the lifter needs next lives in the dock at the bottom, within thumb reach. New screens with a main action put it in the dock, not the app bar or mid-page.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Page Rule",
+        "body": "Nothing that sits in the page flow casts a shadow. If an element needs emphasis, give it a black border or a state fill.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hazard Tape Rule",
+        "body": "The only striped element in the app is hazard tape (`--hazard`: 45° yellow and black, 6px bands), and it marks supersets: a thin strip across the top of the black superset header in Plan and Session detail. Never use stripes for anything else, and never mark a superset without it.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do give every tappable thing at least a 44px target; dock actions are 48px, main actions 64px.",
+      "Do keep text at 4.5:1 or better. Use Target Gray for planned values on concrete, never anything lighter.",
+      "Do rely on the global focus ring (3px solid black, 2px offset) and never remove it.",
+      "Do put the screen's main action in the dock, yellow, and make it the only yellow button on screen.",
+      "Do use black with yellow (or on-black) text for anything that shows state: done, current, linked, toggled.",
+      "Do keep numbers regular width and tabular; condense and capitalize names and labels.",
+      "Do keep motion short (80–250ms), on transform and opacity, and make sure it collapses under `prefers-reduced-motion`.",
+      "Do pad the dock, sheets, and app bar with the safe-area insets.",
+      "Do use the six-column set chip grid for any row of sets, even when an exercise has fewer than six."
+    ],
+    "donts": [
+      "Don't use yellow to decorate, to brand a section, or to fill an empty state.",
+      "Don't use stripes or hazard tape for anything but supersets.",
+      "Don't use red for warnings, highlights, or emphasis; it is errors, destructive actions, and the unread dot.",
+      "Don't add shadows to cards, rows, or buttons in the page flow.",
+      "Don't set comments, numbers, or free text in condensed caps.",
+      "Don't put a small tag or label above a heading; a section label is the section's only heading.",
+      "Don't introduce a second typeface or an icon font; icons are inline stroke SVGs in `currentColor`.",
+      "Don't hard-code grays; use the neutral tokens."
+    ]
+  }
+}
