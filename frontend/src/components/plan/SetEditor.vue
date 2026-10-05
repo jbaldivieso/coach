@@ -81,8 +81,8 @@ function toggleBodyweight() {
   font-stretch: 85%;
 }
 .bw {
-  min-width: 48px;
-  min-height: 32px;
+  min-width: 52px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1.5px solid var(--rule-strong);
   border-radius: var(--r);
@@ -97,7 +97,7 @@ function toggleBodyweight() {
 }
 .copydown {
   justify-self: start;
-  min-height: 36px;
+  min-height: 44px;
   font-size: 12.5px;
   font-weight: 700;
   text-transform: uppercase;

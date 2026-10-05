@@ -75,7 +75,7 @@ const classes = computed(() => [
   letter-spacing: 0.06em;
 }
 .btn-small {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 12px;
   font-size: 13.5px;
   text-transform: uppercase;

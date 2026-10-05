@@ -66,6 +66,11 @@ withDefaults(
   color: var(--muted);
 }
 .hist-all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -10px 0;
+  padding: 0 4px;
   font-size: 12px;
   font-weight: 700;
   text-decoration: underline;

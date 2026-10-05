@@ -71,7 +71,7 @@ const doneLabel = computed(() => {
   if (!unit.value?.isSuperset) return isFinalSet.value ? `Done · ${values} · finish` : `Done · ${values}`;
   const letter = memberLetter(memberIndex.value);
   if (isFinalSet.value) return `Done ${letter} · finish`;
-  return isLastInRound.value ? `Done ${letter} · start rest` : `Done ${letter}`;
+  return isLastInRound.value ? `Done ${letter} · start rest` : `Done ${letter} · ${values}`;
 });
 
 const subline = computed(() => {
@@ -196,7 +196,11 @@ watch(
   () => position.value?.unitIndex,
   async () => {
     await nextTick();
-    strip.value?.querySelector(".is-current")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    // Scroll only the strip, never the page
+    const el = strip.value?.querySelector<HTMLElement>(".is-current");
+    if (strip.value && el) {
+      strip.value.scrollTo({ left: el.offsetLeft - (strip.value.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
+    }
   },
 );
 
@@ -421,6 +425,7 @@ onUnmounted(() => {
 
 .prog-wrap {
   position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   margin: 0 calc(-1 * var(--gutter)) 14px;
@@ -433,6 +438,7 @@ onUnmounted(() => {
   gap: 6px;
   overflow-x: auto;
   padding: 2px 24px 2px var(--gutter);
+  margin-right: 6px;
   scrollbar-width: none;
   /* fade out under the + button */
   mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
@@ -445,8 +451,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 36px;
-  padding: 0 10px;
+  min-height: 44px;
+  padding: 0 12px;
   border: 1.5px solid var(--rule-strong);
   border-radius: var(--r-sm);
   background: var(--card);
@@ -466,7 +472,7 @@ onUnmounted(() => {
 .prog-add {
   flex: 0 0 auto;
   width: 44px;
-  min-height: 36px;
+  min-height: 44px;
   display: grid;
   place-items: center;
   background: var(--k);
@@ -556,7 +562,7 @@ onUnmounted(() => {
   grid-template-columns: 70px 1fr 24px;
   align-items: center;
   width: 100%;
-  min-height: 40px;
+  min-height: 48px;
   padding: 6px 2px;
   border-bottom: 1px solid var(--rule);
   font-size: 14px;
@@ -586,7 +592,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 40px;
+  min-height: 44px;
   font-size: 12.5px;
   font-weight: 700;
   text-transform: uppercase;

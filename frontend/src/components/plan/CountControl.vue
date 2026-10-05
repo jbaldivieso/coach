@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { pluralize } from "@/utils/format";
 import { MAX_SETS } from "@/utils/plan";
+import Icon from "@/components/ui/Icon.vue";
 
 const props = defineProps<{ count: number; noun: string }>();
 const emit = defineEmits<{ change: [count: number] }>();
@@ -8,9 +9,9 @@ const emit = defineEmits<{ change: [count: number] }>();
 
 <template>
   <span class="count">
-    <button type="button" class="mini-pm" :aria-label="`One fewer ${noun}`" :disabled="count <= 1" @click="emit('change', props.count - 1)">−</button>
+    <button type="button" class="mini-pm" :aria-label="`One fewer ${noun}`" :disabled="count <= 1" @click="emit('change', props.count - 1)"><Icon name="minus" size="sm" /></button>
     <b aria-live="polite">{{ pluralize(count, noun) }}</b>
-    <button type="button" class="mini-pm" :aria-label="`One more ${noun}`" :disabled="count >= MAX_SETS" @click="emit('change', props.count + 1)">+</button>
+    <button type="button" class="mini-pm" :aria-label="`One more ${noun}`" :disabled="count >= MAX_SETS" @click="emit('change', props.count + 1)"><Icon name="plus" size="sm" /></button>
   </span>
 </template>
 
@@ -27,8 +28,8 @@ const emit = defineEmits<{ change: [count: number] }>();
   text-align: center;
 }
 .mini-pm {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1.5px solid var(--rule-strong);

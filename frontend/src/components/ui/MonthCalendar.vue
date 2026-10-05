@@ -100,7 +100,7 @@ const label = computed(() =>
   padding-bottom: 4px;
 }
 .day {
-  height: 38px;
+  height: 44px;
   display: grid;
   place-items: center;
   border-radius: var(--r-sm);

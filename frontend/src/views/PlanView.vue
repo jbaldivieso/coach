@@ -349,7 +349,16 @@ onMounted(load);
 
         <label class="text-field date-field" :class="{ 'is-error': errors.date }">
           <span class="date-label">Date</span>
-          <input v-model="date" type="date" :max="mode === 'done' ? todayISO() : undefined" required />
+          <span class="date-value">{{ date === todayISO() ? "Today" : formatDayDate(date || todayISO()) }}</span>
+          <!-- The native picker sits invisibly on top, so a tap opens it -->
+          <input
+            v-model="date"
+            class="date-input"
+            type="date"
+            aria-label="Date"
+            :max="mode === 'done' ? todayISO() : undefined"
+            required
+          />
         </label>
         <p v-if="errors.date" class="field-error">{{ errors.date }}</p>
 
@@ -611,8 +620,22 @@ onMounted(load);
   letter-spacing: 0.12em;
   font-stretch: 85%;
 }
-.date-field input {
+.date-field {
+  position: relative;
+}
+.date-value {
+  flex: 1;
   text-align: right;
+  color: var(--k);
+  font-weight: 600;
+}
+.date-field .date-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
 }
 
 .ex {
@@ -729,7 +752,8 @@ onMounted(load);
   display: flex;
   align-items: center;
   gap: 3px;
-  min-height: 32px;
+  min-height: 44px;
+  margin: -8px 0;
   color: var(--on-k);
   font-size: 11.5px;
   font-weight: 500;

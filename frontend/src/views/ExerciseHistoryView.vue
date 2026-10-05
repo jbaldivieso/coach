@@ -105,7 +105,7 @@ watch(title, load, { immediate: true });
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  min-height: 32px;
+  min-height: 44px;
   align-items: center;
   font-size: 12.5px;
   font-weight: 600;

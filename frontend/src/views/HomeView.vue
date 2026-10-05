@@ -18,6 +18,7 @@ const now = new Date();
 const year = now.getFullYear();
 const month = now.getMonth() + 1;
 const monthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const thisMonthKey = `${year}-${String(month).padStart(2, "0")}`;
 
 const openSessions = ref<Session[]>([]);
 const sessions = ref<Session[]>([]);
@@ -153,6 +154,7 @@ onMounted(() => {
           :title="s.title"
           :date="s.date"
           :exercises="s.exercises"
+          :date-caption="s.date.startsWith(thisMonthKey) ? 'weekday' : 'month'"
           :to="{ name: 'session-detail', params: { id: s.id } }"
         />
       </div>
