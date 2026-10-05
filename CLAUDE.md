@@ -29,6 +29,10 @@ cd frontend && npm run test:run
 ### Starting Development Servers
 
 ```bash
+# Both at once, from the repo root (run `npm install` at the root once first)
+npm run dev
+
+# Or separately:
 # Terminal 1 - Backend
 cd backend && DJANGO_SETTINGS_MODULE=config.settings uv run python manage.py runserver
 
