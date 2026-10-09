@@ -60,6 +60,11 @@ watch(
 const lastOuting = computed(() => (exercise.value ? (lastTime.get(exercise.value.title)?.items[0] ?? null) : null));
 
 const isFinalSet = computed(() => undoneCount.value === 1);
+/** Logging this set finishes the exercise (or superset), so there's no rest before the next one. */
+const isUnitsLastSet = computed(() => {
+  if (!unit.value) return true;
+  return unit.value.items.reduce((n, e) => n + e.sets.filter((s) => !s.done).length, 0) === 1;
+});
 const isLastInRound = computed(() => {
   if (!unit.value || !position.value) return true;
   const round = position.value.round;
@@ -71,7 +76,7 @@ const doneLabel = computed(() => {
   if (!unit.value?.isSuperset) return isFinalSet.value ? `Done · ${values} · finish` : `Done · ${values}`;
   const letter = memberLetter(memberIndex.value);
   if (isFinalSet.value) return `Done ${letter} · finish`;
-  return isLastInRound.value ? `Done ${letter} · start rest` : `Done ${letter} · ${values}`;
+  return isLastInRound.value && !isUnitsLastSet.value ? `Done ${letter} · start rest` : `Done ${letter} · ${values}`;
 });
 
 const subline = computed(() => {
@@ -106,7 +111,7 @@ async function done() {
   clearUndoHistory();
   const { exerciseIndex, round } = position.value;
   const finishing = isFinalSet.value;
-  const startsRest = isLastInRound.value;
+  const startsRest = isLastInRound.value && !isUnitsLastSet.value;
   const restSeconds = rest.value;
   const label = unit.value ? unitTitle(unit.value) : "";
   logging.value = true;
