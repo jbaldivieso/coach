@@ -52,8 +52,8 @@ comments stay regular width. Supersets are the only striped (`--hazard`) element
 
 | Purpose | Location |
 |---------|----------|
-| Plan view (new plans, saved plans, editing finished sessions) | `frontend/src/views/PlanView.vue`, logic in `src/utils/plan.ts` |
+| Plan view (new plans, saved plans, editing finished sessions, Edit mid-session at `track-edit`) | `frontend/src/views/PlanView.vue`, logic in `src/utils/plan.ts` |
 | Live session state, saving, rest timer | `frontend/src/stores/activeSession.ts` |
-| Rest screen (wake lock, alarm) | `frontend/src/components/RestTimer.vue`, `src/utils/audio.ts` |
+| Rest screen (wake lock), rest alarm on Lift and Edit | `frontend/src/components/RestTimer.vue`, `src/composables/useRestAlarm.ts`, `src/utils/audio.ts` |
 | Exercise history cache | `frontend/src/composables/useExerciseHistory.ts` |
 | What's New entries | `frontend/src/data/changelog.ts` |

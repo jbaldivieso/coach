@@ -13,6 +13,31 @@ export interface ChangeGroup {
 /** Newest first. The first group drives the unread dot on the ⋯ menu. */
 export const changelog: ChangeGroup[] = [
   {
+    date: "2026-10-09",
+    teaser: "Edit mid-session, fold, notes, COACH",
+    changes: [
+      {
+        title: "Change the plan without leaving the gym floor",
+        description:
+          "Flip Track from Lift to Edit to reorder, add, drop, or superset what's left. Sets you've already done stay locked, so no rewriting history. Back to lifting saves it, and the rest timer keeps counting (and yelling) the whole time.",
+      },
+      {
+        title: "Fold an exercise when it's planned",
+        description:
+          "The open exercise's header sticks to the top, keyboard up or not, with a fold button. Fold it and the whole plan reads as a list, sets and rest at a glance.",
+      },
+      {
+        title: "Notes on the whole session",
+        description:
+          "Jot a session note while planning, or tap \"Note on today\" between sets. It's waiting for you on Finish.",
+      },
+      {
+        title: "COACH takes you home",
+        description: "From any screen. The back arrow only shows up when it goes somewhere else.",
+      },
+    ],
+  },
+  {
     date: "2026-10-04",
     teaser: "New look, planning, live tracking, supersets",
     changes: [

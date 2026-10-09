@@ -300,6 +300,7 @@ The signature data element: a fixed 6-column grid of weight-over-reps tiles.
 - **Grid:** Always six equal columns with 4px gaps, regardless of how many sets exist, so set N lines up across every row on a screen. No exercise exceeds six sets.
 - **Style:** Chip gray (or white when on a gray context), 5px corners. Weight on top (800), `×reps` below (600, muted ×).
 - **Selectable:** When tappable they are at least 44px tall and `aria-pressed`. Selected is yellow with an inset 2px black ring.
+- **Done (Edit mid-session):** Black with on-black text and disabled: logged sets are fixed on Lift, not in the editor. A muted "✓ N done · fix those on Lift" line sits under them, and the set count can't drop below them.
 
 ### Cards / Lists
 - **Corner Style:** 8px.
@@ -309,11 +310,14 @@ The signature data element: a fixed 6-column grid of weight-over-reps tiles.
 - **Internal Padding:** 10–12px; lists pad 12px sides with rows inside.
 - **Rows:** Optional date column (46px: bold 17px day over 13px muted weekday), a bold title, and a muted single-line ellipsized sub-line.
 - **Resume card:** Black, yellow title, on-black sub-line, 60px minimum. The way back into an open session.
+- **Plan exercise (open):** Its header (name, rest, ⋯, and a 44px fold button with a 1.5px black outline) sticks under the app bar while you scroll inside the exercise, gaining a 1px rule once stuck. In a superset the black header sticks instead, with a yellow fold icon.
+- **Plan exercise (collapsed):** Name, muted clock + rest (hidden inside a superset, whose header shows it), a chevron, and the planned set chips. Folding leaves every exercise collapsed; the one just folded wears a 2px black ring (a superset, a 2px black outline) for about a second.
 
 ### Inputs / Fields
 - **Style:** White, 1.5px rule-strong border, 6px corners, minimum 46px, 16px input text. Textareas start at 76px.
 - **Focus:** Border turns black with a 1px black outer ring.
 - **Error:** Red border, red 13px/600 message below. Dashed borders mark optional note fields in Plan.
+- **Session note:** Under the date on every Plan screen (first after the title in Edit): a dashed note field with a pencil and a one-line textarea that grows as you type. With text it turns solid and gains a small "Session note" caps label. On Track the same note is a "Note on today" row under the exercise note, opening the note sheet.
 - **Autocomplete:** Floating white list, 2px black border, Float shadow, 46px rows; the active row is chip gray.
 
 ### Stepper
@@ -323,7 +327,8 @@ The way numbers are entered mid-set.
 - **Editing:** Tapping the number turns it into a yellow input; Enter moves to the next stepper (weight to reps). Bodyweight displays as "BW".
 
 ### Navigation
-- **App bar:** Sticky, yellow, 56px plus top safe area. Back (←) or close (×) on the left, condensed-caps title, optional actions, and the ⋯ menu always last in the same spot on every screen. Icon buttons are 44px. The open menu button turns black with a yellow icon.
+- **App bar:** Sticky, yellow, 56px (`--appbar-h` includes the top safe area). The COACH wordmark (800, 21px, width 75%, 0.05em) sits on the left of every screen and goes home; on Home it is the 28px title itself. Elsewhere a 1.5px black vertical rule follows it, then a back arrow only when back leads somewhere other than home (a route like Past year, history such as search results, or the rest screen's hide), then the 19px condensed-caps title, optional actions, and the ⋯ menu always last in the same spot. Icon buttons are 44px. The open menu button turns black with a yellow icon. Screens with unsaved edits guard every way out (COACH, back, the menu) with one prompt.
+- **Lift / Edit switch:** On a live session the bar drops its title for a segmented control after the rule: two 41px halves in a 1.5px black outline, condensed caps; the current mode is black with yellow text. It replaces the route, so switching never stacks history. Edit is the Plan editor on the live session; leaving it for Lift or Finish saves.
 - **Menu:** White popover, 2px black border, Float shadow, over the dim scrim. Holds What's new and Log out. A red unread dot (8px, ringed in the bar's color) marks new changelog entries.
 - **Track progress strip:** Horizontally scrolling 44px chips (white, 1.5px border, 4px corners); done chips go black text, the current one is black with yellow text; a black + button adds an exercise. The strip fades out under the + button.
 
