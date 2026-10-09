@@ -204,4 +204,21 @@ describe("activeSession store", () => {
       vi.useRealTimers();
     });
   });
+
+  it("settle waits for queued saves and sends pending notes", async () => {
+    const store = await loaded([exercise(1, "Bench", [false, false])]);
+    let release: (value: { data: object; error: null }) => void = () => {};
+    vi.mocked(api.put).mockImplementationOnce(() => new Promise((resolve) => (release = resolve)));
+    store.logSet(0, 0, { weight: 100, reps: 5 });
+    store.saveNote(0, "Felt fast");
+    store.saveSessionNote("Good day");
+    let settled = false;
+    const settling = store.settle().then(() => (settled = true));
+    await new Promise((r) => setTimeout(r));
+    expect(settled).toBe(false);
+    release({ data: {}, error: null });
+    await settling;
+    expect(api.put).toHaveBeenCalledWith("/api/lifting/exercises/1/", { comments: "Felt fast" });
+    expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Good day" });
+  });
 });

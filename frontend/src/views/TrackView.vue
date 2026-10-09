@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useActiveSessionStore } from "@/stores/activeSession";
 import { useExerciseHistory } from "@/composables/useExerciseHistory";
+import { useRestAlarm } from "@/composables/useRestAlarm";
 import type { SetValues } from "@/types/lifting";
 import { formatSet, formatClock, formatShortDate } from "@/utils/format";
 import { memberLetter, roundCount, unitTitle } from "@/utils/session";
@@ -16,12 +17,14 @@ import Sheet from "@/components/ui/Sheet.vue";
 import Stepper from "@/components/ui/Stepper.vue";
 import RestTimer from "@/components/RestTimer.vue";
 import AddExerciseSheet from "@/components/track/AddExerciseSheet.vue";
+import ModeSwitch from "@/components/track/ModeSwitch.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useActiveSessionStore();
 const sessionId = computed(() => Number(route.params.id));
 const lastTime = useExerciseHistory({ limit: 1, excludeSession: () => sessionId.value });
+const { now } = useRestAlarm();
 
 const restVisible = ref(false);
 const addOpen = ref(false);
@@ -218,12 +221,9 @@ watch(
 
 // ---------- Rest banner while the rest screen is hidden ----------
 
-const now = ref(Date.now());
-let ticker: number | null = null;
 const restLeft = computed(() => formatClock(Math.ceil(store.remaining(now.value))));
 
 onMounted(async () => {
-  ticker = window.setInterval(() => (now.value = Date.now()), 500);
   const session = await store.load(sessionId.value);
   if (!session) return;
   if (session.status === "planned") return router.replace({ name: "plan-edit", params: { id: session.id } });
@@ -233,14 +233,16 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (ticker) clearInterval(ticker);
   store.flushNotes();
 });
 </script>
 
 <template>
   <div class="screen track">
-    <AppBar :title="store.session?.title ?? ''" back="/">
+    <AppBar :back="false">
+      <template #title>
+        <ModeSwitch :session-id="sessionId" mode="lift" />
+      </template>
       <template #actions>
         <Btn size="small" :to="{ name: 'track-finish', params: { id: sessionId } }">Finish</Btn>
       </template>

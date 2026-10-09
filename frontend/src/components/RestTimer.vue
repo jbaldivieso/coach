@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useActiveSessionStore } from "@/stores/activeSession";
 import { formatClock } from "@/utils/format";
-import { playAlarm, unlockAudio, vibrate } from "@/utils/audio";
+import { unlockAudio } from "@/utils/audio";
 import AppBar from "@/components/ui/AppBar.vue";
 import Btn from "@/components/ui/Btn.vue";
 import Icon from "@/components/ui/Icon.vue";
@@ -42,10 +42,9 @@ function tick() {
   now.value = Date.now();
 }
 
+// The alarm itself is useRestAlarm's, so it sounds with this screen hidden too
 watch(isOver, (over) => {
   if (!over) return;
-  playAlarm();
-  vibrate();
   // Flash between yellow and black, ending on black; with reduced motion, just go black
   flashOn.value = true;
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;

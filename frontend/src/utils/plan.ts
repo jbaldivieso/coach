@@ -8,7 +8,12 @@ export const DEFAULT_REST = 90;
 export interface DraftSet {
   weight: number | null;
   reps: number;
+  /** Logged mid-session: locked in the editor. */
+  done: boolean;
 }
+
+/** "new" and "planned" hold targets, "done" a finished session's actuals, "active" a live session's mix. */
+export type PlanMode = "new" | "planned" | "done" | "active";
 
 export interface DraftExercise {
   key: number; // stable identity for rendering
@@ -28,7 +33,7 @@ function nextKey(): number {
 }
 
 export function blankSet(): DraftSet {
-  return { weight: null, reps: 0 };
+  return { weight: null, reps: 0, done: false };
 }
 
 export function blankExercise(): DraftExercise {
@@ -49,7 +54,11 @@ export function hasOnlyBlankSets(exercise: DraftExercise): boolean {
 }
 
 export function copySets(sets: { weight: number | null; reps: number }[]): DraftSet[] {
-  return sets.slice(0, MAX_SETS).map((s) => ({ weight: s.weight, reps: s.reps }));
+  return sets.slice(0, MAX_SETS).map((s) => ({ weight: s.weight, reps: s.reps, done: false }));
+}
+
+export function doneCount(exercise: DraftExercise): number {
+  return exercise.sets.filter((s) => s.done).length;
 }
 
 /**
@@ -62,7 +71,9 @@ export function draftFromExercise(exercise: Exercise, keepIds: boolean): DraftEx
     id: keepIds ? exercise.id : undefined,
     title: exercise.title,
     historyTitle: exercise.title,
-    sets: copySets(exercise.sets),
+    sets: keepIds
+      ? exercise.sets.slice(0, MAX_SETS).map((s) => ({ weight: s.weight, reps: s.reps, done: s.done }))
+      : copySets(exercise.sets),
     rest_seconds: exercise.rest_seconds,
     comments: keepIds ? exercise.comments : "",
     superset_group: exercise.superset_group,
@@ -80,25 +91,33 @@ function members(exercises: DraftExercise[], index: number): DraftExercise[] {
   return exercises.slice(start, end);
 }
 
-/** Pad (copying the last set) or trim one exercise's sets to count. */
+/** Pad (copying the last set, not done) or trim one exercise's sets to count. Done sets are never trimmed. */
 export function resizeSets(exercise: DraftExercise, count: number) {
   while (exercise.sets.length < count) {
     const last = exercise.sets[exercise.sets.length - 1];
-    exercise.sets.push(last ? { ...last } : blankSet());
+    exercise.sets.push(last ? { ...last, done: false } : blankSet());
   }
-  exercise.sets.length = count;
+  for (let i = exercise.sets.length - 1; i >= 0 && exercise.sets.length > count; i--) {
+    if (!exercise.sets[i]!.done) exercise.sets.splice(i, 1);
+  }
+}
+
+/** The fewest sets (rounds) the unit can have: the most any member has done. */
+export function minSetCount(exercises: DraftExercise[], index: number): number {
+  return Math.max(1, ...members(exercises, index).map(doneCount));
 }
 
 /** Change the set count (rounds, for a superset: every member changes). New sets copy the last. */
 export function setSetCount(exercises: DraftExercise[], index: number, count: number) {
-  const clamped = Math.min(MAX_SETS, Math.max(1, count));
+  const clamped = Math.min(MAX_SETS, Math.max(minSetCount(exercises, index), count));
   members(exercises, index).forEach((e) => resizeSets(e, clamped));
 }
 
+/** Copy set 1's numbers to every set not yet done. */
 export function copyFirstSetToAll(exercise: DraftExercise) {
   const first = exercise.sets[0];
   if (!first) return;
-  exercise.sets = exercise.sets.map(() => ({ ...first }));
+  exercise.sets = exercise.sets.map((s) => (s.done ? s : { weight: first.weight, reps: first.reps, done: false }));
 }
 
 /** Renumber superset groups 1..n in order and dissolve any group left with one member. */
@@ -121,7 +140,7 @@ export function canLinkWithNext(exercises: DraftExercise[], index: number): bool
 
 /**
  * Link the exercise's unit with the unit below it. Members share the first
- * exercise's rest and are padded to the same set count.
+ * exercise's rest and are padded to the same set count (never trimmed, so done sets survive).
  */
 export function linkWithNext(exercises: DraftExercise[], index: number) {
   if (!canLinkWithNext(exercises, index)) return;
@@ -208,12 +227,13 @@ export function validatePlan(form: PlanForm, opts: { allowFuture: boolean; today
   return errors;
 }
 
-/** Plans hold targets (done: false); a finished session being edited holds actuals (done: true). */
-export function toPayload(exercises: DraftExercise[], done: boolean): ExercisePayload[] {
+/** Plans hold targets (not done); a finished session holds actuals (all done); a live one keeps each set's own flag. */
+export function toPayload(exercises: DraftExercise[], mode: PlanMode): ExercisePayload[] {
+  const doneFor = (s: DraftSet) => (mode === "active" ? s.done : mode === "done");
   return exercises.map((e) => ({
     ...(e.id ? { id: e.id } : {}),
     title: e.title.trim(),
-    sets: e.sets.map((s): Set => ({ weight: s.weight, reps: s.reps, done })),
+    sets: e.sets.map((s): Set => ({ weight: s.weight, reps: s.reps, done: doneFor(s) })),
     rest_seconds: e.rest_seconds,
     comments: e.comments.trim(),
     superset_group: e.superset_group,

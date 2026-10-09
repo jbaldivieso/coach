@@ -190,14 +190,20 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
   let sessionNoteTimer: ReturnType<typeof setTimeout> | null = null;
   let pendingSessionNote: { id: number; comments: string } | null = null;
 
-  async function sendSessionNote(): Promise<boolean> {
+  // One at a time, like exercise saves; with nothing pending this is the save in flight, if any
+  let sessionNoteSave: Promise<boolean> = Promise.resolve(true);
+
+  function sendSessionNote(): Promise<boolean> {
     const note = pendingSessionNote;
     pendingSessionNote = null;
-    if (!note) return true;
-    await api.fetchCsrfToken();
-    const response = await api.put<Session>(`/api/lifting/sessions/${note.id}/`, { comments: note.comments });
-    if (!response.data) saveError.value = "Couldn't save the note. Check your connection.";
-    return response.data !== null;
+    if (!note) return sessionNoteSave;
+    sessionNoteSave = sessionNoteSave.then(async () => {
+      await api.fetchCsrfToken();
+      const response = await api.put<Session>(`/api/lifting/sessions/${note.id}/`, { comments: note.comments });
+      if (!response.data) saveError.value = "Couldn't save the note. Check your connection.";
+      return response.data !== null;
+    });
+    return sessionNoteSave;
   }
 
   /** The note on the whole session ("Note on today"), saved as you type. */
@@ -226,6 +232,12 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
       }),
       sendSessionNote(),
     ]);
+  }
+
+  /** Wait for every queued save and send pending notes, so a fresh load sees everything. */
+  async function settle() {
+    await flushNotes();
+    await Promise.all(queues.values());
   }
 
   // ---------- Structure ----------
@@ -364,6 +376,7 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     saveNote,
     saveSessionNote,
     flushNotes,
+    settle,
     addExercise,
     jumpTo,
     remaining,

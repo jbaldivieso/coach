@@ -50,6 +50,26 @@ const source: Session = {
   ],
 };
 
+// A live session: two Bench sets logged, one to go
+const live: Session = {
+  ...source,
+  id: 2,
+  status: "active",
+  comments: "",
+  exercises: [
+    {
+      ...source.exercises[0]!,
+      id: 20,
+      sets: [
+        { weight: 150, reps: 5, done: true },
+        { weight: 155, reps: 5, done: true },
+        { weight: 155, reps: 4, done: false },
+      ],
+    },
+    { ...source.exercises[1]!, id: 21, sets: [{ weight: 30, reps: 12, done: false }] },
+  ],
+};
+
 const placeholder = { template: "<div/>" };
 
 function makeRouter() {
@@ -59,6 +79,8 @@ function makeRouter() {
       { path: "/", name: "home", component: placeholder },
       { path: "/plan/new", name: "plan-new", component: PlanView },
       { path: "/track/:id", name: "track", component: placeholder },
+      { path: "/track/:id/edit", name: "track-edit", component: PlanView },
+      { path: "/track/:id/finish", name: "track-finish", component: placeholder },
       { path: "/session/:id", name: "session-detail", component: placeholder },
       { path: "/exercise/:title", name: "exercise-history", component: placeholder },
       { path: "/changelog", name: "changelog", component: placeholder },
@@ -67,9 +89,9 @@ function makeRouter() {
   });
 }
 
-async function mountFrom() {
+async function mountFrom(path = "/plan/new?from=1") {
   const router = makeRouter();
-  await router.push("/plan/new?from=1");
+  await router.push(path);
   await router.isReady();
   // Inside a RouterView, so the leave guard is live
   const wrapper = mount(RouterView, { global: { plugins: [router] }, attachTo: document.body });
@@ -88,10 +110,12 @@ describe("PlanView", () => {
     vi.clearAllMocks();
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url.startsWith("/api/lifting/sessions/1/")) return Promise.resolve({ data: source, error: null });
+      if (url.startsWith("/api/lifting/sessions/2/")) return Promise.resolve({ data: structuredClone(live), error: null });
       if (url.includes("/exercises/history/"))
         return Promise.resolve({ data: { title: "", items: [], total: 0, has_more: false }, error: null });
       return Promise.resolve({ data: null, error: null });
     });
+    vi.mocked(api.put).mockResolvedValue({ data: live, error: null });
     vi.mocked(api.post).mockResolvedValue({ data: { ...source, id: 5, status: "active" }, error: null });
   });
 
@@ -230,5 +254,63 @@ describe("PlanView", () => {
     expect(router.currentRoute.value.name).toBe("plan-new");
     vi.unstubAllGlobals();
     wrapper.unmount();
+  });
+
+  describe("Edit mid-session", () => {
+    it("opens on the current exercise with done sets locked", async () => {
+      const { wrapper } = await mountFrom("/track/2/edit");
+      const chips = wrapper.findAll(".ex .setchips .chip");
+      expect(chips.map((c) => c.attributes("disabled") !== undefined)).toEqual([true, true, false]);
+      expect(chips[0]!.classes()).toContain("is-done");
+      expect(wrapper.find(".lockrow").text()).toContain("2 done");
+      expect(wrapper.find('input[type="date"]').exists()).toBe(false);
+      wrapper.unmount();
+    });
+
+    it("can't drop below the done sets", async () => {
+      const { wrapper } = await mountFrom("/track/2/edit");
+      const fewer = wrapper.find('[aria-label="One fewer set"]');
+      await fewer.trigger("click");
+      expect(wrapper.findAll(".ex .setchips .chip")).toHaveLength(2);
+      expect(fewer.attributes("disabled")).toBeDefined();
+      wrapper.unmount();
+    });
+
+    it("Lift saves, keeping done flags, and returns to Track", async () => {
+      const { wrapper, router } = await mountFrom("/track/2/edit");
+      await wrapper.find('[aria-label="One more set"]').trigger("click");
+      await wrapper.find('nav a[href="/track/2"]').trigger("click");
+      await flushPromises();
+      const [url, body] = vi.mocked(api.put).mock.calls.find(([u]) => u.includes("with-exercises"))!;
+      expect(url).toBe("/api/lifting/sessions/2/with-exercises/");
+      const sent = body as { exercises: { id?: number; sets: { done: boolean }[] }[] };
+      expect(sent.exercises.map((e) => e.id)).toEqual([20, 21]);
+      expect(sent.exercises[0]!.sets.map((x) => x.done)).toEqual([true, true, false, false]);
+      expect(router.currentRoute.value.name).toBe("track");
+      wrapper.unmount();
+    });
+
+    it("stays put when the save fails", async () => {
+      vi.mocked(api.put).mockResolvedValue({ data: null, error: "Offline" });
+      const { wrapper, router } = await mountFrom("/track/2/edit");
+      await wrapper.find('[aria-label="One more set"]').trigger("click");
+      await wrapper.find(".dock button").trigger("click");
+      await flushPromises();
+      expect(router.currentRoute.value.name).toBe("track-edit");
+      expect(wrapper.text()).toContain("Offline");
+      wrapper.unmount();
+    });
+
+    it("asks before removing an exercise with logged sets", async () => {
+      const confirm = vi.fn(() => false);
+      vi.stubGlobal("confirm", confirm);
+      const { wrapper } = await mountFrom("/track/2/edit");
+      await wrapper.find('[aria-label="Exercise options"]').trigger("click");
+      Array.from(document.querySelectorAll<HTMLButtonElement>(".action")).find((b) => b.textContent?.includes("Remove"))!.click();
+      expect(confirm).toHaveBeenCalledWith("Remove Bench and its 2 logged sets?");
+      expect(wrapper.findAll(".ex")).toHaveLength(1);
+      vi.unstubAllGlobals();
+      wrapper.unmount();
+    });
   });
 });

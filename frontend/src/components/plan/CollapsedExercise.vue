@@ -12,6 +12,8 @@ defineProps<{
   hideRest?: boolean;
   /** Just folded: outlined for a moment so you can find your place. */
   just?: boolean;
+  /** Done sets black (editing a live session). */
+  markDone?: boolean;
 }>();
 const emit = defineEmits<{ expand: [] }>();
 </script>
@@ -29,7 +31,7 @@ const emit = defineEmits<{ expand: [] }>();
       <span v-if="!hideRest" class="rest"><Icon name="clock" size="sm" />{{ formatClock(exercise.rest_seconds) }}</span>
       <Icon name="down" size="sm" class="chev" />
     </span>
-    <SetChips :sets="exercise.sets" />
+    <SetChips :sets="exercise.sets" :mark-done="markDone" />
   </button>
 </template>
 

@@ -5,13 +5,15 @@ import { formatWeight, formatSet } from "@/utils/format";
 // Six fixed columns (no exercise goes past 6 sets), so set N lines up across rows.
 withDefaults(
   defineProps<{
-    sets: SetValues[];
+    sets: (SetValues & { done?: boolean })[];
     selectable?: boolean;
+    /** Show done sets black and locked (editing a live session). */
+    markDone?: boolean;
     selected?: number | null;
     tone?: "chip" | "card";
     size?: "md" | "lg";
   }>(),
-  { selectable: false, selected: null, tone: "chip", size: "md" },
+  { selectable: false, markDone: false, selected: null, tone: "chip", size: "md" },
 );
 
 const emit = defineEmits<{ select: [index: number] }>();
@@ -24,15 +26,16 @@ const emit = defineEmits<{ select: [index: number] }>();
         v-if="selectable"
         type="button"
         class="chip"
-        :class="{ 'is-selected': selected === i }"
+        :class="{ 'is-selected': selected === i, 'is-done': markDone && set.done }"
         :aria-pressed="selected === i"
-        :aria-label="`Set ${i + 1}: ${formatSet(set)}`"
+        :disabled="markDone && set.done"
+        :aria-label="`Set ${i + 1}: ${formatSet(set)}${markDone && set.done ? ', done' : ''}`"
         @click="emit('select', i)"
       >
         <em>{{ formatWeight(set.weight) }}</em>
         <span><b>×</b>{{ set.reps || "–" }}</span>
       </button>
-      <span v-else class="chip" :aria-label="formatSet(set)">
+      <span v-else class="chip" :class="{ 'is-done': markDone && set.done }" :aria-label="formatSet(set)">
         <em>{{ formatWeight(set.weight) }}</em>
         <span><b>×</b>{{ set.reps }}</span>
       </span>
@@ -81,6 +84,13 @@ const emit = defineEmits<{ select: [index: number] }>();
 }
 button.chip {
   min-height: 44px;
+}
+.chip.is-done {
+  background: var(--k);
+  color: var(--on-k);
+}
+.chip.is-done b {
+  color: var(--on-k-muted);
 }
 .chip.is-selected {
   background: var(--y);

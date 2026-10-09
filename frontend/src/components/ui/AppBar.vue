@@ -9,9 +9,9 @@ const props = defineProps<{
   title?: string;
   /**
    * Where back goes. A route is the fallback when there's no history to go back to; a function takes over entirely.
-   * COACH always goes home, so the arrow only shows when back leads somewhere else.
+   * COACH always goes home, so the arrow only shows when back leads somewhere else. false never shows it.
    */
-  back?: RouteLocationRaw | (() => void);
+  back?: RouteLocationRaw | (() => void) | false;
   /** Let the screen's own color show through (the rest screen). */
   transparent?: boolean;
 }>();
@@ -28,6 +28,7 @@ const isHome = computed(() => route.name === "home");
 
 const showBack = computed(() => {
   const target = props.back;
+  if (target === false) return false;
   if (typeof target === "function") return true;
   if (target !== undefined && router.resolve(target).path !== "/") return true;
   const previous = window.history.state?.back;
@@ -41,7 +42,7 @@ function navigate() {
   } else if (window.history.state?.back) {
     router.back();
   } else {
-    router.push(target ?? "/");
+    router.push(target || "/");
   }
 }
 

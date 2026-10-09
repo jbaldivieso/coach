@@ -41,6 +41,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: "/track/:id/edit",
+      name: "track-edit",
+      component: () => import("@/views/PlanView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
       path: "/track/:id/finish",
       name: "track-finish",
       component: () => import("@/views/FinishView.vue"),
