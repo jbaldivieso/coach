@@ -1,21 +1,33 @@
-// One AudioContext for the app. iOS only lets audio start from a user gesture,
-// so unlockAudio() is called from the Done tap; the rest-over alarm plays later.
+// One AudioContext at a time. iOS only lets audio start from a user gesture, so
+// unlockAudio() is called from the Done tap; the rest-over alarm plays later.
 
 let audioContext: AudioContext | null = null;
 
-export async function unlockAudio(): Promise<void> {
+/**
+ * Call from inside a tap. Starts a fresh context each time: on iOS a context
+ * goes "interrupted" (not "suspended") when the app is backgrounded or another
+ * app takes the audio, and after that it can stay silent even once it reports
+ * "running" again. A new one made inside the gesture always plays.
+ */
+export function unlockAudio(): void {
   try {
-    if (!audioContext) audioContext = new AudioContext();
-    if (audioContext.state === "suspended") await audioContext.resume();
+    audioContext?.close().catch(() => {});
+    audioContext = new AudioContext();
+    audioContext.resume().catch(() => {});
   } catch (error) {
     console.log("Failed to initialize audio context:", error);
   }
 }
 
+async function readyContext(): Promise<AudioContext> {
+  if (!audioContext || audioContext.state === "closed") audioContext = new AudioContext();
+  if (audioContext.state !== "running") await audioContext.resume();
+  return audioContext;
+}
+
 export async function playAlarm(): Promise<void> {
   try {
-    await unlockAudio();
-    const ctx = audioContext!;
+    const ctx = await readyContext();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
     oscillator.connect(gainNode);

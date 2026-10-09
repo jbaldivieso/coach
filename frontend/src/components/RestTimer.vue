@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useActiveSessionStore } from "@/stores/activeSession";
 import { formatClock } from "@/utils/format";
-import { playAlarm, vibrate } from "@/utils/audio";
+import { playAlarm, unlockAudio, vibrate } from "@/utils/audio";
 import AppBar from "@/components/ui/AppBar.vue";
 import Btn from "@/components/ui/Btn.vue";
 import Icon from "@/components/ui/Icon.vue";
@@ -62,6 +62,7 @@ watch(isOver, (over) => {
 });
 
 function extend() {
+  unlockAudio(); // +30 after the alarm starts a new countdown
   if (isOver.value) store.startRest(30);
   else store.adjustRest(30);
   flashOn.value = false;
@@ -74,6 +75,7 @@ function adjust(delta: number) {
 }
 
 function togglePause() {
+  unlockAudio();
   store.toggleRestPause();
   tick();
 }
