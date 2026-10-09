@@ -44,7 +44,7 @@ comments stay regular width. Supersets are the only striped (`--hazard`) element
 
 3. **CSRF:** The frontend must fetch a CSRF token before POST/PUT/DELETE requests. The API client handles this.
 
-4. **Mobile First:** Design for a 390px-wide phone first; touch targets are at least 44px. The layout centers at `--content` width on larger screens.
+4. **Mobile First:** Design for a 390px-wide phone first. The smallest target device is an iPhone 12 Pro (390×844 CSS px), so layouts don't need to fit anything narrower. Touch targets are at least 44px. The layout centers at `--content` width on larger screens.
 
 5. **PWA:** Screen Wake Lock API works better when installed as PWA on iOS.
 
