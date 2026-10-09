@@ -1,29 +1,40 @@
 <script setup lang="ts">
 import type { DraftExercise } from "@/utils/plan";
-import type { HistoryEntry } from "@/composables/useExerciseHistory";
-import { formatShortDate } from "@/utils/format";
+import { formatClock } from "@/utils/format";
 import SetChips from "@/components/ui/SetChips.vue";
 import Icon from "@/components/ui/Icon.vue";
 
-defineProps<{ exercise: DraftExercise; entry: HistoryEntry | undefined; prefix?: string; error?: boolean }>();
+defineProps<{
+  exercise: DraftExercise;
+  prefix?: string;
+  error?: boolean;
+  /** A superset's black header already shows the shared rest. */
+  hideRest?: boolean;
+  /** Just folded: outlined for a moment so you can find your place. */
+  just?: boolean;
+}>();
 const emit = defineEmits<{ expand: [] }>();
 </script>
 
 <template>
-  <button type="button" class="collapsed" :class="{ 'is-error': error }" :aria-label="`Edit ${exercise.title || 'exercise'}`" @click="emit('expand')">
-    <span class="t caps">{{ prefix }}{{ exercise.title || "Unnamed exercise" }}</span>
-    <Icon name="down" size="sm" class="chev" />
-    <span class="lbl"><span class="lbl-name">Plan</span><SetChips :sets="exercise.sets" /></span>
-    <span v-if="entry?.items[0]" class="lbl">
-      <span class="lbl-name">{{ formatShortDate(entry.items[0].date) }}</span>
-      <SetChips :sets="entry.items[0].sets" />
+  <button
+    type="button"
+    class="collapsed"
+    :class="{ 'is-error': error, 'is-just': just }"
+    :aria-label="`Edit ${exercise.title || 'exercise'}`"
+    @click="emit('expand')"
+  >
+    <span class="head">
+      <span class="t caps">{{ prefix }}{{ exercise.title || "Unnamed exercise" }}</span>
+      <span v-if="!hideRest" class="rest"><Icon name="clock" size="sm" />{{ formatClock(exercise.rest_seconds) }}</span>
+      <Icon name="down" size="sm" class="chev" />
     </span>
+    <SetChips :sets="exercise.sets" />
   </button>
 </template>
 
 <style scoped>
 .collapsed {
-  position: relative;
   display: block;
   width: 100%;
   text-align: left;
@@ -35,30 +46,32 @@ const emit = defineEmits<{ expand: [] }>();
 .collapsed.is-error {
   box-shadow: inset 0 0 0 2px var(--alert);
 }
-.t {
-  display: block;
-  font-size: 15.5px;
-  margin: 0 28px 6px 0;
+.collapsed.is-just {
+  box-shadow: inset 0 0 0 2px var(--k);
 }
-.chev {
-  position: absolute;
-  top: 13px;
-  right: 12px;
-  color: var(--muted);
-}
-.lbl {
+.head {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 6px;
 }
-.lbl + .lbl {
-  margin-top: 4px;
+.t {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.lbl-name {
-  width: 42px;
-  flex: 0 0 auto;
-  font-size: 11.5px;
-  font-weight: 600;
+.rest {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chev {
   color: var(--muted);
 }
 </style>

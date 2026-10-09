@@ -18,6 +18,7 @@
   --font: "Saira", system-ui, -apple-system, "Segoe UI", sans-serif;
   --gutter: 16px;
   --content: 608px; // max content width; the app is phone-first
+  --appbar-h: calc(56px + env(safe-area-inset-top)); // sticky elements line up under the bar
 
   --r-sm: 4px;
   --r: 6px;

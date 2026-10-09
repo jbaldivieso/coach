@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api } from "@/api/client";
 import type { Session, TitleSuggestion, TitleSuggestions } from "@/types/lifting";
@@ -189,6 +189,41 @@ function expand(exercise: DraftExercise) {
   selected.value = null;
 }
 
+// Folding leaves every exercise collapsed; the one just folded is outlined for a moment
+const justFolded = ref<number | null>(null);
+let justFoldedTimer: number | null = null;
+
+async function fold() {
+  const key = expandedKey.value;
+  expandedKey.value = null;
+  selected.value = null;
+  if (key === null) return;
+  justFolded.value = key;
+  if (justFoldedTimer) clearTimeout(justFoldedTimer);
+  justFoldedTimer = window.setTimeout(() => (justFolded.value = null), 1200);
+  await nextTick();
+  document.querySelector(`[data-key="${key}"]`)?.scrollIntoView({ block: "nearest" });
+}
+
+function isJustFolded(unit: Unit<DraftExercise>): boolean {
+  return unit.items.some((e) => e.key === justFolded.value);
+}
+
+// The open exercise's header sticks under the app bar; it gets a rule once it's stuck
+const stuck = ref(false);
+function checkStuck() {
+  const header = document.querySelector<HTMLElement>(".is-sticky");
+  const card = header?.parentElement;
+  if (!header || !card) return void (stuck.value = false);
+  stuck.value = card.getBoundingClientRect().top < header.getBoundingClientRect().top - 1;
+}
+watch(expandedKey, () => nextTick(checkStuck));
+onMounted(() => window.addEventListener("scroll", checkStuck, { passive: true }));
+onUnmounted(() => {
+  window.removeEventListener("scroll", checkStuck);
+  if (justFoldedTimer) clearTimeout(justFoldedTimer);
+});
+
 function select(exercise: DraftExercise, index: number) {
   const same = selected.value?.key === exercise.key && selected.value.index === index;
   selected.value = same ? null : { key: exercise.key, index };
@@ -366,7 +401,7 @@ onMounted(load);
           <!-- Single exercise -->
           <template v-if="!unit.isSuperset">
             <section v-if="isExpanded(unit)" class="ex">
-              <div class="ex-h">
+              <div class="ex-h is-sticky" :class="{ 'is-stuck': stuck }">
                 <Autocomplete
                   :ref="(el) => setNameRef(unit.items[0]!.key, el)"
                   v-model="unit.items[0]!.title"
@@ -385,6 +420,7 @@ onMounted(load);
                 <button type="button" class="ex-menu" aria-label="Exercise options" @click="menuFor = unit.items[0]!">
                   <Icon name="more" />
                 </button>
+                <button type="button" class="fold" aria-label="Fold" @click="fold"><Icon name="fold" /></button>
               </div>
               <p v-if="errors[`exercise.${unit.items[0]!.key}.title`]" class="field-error is-error">
                 {{ errors[`exercise.${unit.items[0]!.key}.title`] }}
@@ -424,7 +460,8 @@ onMounted(load);
             <CollapsedExercise
               v-else
               :exercise="unit.items[0]!"
-              :entry="history.get(unit.items[0]!.historyTitle)"
+              :data-key="unit.items[0]!.key"
+              :just="isJustFolded(unit)"
               :error="Object.keys(errors).some((k) => k.startsWith(`exercise.${unit.items[0]!.key}.`))"
               @expand="expand(unit.items[0]!)"
             />
@@ -432,11 +469,14 @@ onMounted(load);
 
           <!-- Superset -->
           <section v-else class="ss" :class="{ 'is-collapsed': !isExpanded(unit) }">
-            <header class="ss-h">
+            <header class="ss-h" :class="{ 'is-sticky': isExpanded(unit), 'is-stuck': stuck && isExpanded(unit) }">
               <Icon name="link" size="sm" />
               <span class="ss-title">Superset · {{ unit.items[0]!.sets.length }} rounds</span>
               <button type="button" class="ss-rest" @click="restFor = unit.items[0]!">
                 <Icon name="clock" size="sm" />{{ formatClock(unit.items[0]!.rest_seconds) }} after each round
+              </button>
+              <button v-if="isExpanded(unit)" type="button" class="fold" aria-label="Fold superset" @click="fold">
+                <Icon name="fold" />
               </button>
             </header>
 
@@ -510,8 +550,10 @@ onMounted(load);
                 v-for="(e, m) in unit.items"
                 :key="e.key"
                 :exercise="e"
-                :entry="history.get(e.historyTitle)"
+                :data-key="e.key"
                 :prefix="`${memberLetter(m)} · `"
+                :just="isJustFolded(unit)"
+                hide-rest
                 :error="Object.keys(errors).some((k) => k.startsWith(`exercise.${e.key}.`))"
                 @expand="expand(e)"
               />
@@ -649,6 +691,30 @@ onMounted(load);
   align-items: center;
   gap: 4px;
 }
+.ex > .ex-h.is-sticky {
+  position: sticky;
+  top: var(--appbar-h);
+  z-index: 3;
+  background: var(--card);
+  margin: -8px -12px 0;
+  padding: 8px 12px 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.ex > .ex-h.is-stuck {
+  border-radius: 0;
+  box-shadow: 0 1px 0 var(--rule);
+}
+.fold {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--k);
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--k);
+}
 .ex-h :deep(.name-input) {
   border: 0;
   border-bottom: 1.5px dashed transparent;
@@ -717,7 +783,8 @@ onMounted(load);
   border-radius: 10px;
   padding: 0 10px 10px;
   margin-bottom: 10px;
-  overflow: hidden;
+  /* clip, not hidden: hidden would stop the header sticking */
+  overflow: clip;
 }
 .ss.is-collapsed {
   padding-bottom: 2px;
@@ -736,6 +803,17 @@ onMounted(load);
   text-transform: uppercase;
   font-stretch: 85%;
   letter-spacing: 0.04em;
+}
+.ss-h.is-sticky {
+  position: sticky;
+  top: var(--appbar-h);
+  z-index: 3;
+}
+.ss-h .fold {
+  margin: -8px 0 -8px 4px;
+  background: var(--k);
+  border-color: var(--y);
+  color: var(--y);
 }
 .ss-h::before {
   content: "";

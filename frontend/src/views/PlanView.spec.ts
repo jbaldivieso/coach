@@ -172,4 +172,38 @@ describe("PlanView", () => {
     expect(wrapper.text()).toContain("Give it a title");
     wrapper.unmount();
   });
+
+  it("folds the open exercise, and a tap opens it again", async () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const { wrapper } = await mountFrom();
+    expect(wrapper.findAll(".ex")).toHaveLength(1);
+    await wrapper.find('[aria-label="Fold"]').trigger("click");
+    expect(wrapper.find(".ex").exists()).toBe(false);
+    const collapsed = wrapper.findAll(".collapsed");
+    expect(collapsed).toHaveLength(2);
+    expect(collapsed[0]!.classes()).toContain("is-just");
+    await collapsed[1]!.trigger("click");
+    expect(wrapper.find(".ex input[aria-label='Exercise name']").element).toHaveProperty("value", "Lat raises");
+    wrapper.unmount();
+  });
+
+  it("a collapsed exercise shows its plan and rest, not last time", async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url.startsWith("/api/lifting/sessions/1/")) return Promise.resolve({ data: source, error: null });
+      if (url.includes("/exercises/history/"))
+        return Promise.resolve({
+          data: { title: "", items: [{ id: 3, session_id: 3, date: "2026-01-10", title: "Upper A", sets: [{ weight: 25, reps: 15, done: true }], rest_seconds: 90, comments: "" }], total: 1, has_more: false },
+          error: null,
+        });
+      return Promise.resolve({ data: null, error: null });
+    });
+    const { wrapper } = await mountFrom();
+    const card = wrapper.find(".collapsed");
+    expect(card.text()).toContain("Lat raises");
+    expect(card.text()).toContain("1:30");
+    expect(card.text()).toContain("30");
+    expect(card.text()).not.toContain("Jan 10");
+    expect(card.text()).not.toContain("25");
+    wrapper.unmount();
+  });
 });

@@ -9,6 +9,7 @@ const paths = {
   right: '<path d="m9 5 7 7-7 7"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   up: '<path d="m6 15 6-6 6 6"/>',
+  fold: '<path d="m7 11 5-5 5 5M7 18l5-5 5 5"/>',
   grip: '<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>',
   more: '<path d="M5 12h.01M12 12h.01M19 12h.01"/>',
   clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
