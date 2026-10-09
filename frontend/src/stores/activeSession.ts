@@ -80,6 +80,8 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
       error.value = response.error || "Couldn't load the session";
       return null;
     }
+    // A session note still waiting to save is newer than what the server sent
+    if (pendingSessionNote?.id === id) response.data.comments = pendingSessionNote.comments;
     session.value = response.data;
     const stored = readStoredRest();
     rest.value = stored && stored.sessionId === id ? stored : null;
@@ -185,17 +187,45 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     );
   }
 
+  let sessionNoteTimer: ReturnType<typeof setTimeout> | null = null;
+  let pendingSessionNote: { id: number; comments: string } | null = null;
+
+  async function sendSessionNote(): Promise<boolean> {
+    const note = pendingSessionNote;
+    pendingSessionNote = null;
+    if (!note) return true;
+    await api.fetchCsrfToken();
+    const response = await api.put<Session>(`/api/lifting/sessions/${note.id}/`, { comments: note.comments });
+    if (!response.data) saveError.value = "Couldn't save the note. Check your connection.";
+    return response.data !== null;
+  }
+
+  /** The note on the whole session ("Note on today"), saved as you type. */
+  function saveSessionNote(text: string) {
+    if (!session.value) return;
+    session.value.comments = text;
+    pendingSessionNote = { id: session.value.id, comments: text };
+    if (sessionNoteTimer) clearTimeout(sessionNoteTimer);
+    sessionNoteTimer = setTimeout(() => {
+      sessionNoteTimer = null;
+      sendSessionNote();
+    }, NOTE_DEBOUNCE_MS);
+  }
+
   /** Send any note still waiting on its debounce. */
   async function flushNotes() {
     const pending = Array.from(noteTimers.entries());
     noteTimers.clear();
-    await Promise.all(
-      pending.map(([id, timer]) => {
+    if (sessionNoteTimer) clearTimeout(sessionNoteTimer);
+    sessionNoteTimer = null;
+    await Promise.all([
+      ...pending.map(([id, timer]) => {
         clearTimeout(timer);
         const exercise = exercises.value.find((e) => e.id === id);
         return exercise ? saveExercise(exercise, { comments: exercise.comments }) : true;
       }),
-    );
+      sendSessionNote(),
+    ]);
   }
 
   // ---------- Structure ----------
@@ -332,6 +362,7 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     editSet,
     addSet,
     saveNote,
+    saveSessionNote,
     flushNotes,
     addExercise,
     jumpTo,

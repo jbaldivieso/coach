@@ -179,4 +179,29 @@ describe("activeSession store", () => {
       position: 3,
     });
   });
+
+  describe("session note", () => {
+    it("saves once after typing stops", async () => {
+      vi.useFakeTimers();
+      const store = await loaded([exercise(1, "Bench", [false])]);
+      store.saveSessionNote("Shoulder's");
+      store.saveSessionNote("Shoulder's cranky");
+      expect(store.session?.comments).toBe("Shoulder's cranky");
+      await vi.advanceTimersByTimeAsync(700);
+      expect(api.put).toHaveBeenCalledTimes(1);
+      expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Shoulder's cranky" });
+      vi.useRealTimers();
+    });
+
+    it("flushNotes sends a pending note right away, once", async () => {
+      vi.useFakeTimers();
+      const store = await loaded([exercise(1, "Bench", [false])]);
+      store.saveSessionNote("Cranky");
+      await store.flushNotes();
+      expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Cranky" });
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(api.put).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+  });
 });

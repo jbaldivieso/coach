@@ -25,7 +25,7 @@ const lastTime = useExerciseHistory({ limit: 1, excludeSession: () => sessionId.
 
 const restVisible = ref(false);
 const addOpen = ref(false);
-const noteFor = ref<number | null>(null); // exercise index
+const noteFor = ref<number | "session" | null>(null); // exercise index, or the whole session
 const editing = ref<{ exerciseIndex: number; setIndex: number; values: SetValues }[] | null>(null);
 const logging = ref(false);
 const strip = ref<HTMLElement | null>(null);
@@ -177,11 +177,18 @@ async function saveEdit() {
 // ---------- Notes ----------
 
 const noteText = computed({
-  get: () => (noteFor.value !== null ? (store.exercises[noteFor.value]?.comments ?? "") : ""),
+  get: () => {
+    if (noteFor.value === "session") return store.session?.comments ?? "";
+    return noteFor.value !== null ? (store.exercises[noteFor.value]?.comments ?? "") : "";
+  },
   set: (text: string) => {
-    if (noteFor.value !== null) store.saveNote(noteFor.value, text);
+    if (noteFor.value === "session") store.saveSessionNote(text);
+    else if (noteFor.value !== null) store.saveNote(noteFor.value, text);
   },
 });
+const noteTitle = computed(() =>
+  noteFor.value === "session" ? "Note on today" : `Note · ${store.exercises[noteFor.value ?? -1]?.title ?? ""}`,
+);
 
 function openNote(index: number | undefined) {
   if (index !== undefined) noteFor.value = index;
@@ -359,6 +366,12 @@ onUnmounted(() => {
             <span v-else>Note on {{ exercise.title }}…</span>
           </button>
         </template>
+
+        <button type="button" class="noterow" :class="{ filled: store.session.comments }" @click="noteFor = 'session'">
+          <Icon name="pencil" size="sm" />
+          <span v-if="store.session.comments"><small>Note on today</small>{{ store.session.comments }}</span>
+          <span v-else>Note on today…</span>
+        </button>
       </template>
     </main>
 
@@ -377,12 +390,15 @@ onUnmounted(() => {
       @note="openNote(position ? position.exerciseIndex : undefined)"
     />
 
-    <Sheet :open="noteFor !== null" :title="`Note · ${store.exercises[noteFor ?? -1]?.title ?? ''}`" @close="noteFor = null">
+    <Sheet :open="noteFor !== null" :title="noteTitle" @close="noteFor = null">
       <label class="text-field">
         <span class="visually-hidden">Note</span>
-        <textarea v-model="noteText" placeholder="How did it feel? Anything to remember next time?" />
+        <textarea
+          v-model="noteText"
+          :placeholder="noteFor === 'session' ? 'How is it going?' : 'How did it feel? Anything to remember next time?'"
+        />
       </label>
-      <p class="small muted sheet-hint">Saves as you type.</p>
+      <p class="small muted sheet-hint">{{ noteFor === "session" ? "Saves as you type. Shows up again on Finish." : "Saves as you type." }}</p>
       <Btn variant="primary" class="sheet-btn" @click="noteFor = null">Done</Btn>
     </Sheet>
 

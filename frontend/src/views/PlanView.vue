@@ -70,6 +70,7 @@ const menuFor = ref<DraftExercise | null>(null);
 const restFor = ref<DraftExercise | null>(null);
 
 const titleInput = ref<InstanceType<typeof Autocomplete> | null>(null);
+const noteInput = ref<HTMLTextAreaElement | null>(null);
 const nameInputs = new Map<number, InstanceType<typeof Autocomplete>>();
 
 const history = useExerciseHistory({ excludeSession: () => sessionId.value });
@@ -126,6 +127,15 @@ async function finishLoading() {
 }
 
 watch([title, date, comments, exercises], () => (dirty.value = true), { deep: true });
+
+// The session note is one line until it needs more
+function growNote() {
+  const el = noteInput.value;
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
+watch([comments, loading], () => nextTick(growNote));
 
 watch(
   () => exercises.value.map((e) => e.historyTitle),
@@ -397,6 +407,20 @@ onMounted(load);
         </label>
         <p v-if="errors.date" class="field-error">{{ errors.date }}</p>
 
+        <label class="text-field note-field session-note" :class="{ 'is-filled': comments }">
+          <Icon name="pencil" size="sm" />
+          <span class="session-note-body">
+            <small v-if="comments" aria-hidden="true">Session note</small>
+            <textarea
+              ref="noteInput"
+              v-model="comments"
+              rows="1"
+              aria-label="Session note"
+              :placeholder="mode === 'done' ? 'How did it go?' : 'Session note'"
+            />
+          </span>
+        </label>
+
         <template v-for="unit in units" :key="unit.items[0]!.key">
           <!-- Single exercise -->
           <template v-if="!unit.isSuperset">
@@ -564,14 +588,6 @@ onMounted(load);
         <p v-if="errors.exercises" class="field-error is-error">{{ errors.exercises }}</p>
         <Btn class="add-ex" @click="addExercise"><Icon name="plus" />Add exercise</Btn>
 
-        <template v-if="mode === 'done'">
-          <h2 class="eyebrow">Session comments</h2>
-          <label class="text-field">
-            <span class="visually-hidden">Session comments</span>
-            <textarea v-model="comments" placeholder="How did it go?" />
-          </label>
-        </template>
-
         <button v-if="mode !== 'new'" type="button" class="delete" :disabled="saving !== null" @click="deleteSession">
           {{ mode === "planned" ? "Delete this plan" : "Delete this session" }}
         </button>
@@ -653,7 +669,7 @@ onMounted(load);
   white-space: nowrap;
 }
 .date-field {
-  margin: 8px 0 12px;
+  margin: 8px 0;
 }
 .date-label {
   font-size: 12px;
@@ -774,6 +790,37 @@ onMounted(load);
 .note-field input {
   font-size: 15px;
   padding: 8px 0;
+}
+.session-note {
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding-top: 11px;
+}
+.session-note.is-filled {
+  border-style: solid;
+}
+.session-note-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.session-note small {
+  margin-top: -2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-stretch: 85%;
+  color: var(--muted);
+}
+.session-note textarea {
+  min-height: 0;
+  padding: 0 0 9px;
+  margin-top: -2px;
+  resize: none;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 /* Superset: the only striped element in the app */

@@ -78,7 +78,7 @@ async function mountFrom() {
 
 function lastPostBody() {
   const calls = vi.mocked(api.post).mock.calls.filter(([url]) => url.includes("with-exercises"));
-  return calls[calls.length - 1]![1] as { status: string; exercises: { title: string; sets: unknown[]; superset_group: number | null; comments: string }[] };
+  return calls[calls.length - 1]![1] as { status: string; comments: string; exercises: { title: string; sets: unknown[]; superset_group: number | null; comments: string }[] };
 }
 
 describe("PlanView", () => {
@@ -204,6 +204,18 @@ describe("PlanView", () => {
     expect(card.text()).toContain("30");
     expect(card.text()).not.toContain("Jan 10");
     expect(card.text()).not.toContain("25");
+    wrapper.unmount();
+  });
+
+  it("has a session note under the date, saved with a new plan", async () => {
+    const { wrapper } = await mountFrom();
+    const note = wrapper.find('textarea[aria-label="Session note"]');
+    expect(note.attributes("placeholder")).toBe("Session note");
+    expect((note.element as HTMLTextAreaElement).value).toBe("");
+    await note.setValue("Shoulder's cranky");
+    await wrapper.findAll(".dock button")[1]!.trigger("click");
+    await flushPromises();
+    expect(lastPostBody().comments).toBe("Shoulder's cranky");
     wrapper.unmount();
   });
 });
