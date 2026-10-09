@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import { createRouter, createMemoryHistory } from "vue-router";
+import { createRouter, createMemoryHistory, RouterView } from "vue-router";
 import { createPinia, setActivePinia } from "pinia";
 import PlanView from "./PlanView.vue";
 import type { Session } from "@/types/lifting";
@@ -71,7 +71,8 @@ async function mountFrom() {
   const router = makeRouter();
   await router.push("/plan/new?from=1");
   await router.isReady();
-  const wrapper = mount(PlanView, { global: { plugins: [router] }, attachTo: document.body });
+  // Inside a RouterView, so the leave guard is live
+  const wrapper = mount(RouterView, { global: { plugins: [router] }, attachTo: document.body });
   await flushPromises();
   return { wrapper, router };
 }
@@ -216,6 +217,18 @@ describe("PlanView", () => {
     await wrapper.findAll(".dock button")[1]!.trigger("click");
     await flushPromises();
     expect(lastPostBody().comments).toBe("Shoulder's cranky");
+    wrapper.unmount();
+  });
+
+  it("asks before leaving with unsaved changes", async () => {
+    const { wrapper, router } = await mountFrom();
+    await wrapper.find('input[aria-label="Session title"]').setValue("Upper B");
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirm);
+    await router.push("/");
+    expect(confirm).toHaveBeenCalledWith("Discard your changes?");
+    expect(router.currentRoute.value.name).toBe("plan-new");
+    vi.unstubAllGlobals();
     wrapper.unmount();
   });
 });

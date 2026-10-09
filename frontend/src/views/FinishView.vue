@@ -77,7 +77,7 @@ onMounted(async () => {
 
 <template>
   <div class="screen">
-    <AppBar :title="`Finish ${store.session?.title ?? ''}`" small :back="{ name: 'track', params: { id: sessionId } }" />
+    <AppBar :title="`Finish ${store.session?.title ?? ''}`" :back="{ name: 'track', params: { id: sessionId } }" />
 
     <main class="screen-body">
       <p v-if="!store.session" class="empty">{{ store.error ?? "Loading…" }}</p>

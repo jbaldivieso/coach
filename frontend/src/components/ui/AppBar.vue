@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { RouterLink, useRouter, type RouteLocationRaw } from "vue-router";
+import { RouterLink, useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { changelog, hasUnreadChanges } from "@/data/changelog";
 import Icon from "./Icon.vue";
 
 const props = defineProps<{
   title?: string;
-  small?: boolean;
-  /** Show a back arrow. A route is the fallback when there's no history to go back to; a function takes over entirely. */
+  /**
+   * Where back goes. A route is the fallback when there's no history to go back to; a function takes over entirely.
+   * COACH always goes home, so the arrow only shows when back leads somewhere else.
+   */
   back?: RouteLocationRaw | (() => void);
-  /** Show an X instead of a back arrow, with the same semantics. */
-  close?: RouteLocationRaw | (() => void);
   /** Let the screen's own color show through (the rest screen). */
   transparent?: boolean;
 }>();
 
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -23,10 +24,18 @@ const menuOpen = ref(false);
 const unread = ref(hasUnreadChanges());
 const latestTeaser = computed(() => changelog[0]?.teaser ?? changelog[0]?.changes[0]?.title ?? "");
 
-const nav = computed(() => props.close ?? props.back);
+const isHome = computed(() => route.name === "home");
+
+const showBack = computed(() => {
+  const target = props.back;
+  if (typeof target === "function") return true;
+  if (target !== undefined && router.resolve(target).path !== "/") return true;
+  const previous = window.history.state?.back;
+  return typeof previous === "string" && previous !== "/";
+});
 
 function navigate() {
-  const target = nav.value;
+  const target = props.back;
   if (typeof target === "function") {
     target();
   } else if (window.history.state?.back) {
@@ -59,12 +68,19 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 <template>
   <header class="appbar" :class="{ 'is-transparent': transparent }">
     <div class="appbar-inner">
-      <button v-if="nav" class="appbar-icon" :aria-label="close ? 'Close' : 'Back'" @click="navigate">
-        <Icon :name="close ? 'x' : 'left'" />
-      </button>
-      <slot name="title">
-        <h1 class="appbar-title" :class="{ 'is-small': small }">{{ title }}</h1>
-      </slot>
+      <h1 v-if="isHome" class="appbar-title">
+        <RouterLink to="/" class="wordmark is-big" aria-label="Home">Coach</RouterLink>
+      </h1>
+      <template v-else>
+        <RouterLink to="/" class="wordmark" aria-label="Home">Coach</RouterLink>
+        <span class="vrule" aria-hidden="true" />
+        <button v-if="showBack" class="appbar-icon back" aria-label="Back" @click="navigate">
+          <Icon name="left" />
+        </button>
+        <slot name="title">
+          <h1 class="appbar-title is-small" :class="{ 'after-rule': !showBack }">{{ title }}</h1>
+        </slot>
+      </template>
       <slot name="actions" />
       <div class="appbar-menu">
         <button
@@ -125,8 +141,36 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
   min-height: 56px;
   padding: 0 max(8px, calc((100% - var(--content)) / 2 - 8px)) 0 max(var(--gutter), calc((100% - var(--content)) / 2));
 }
-.appbar-inner:has(> .appbar-icon:first-child) {
-  padding-left: max(6px, calc((100% - var(--content)) / 2 - 10px));
+/* The home link, on every screen */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 2px;
+  margin-left: -2px;
+  color: inherit;
+  font-size: 21px;
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.wordmark.is-big {
+  font-size: inherit;
+  font-stretch: inherit;
+  letter-spacing: inherit;
+}
+.vrule {
+  flex: 0 0 auto;
+  width: 1.5px;
+  height: 24px;
+  margin: 0 4px 0 6px;
+  background: currentColor;
+}
+.appbar-icon.back {
+  margin-left: -4px;
 }
 .appbar-title {
   flex: 1;
@@ -143,6 +187,9 @@ onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 }
 .appbar-title.is-small {
   font-size: 19px;
+}
+.appbar-title.after-rule {
+  padding-left: 2px;
 }
 .appbar-icon {
   position: relative;

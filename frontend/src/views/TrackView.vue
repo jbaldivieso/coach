@@ -240,7 +240,7 @@ onUnmounted(() => {
 
 <template>
   <div class="screen track">
-    <AppBar :title="store.session?.title ?? ''" small back="/">
+    <AppBar :title="store.session?.title ?? ''" back="/">
       <template #actions>
         <Btn size="small" :to="{ name: 'track-finish', params: { id: sessionId } }">Finish</Btn>
       </template>

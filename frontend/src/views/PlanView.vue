@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { api } from "@/api/client";
 import type { Session, TitleSuggestion, TitleSuggestions } from "@/types/lifting";
 import { todayISO, formatDayDate, formatShortDate, formatClock, parseClock, formatSet } from "@/utils/format";
@@ -360,18 +360,21 @@ async function deleteSession() {
   router.replace({ name: "home" });
 }
 
-function close() {
-  if (dirty.value && !window.confirm("Discard your changes?")) return;
-  if (window.history.state?.back) router.back();
-  else router.push(mode.value === "done" && sessionId.value ? { name: "session-detail", params: { id: sessionId.value } } : "/");
-}
+// Every way out asks first: COACH, back, the menu
+onBeforeRouteLeave(() => {
+  if (dirty.value && !window.confirm("Discard your changes?")) return false;
+});
+
+const back = computed(() =>
+  mode.value === "done" && sessionId.value ? { name: "session-detail", params: { id: sessionId.value } } : undefined,
+);
 
 onMounted(load);
 </script>
 
 <template>
   <div class="screen">
-    <AppBar :title="barTitle" small :close="close" />
+    <AppBar :title="barTitle" :back="back" />
 
     <main class="screen-body">
       <p v-if="loading" class="empty">Loading…</p>

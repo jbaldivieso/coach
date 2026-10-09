@@ -121,7 +121,7 @@ onUnmounted(() => {
 
 <template>
   <div class="rest" :class="{ 'is-over': isOver && flashOn }" role="timer" :aria-label="`Rest, ${clock} left`">
-    <AppBar :title="props.title" small transparent :back="() => emit('hide')" />
+    <AppBar :title="props.title" transparent :back="() => emit('hide')" />
     <main class="rest-body">
       <div class="clock">
         <b aria-live="off">{{ clock }}</b>
