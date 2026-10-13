@@ -41,7 +41,7 @@ watch(sessionId, fetchSession, { immediate: true });
 
 <template>
   <div class="screen">
-    <AppBar :title="barTitle" small back="/">
+    <AppBar :title="barTitle" back="/">
       <template #actions>
         <RouterLink
           v-if="session"

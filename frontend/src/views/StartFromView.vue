@@ -45,7 +45,7 @@ onMounted(() => fetchSessions());
 
 <template>
   <div class="screen">
-    <AppBar title="Start from…" small back="/" />
+    <AppBar title="Start from…" back="/" />
     <main class="screen-body">
       <label class="text-field">
         <Icon name="search" size="sm" />

@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { api } from "@/api/client";
 import type { Session, TitleSuggestion, TitleSuggestions } from "@/types/lifting";
-import { todayISO, formatDayDate, formatShortDate, formatClock, parseClock, formatSet } from "@/utils/format";
+import { todayISO, formatDayDate, formatShortDate, formatClock, parseClock, formatSet, pluralize } from "@/utils/format";
 import { groupUnits, memberLetter, type Unit } from "@/utils/session";
 import {
   type DraftExercise,
+  type PlanMode,
   blankExercise,
   draftFromExercise,
   copySets,
   hasOnlyBlankSets,
   resizeSets,
   setSetCount,
+  minSetCount,
+  doneCount,
   copyFirstSetToAll,
   canLinkWithNext,
   linkWithNext,
@@ -26,6 +29,8 @@ import {
   toPayload,
 } from "@/utils/plan";
 import { useExerciseHistory } from "@/composables/useExerciseHistory";
+import { useRestAlarm } from "@/composables/useRestAlarm";
+import { useActiveSessionStore } from "@/stores/activeSession";
 import AppBar from "@/components/ui/AppBar.vue";
 import Autocomplete from "@/components/ui/Autocomplete.vue";
 import Btn from "@/components/ui/Btn.vue";
@@ -37,6 +42,7 @@ import SetEditor from "@/components/plan/SetEditor.vue";
 import CountControl from "@/components/plan/CountControl.vue";
 import HistoryBlock from "@/components/plan/HistoryBlock.vue";
 import CollapsedExercise from "@/components/plan/CollapsedExercise.vue";
+import ModeSwitch from "@/components/track/ModeSwitch.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -44,11 +50,17 @@ const router = useRouter();
 // "new": a fresh plan (optionally started from a past session)
 // "planned": editing a plan saved for later
 // "done": editing a finished session
-const mode = computed<"new" | "planned" | "done">(() => {
+// "active": Edit mid-session; done sets are locked
+const mode = computed<PlanMode>(() => {
   if (route.name === "session-edit") return "done";
   if (route.name === "plan-edit") return "planned";
+  if (route.name === "track-edit") return "active";
   return "new";
 });
+const store = useActiveSessionStore();
+// The rest timer keeps running (and alarming) while you edit
+const { now } = useRestAlarm(() => mode.value === "active");
+const restLeft = computed(() => formatClock(Math.ceil(store.remaining(now.value))));
 const sessionId = computed(() => (mode.value === "new" ? null : Number(route.params.id)));
 const fromId = computed(() => (mode.value === "new" && route.query.from ? Number(route.query.from) : null));
 
@@ -70,6 +82,7 @@ const menuFor = ref<DraftExercise | null>(null);
 const restFor = ref<DraftExercise | null>(null);
 
 const titleInput = ref<InstanceType<typeof Autocomplete> | null>(null);
+const noteInput = ref<HTMLTextAreaElement | null>(null);
 const nameInputs = new Map<number, InstanceType<typeof Autocomplete>>();
 
 const history = useExerciseHistory({ excludeSession: () => sessionId.value });
@@ -88,7 +101,21 @@ async function fetchSession(id: number): Promise<Session | null> {
 async function load() {
   loading.value = true;
   error.value = null;
-  if (sessionId.value) {
+  if (mode.value === "active") {
+    // Let Lift's saves land first, so the editor never starts from stale sets
+    await store.settle();
+    const session = await store.load(sessionId.value!);
+    if (!session) {
+      error.value = store.error || "Couldn't load that session";
+      return finishLoading();
+    }
+    if (session.status === "planned") return router.replace({ name: "plan-edit", params: { id: session.id } });
+    if (session.status === "done") return router.replace({ name: "session-detail", params: { id: session.id } });
+    title.value = session.title;
+    date.value = session.date;
+    comments.value = session.comments;
+    exercises.value = session.exercises.map((e) => draftFromExercise(e, true));
+  } else if (sessionId.value) {
     const session = await fetchSession(sessionId.value);
     if (!session) return finishLoading();
     // Send each status to the screen that owns it
@@ -101,6 +128,8 @@ async function load() {
     date.value = session.date;
     comments.value = session.comments;
     exercises.value = session.exercises.map((e) => draftFromExercise(e, true));
+    // Only a live session locks its done sets; a finished one's are all editable
+    exercises.value.forEach((e) => e.sets.forEach((set) => (set.done = false)));
   } else if (fromId.value) {
     const source = await fetchSession(fromId.value);
     if (!source) return finishLoading();
@@ -111,7 +140,9 @@ async function load() {
     exercises.value = [blankExercise()];
   }
   normalizeGroups(exercises.value);
-  expandedKey.value = exercises.value[0]?.key ?? null;
+  // Mid-session, open where you are: the first exercise with sets to go
+  const current = mode.value === "active" ? exercises.value.find((e) => e.sets.some((set) => !set.done)) : undefined;
+  expandedKey.value = (current ?? exercises.value[0])?.key ?? null;
   finishLoading();
   if (mode.value === "new" && !fromId.value) {
     await nextTick();
@@ -126,6 +157,15 @@ async function finishLoading() {
 }
 
 watch([title, date, comments, exercises], () => (dirty.value = true), { deep: true });
+
+// The session note is one line until it needs more
+function growNote() {
+  const el = noteInput.value;
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
+watch([comments, loading], () => nextTick(growNote));
 
 watch(
   () => exercises.value.map((e) => e.historyTitle),
@@ -189,7 +229,43 @@ function expand(exercise: DraftExercise) {
   selected.value = null;
 }
 
+// Folding leaves every exercise collapsed; the one just folded is outlined for a moment
+const justFolded = ref<number | null>(null);
+let justFoldedTimer: number | null = null;
+
+async function fold() {
+  const key = expandedKey.value;
+  expandedKey.value = null;
+  selected.value = null;
+  if (key === null) return;
+  justFolded.value = key;
+  if (justFoldedTimer) clearTimeout(justFoldedTimer);
+  justFoldedTimer = window.setTimeout(() => (justFolded.value = null), 1200);
+  await nextTick();
+  document.querySelector(`[data-key="${key}"]`)?.scrollIntoView({ block: "nearest" });
+}
+
+function isJustFolded(unit: Unit<DraftExercise>): boolean {
+  return unit.items.some((e) => e.key === justFolded.value);
+}
+
+// The open exercise's header sticks under the app bar; it gets a rule once it's stuck
+const stuck = ref(false);
+function checkStuck() {
+  const header = document.querySelector<HTMLElement>(".is-sticky");
+  const card = header?.parentElement;
+  if (!header || !card) return void (stuck.value = false);
+  stuck.value = card.getBoundingClientRect().top < header.getBoundingClientRect().top - 1;
+}
+watch(expandedKey, () => nextTick(checkStuck));
+onMounted(() => window.addEventListener("scroll", checkStuck, { passive: true }));
+onUnmounted(() => {
+  window.removeEventListener("scroll", checkStuck);
+  if (justFoldedTimer) clearTimeout(justFoldedTimer);
+});
+
 function select(exercise: DraftExercise, index: number) {
+  if (exercise.sets[index]?.done) return; // fix those on Lift
   const same = selected.value?.key === exercise.key && selected.value.index === index;
   selected.value = same ? null : { key: exercise.key, index };
 }
@@ -201,6 +277,10 @@ function selectedSetIn(unit: Unit<DraftExercise>) {
   const exercise = unit.items[memberIndex];
   const set = exercise?.sets[sel.index];
   return exercise && set ? { exercise, set, memberIndex, index: sel.index } : null;
+}
+
+function doneIn(unit: Unit<DraftExercise>): number {
+  return unit.items.reduce((n, e) => n + doneCount(e), 0);
 }
 
 function changeCount(exercise: DraftExercise, count: number) {
@@ -233,6 +313,8 @@ function menuAction(action: "up" | "down" | "link" | "unlink" | "remove") {
   else if (action === "link") linkWithNext(list, index);
   else if (action === "unlink") unlink(list, index);
   else if (action === "remove") {
+    const logged = doneCount(exercise);
+    if (logged && !window.confirm(`Remove ${exercise.title || "this exercise"} and its ${pluralize(logged, "logged set")}?`)) return;
     removeExercise(list, index);
     if (expandedKey.value === exercise.key) expandedKey.value = list[Math.min(index, list.length - 1)]?.key ?? null;
     return;
@@ -270,7 +352,7 @@ async function save(action: "start" | "later" | "save") {
     // Starting means it's happening today, whatever date was planned
     date: action === "start" ? today : date.value,
     comments: comments.value.trim(),
-    exercises: toPayload(exercises.value, mode.value === "done"),
+    exercises: toPayload(exercises.value, mode.value),
   };
 
   let saved: Session | null = null;
@@ -315,23 +397,81 @@ async function deleteSession() {
   router.replace({ name: "home" });
 }
 
-function close() {
-  if (dirty.value && !window.confirm("Discard your changes?")) return;
-  if (window.history.state?.back) router.back();
-  else router.push(mode.value === "done" && sessionId.value ? { name: "session-detail", params: { id: sessionId.value } } : "/");
+// ---------- Edit mid-session ----------
+
+const liftRoute = computed(() => ({ name: "track", params: { id: sessionId.value } }));
+
+/** Save the live session, keeping each set's done flag, and refresh Lift's copy of it. */
+async function saveEdits(): Promise<boolean> {
+  if (!dirty.value) return true;
+  error.value = null;
+  errors.value = validatePlan(
+    { title: title.value, date: date.value, exercises: exercises.value },
+    { allowFuture: false, today: todayISO() },
+  );
+  if (Object.keys(errors.value).length) {
+    await scrollToFirstError();
+    return false;
+  }
+  saving.value = "save";
+  await api.fetchCsrfToken();
+  const response = await api.put<Session>(`/api/lifting/sessions/${sessionId.value}/with-exercises/`, {
+    title: title.value.trim(),
+    date: date.value,
+    comments: comments.value.trim(),
+    exercises: toPayload(exercises.value, "active"),
+  });
+  if (!response.data) {
+    saving.value = null;
+    error.value = response.error || "Couldn't save";
+    return false;
+  }
+  dirty.value = false;
+  store.focusUnit = null; // the order may have changed; follow the first undone set
+  await store.load(response.data.id);
+  saving.value = null;
+  return true;
 }
+
+function discardEdits() {
+  dirty.value = false;
+  router.replace(liftRoute.value);
+}
+
+// Every way out asks first: COACH, back, the menu. Mid-session, Lift and Finish save instead.
+onBeforeRouteLeave((to) => {
+  const toLiveSession = (to.name === "track" || to.name === "track-finish") && Number(to.params.id) === sessionId.value;
+  if (mode.value === "active" && toLiveSession) return saveEdits();
+  if (dirty.value && !window.confirm("Discard your changes?")) return false;
+});
+
+const back = computed(() =>
+  mode.value === "done" && sessionId.value ? { name: "session-detail", params: { id: sessionId.value } } : undefined,
+);
 
 onMounted(load);
 </script>
 
 <template>
   <div class="screen">
-    <AppBar :title="barTitle" small :close="close" />
+    <AppBar v-if="mode === 'active'" :back="false">
+      <template #title>
+        <ModeSwitch :session-id="sessionId!" mode="edit" />
+      </template>
+      <template #actions>
+        <Btn size="small" :to="{ name: 'track-finish', params: { id: sessionId } }">Finish</Btn>
+      </template>
+    </AppBar>
+    <AppBar v-else :title="barTitle" :back="back" />
 
     <main class="screen-body">
       <p v-if="loading" class="empty">Loading…</p>
       <template v-else>
         <div v-if="error" class="notice is-error" role="alert"><b>Not saved</b>{{ error }}</div>
+
+        <button v-if="mode === 'active' && store.rest" type="button" class="rest-pill" @click="router.replace(liftRoute)">
+          <Icon name="clock" size="sm" /><span>Rest {{ restLeft }}</span><b>Lift</b>
+        </button>
 
         <div class="text-field title-field" :class="{ 'is-error': errors.title }">
           <Autocomplete
@@ -347,7 +487,7 @@ onMounted(load);
         </div>
         <p v-if="errors.title" class="field-error">{{ errors.title }}</p>
 
-        <label class="text-field date-field" :class="{ 'is-error': errors.date }">
+        <label v-if="mode !== 'active'" class="text-field date-field" :class="{ 'is-error': errors.date }">
           <span class="date-label">Date</span>
           <span class="date-value">{{ date === todayISO() ? "Today" : formatDayDate(date || todayISO()) }}</span>
           <!-- The native picker sits invisibly on top, so a tap opens it -->
@@ -361,12 +501,27 @@ onMounted(load);
           />
         </label>
         <p v-if="errors.date" class="field-error">{{ errors.date }}</p>
+        <div v-if="mode === 'active'" class="gap" />
+
+        <label class="text-field note-field session-note" :class="{ 'is-filled': comments }">
+          <Icon name="pencil" size="sm" />
+          <span class="session-note-body">
+            <small v-if="comments" aria-hidden="true">Session note</small>
+            <textarea
+              ref="noteInput"
+              v-model="comments"
+              rows="1"
+              aria-label="Session note"
+              :placeholder="mode === 'done' ? 'How did it go?' : 'Session note'"
+            />
+          </span>
+        </label>
 
         <template v-for="unit in units" :key="unit.items[0]!.key">
           <!-- Single exercise -->
           <template v-if="!unit.isSuperset">
             <section v-if="isExpanded(unit)" class="ex">
-              <div class="ex-h">
+              <div class="ex-h is-sticky" :class="{ 'is-stuck': stuck }">
                 <Autocomplete
                   :ref="(el) => setNameRef(unit.items[0]!.key, el)"
                   v-model="unit.items[0]!.title"
@@ -385,6 +540,7 @@ onMounted(load);
                 <button type="button" class="ex-menu" aria-label="Exercise options" @click="menuFor = unit.items[0]!">
                   <Icon name="more" />
                 </button>
+                <button type="button" class="fold" aria-label="Fold" @click="fold"><Icon name="fold" /></button>
               </div>
               <p v-if="errors[`exercise.${unit.items[0]!.key}.title`]" class="field-error is-error">
                 {{ errors[`exercise.${unit.items[0]!.key}.title`] }}
@@ -392,14 +548,23 @@ onMounted(load);
 
               <div class="plan-head">
                 <span class="sub-label">Today · tap a set</span>
-                <CountControl :count="unit.items[0]!.sets.length" noun="set" @change="(n) => changeCount(unit.items[0]!, n)" />
+                <CountControl
+                  :count="unit.items[0]!.sets.length"
+                  :min="minSetCount(exercises, indexOf(unit.items[0]!))"
+                  noun="set"
+                  @change="(n) => changeCount(unit.items[0]!, n)"
+                />
               </div>
               <SetChips
                 :sets="unit.items[0]!.sets"
                 selectable
+                :mark-done="mode === 'active'"
                 :selected="selected?.key === unit.items[0]!.key ? selected.index : null"
                 @select="(i) => select(unit.items[0]!, i)"
               />
+              <p v-if="mode === 'active' && doneIn(unit)" class="lockrow">
+                <Icon name="check" size="sm" /><span><b>{{ doneIn(unit) }} done</b> · fix those on Lift</span>
+              </p>
               <p v-if="errors[`exercise.${unit.items[0]!.key}.sets`]" class="field-error is-error">
                 {{ errors[`exercise.${unit.items[0]!.key}.sets`] }}
               </p>
@@ -424,19 +589,24 @@ onMounted(load);
             <CollapsedExercise
               v-else
               :exercise="unit.items[0]!"
-              :entry="history.get(unit.items[0]!.historyTitle)"
+              :data-key="unit.items[0]!.key"
+              :just="isJustFolded(unit)"
+              :mark-done="mode === 'active'"
               :error="Object.keys(errors).some((k) => k.startsWith(`exercise.${unit.items[0]!.key}.`))"
               @expand="expand(unit.items[0]!)"
             />
           </template>
 
           <!-- Superset -->
-          <section v-else class="ss" :class="{ 'is-collapsed': !isExpanded(unit) }">
-            <header class="ss-h">
+          <section v-else class="ss" :class="{ 'is-collapsed': !isExpanded(unit), 'is-just': isJustFolded(unit) }">
+            <header class="ss-h" :class="{ 'is-sticky': isExpanded(unit), 'is-stuck': stuck && isExpanded(unit) }">
               <Icon name="link" size="sm" />
               <span class="ss-title">Superset · {{ unit.items[0]!.sets.length }} rounds</span>
               <button type="button" class="ss-rest" @click="restFor = unit.items[0]!">
                 <Icon name="clock" size="sm" />{{ formatClock(unit.items[0]!.rest_seconds) }} after each round
+              </button>
+              <button v-if="isExpanded(unit)" type="button" class="fold" aria-label="Fold superset" @click="fold">
+                <Icon name="fold" />
               </button>
             </header>
 
@@ -471,7 +641,12 @@ onMounted(load);
 
               <div class="plan-head rounds-head">
                 <span class="sub-label">Rounds · tap a set</span>
-                <CountControl :count="unit.items[0]!.sets.length" noun="round" @change="(n) => changeCount(unit.items[0]!, n)" />
+                <CountControl
+                  :count="unit.items[0]!.sets.length"
+                  :min="minSetCount(exercises, indexOf(unit.items[0]!))"
+                  noun="round"
+                  @change="(n) => changeCount(unit.items[0]!, n)"
+                />
               </div>
               <div class="rounds" :style="{ '--members': unit.items.length }">
                 <span />
@@ -483,14 +658,18 @@ onMounted(load);
                     :key="e.key"
                     type="button"
                     class="round-cell"
-                    :class="{ 'is-selected': selected?.key === e.key && selected.index === r }"
+                    :class="{ 'is-selected': selected?.key === e.key && selected.index === r, 'is-done': mode === 'active' && e.sets[r]?.done }"
                     :aria-pressed="selected?.key === e.key && selected.index === r"
+                    :disabled="mode === 'active' && e.sets[r]?.done"
                     @click="select(e, r)"
                   >
                     {{ e.sets[r] ? formatSet(e.sets[r]!) : "–" }}
                   </button>
                 </template>
               </div>
+              <p v-if="mode === 'active' && doneIn(unit)" class="lockrow">
+                <Icon name="check" size="sm" /><span><b>{{ doneIn(unit) }} done</b> · fix those on Lift</span>
+              </p>
               <p v-for="e in unit.items.filter((x) => errors[`exercise.${x.key}.sets`])" :key="e.key" class="field-error is-error">
                 {{ e.title || "An exercise" }}: {{ errors[`exercise.${e.key}.sets`] }}
               </p>
@@ -510,8 +689,10 @@ onMounted(load);
                 v-for="(e, m) in unit.items"
                 :key="e.key"
                 :exercise="e"
-                :entry="history.get(e.historyTitle)"
+                :data-key="e.key"
                 :prefix="`${memberLetter(m)} · `"
+                :mark-done="mode === 'active'"
+                hide-rest
                 :error="Object.keys(errors).some((k) => k.startsWith(`exercise.${e.key}.`))"
                 @expand="expand(e)"
               />
@@ -522,22 +703,22 @@ onMounted(load);
         <p v-if="errors.exercises" class="field-error is-error">{{ errors.exercises }}</p>
         <Btn class="add-ex" @click="addExercise"><Icon name="plus" />Add exercise</Btn>
 
-        <template v-if="mode === 'done'">
-          <h2 class="eyebrow">Session comments</h2>
-          <label class="text-field">
-            <span class="visually-hidden">Session comments</span>
-            <textarea v-model="comments" placeholder="How did it go?" />
-          </label>
-        </template>
-
-        <button v-if="mode !== 'new'" type="button" class="delete" :disabled="saving !== null" @click="deleteSession">
+        <button v-if="mode === 'active'" type="button" class="delete is-discard" :disabled="saving !== null" @click="discardEdits">
+          Discard changes
+        </button>
+        <button v-else-if="mode !== 'new'" type="button" class="delete" :disabled="saving !== null" @click="deleteSession">
           {{ mode === "planned" ? "Delete this plan" : "Delete this session" }}
         </button>
       </template>
     </main>
 
     <footer v-if="!loading" class="dock">
-      <template v-if="mode === 'done'">
+      <template v-if="mode === 'active'">
+        <Btn variant="primary" size="huge" :loading="saving === 'save'" :disabled="saving !== null" @click="router.replace(liftRoute)">
+          Back to lifting
+        </Btn>
+      </template>
+      <template v-else-if="mode === 'done'">
         <Btn variant="primary" size="huge" :loading="saving === 'save'" :disabled="saving !== null" @click="save('save')">Save</Btn>
       </template>
       <template v-else>
@@ -611,7 +792,7 @@ onMounted(load);
   white-space: nowrap;
 }
 .date-field {
-  margin: 8px 0 12px;
+  margin: 8px 0;
 }
 .date-label {
   font-size: 12px;
@@ -648,6 +829,30 @@ onMounted(load);
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.ex > .ex-h.is-sticky {
+  position: sticky;
+  top: var(--appbar-h);
+  z-index: 3;
+  background: var(--card);
+  margin: -8px -12px 0;
+  padding: 8px 12px 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.ex > .ex-h.is-stuck {
+  border-radius: 0;
+  box-shadow: 0 1px 0 var(--rule);
+}
+.fold {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--k);
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--k);
 }
 .ex-h :deep(.name-input) {
   border: 0;
@@ -709,6 +914,37 @@ onMounted(load);
   font-size: 15px;
   padding: 8px 0;
 }
+.session-note {
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding-top: 11px;
+}
+.session-note.is-filled {
+  border-style: solid;
+}
+.session-note-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.session-note small {
+  margin-top: -2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-stretch: 85%;
+  color: var(--muted);
+}
+.session-note textarea {
+  min-height: 0;
+  padding: 0 0 9px;
+  margin-top: -2px;
+  resize: none;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.4;
+}
 
 /* Superset: the only striped element in the app */
 .ss {
@@ -717,7 +953,12 @@ onMounted(load);
   border-radius: 10px;
   padding: 0 10px 10px;
   margin-bottom: 10px;
-  overflow: hidden;
+  /* clip, not hidden: hidden would stop the header sticking */
+  overflow: clip;
+}
+.ss.is-just {
+  outline: 2px solid var(--k);
+  outline-offset: 2px;
 }
 .ss.is-collapsed {
   padding-bottom: 2px;
@@ -736,6 +977,17 @@ onMounted(load);
   text-transform: uppercase;
   font-stretch: 85%;
   letter-spacing: 0.04em;
+}
+.ss-h.is-sticky {
+  position: sticky;
+  top: var(--appbar-h);
+  z-index: 3;
+}
+.ss-h .fold {
+  margin: -8px 0 -8px 4px;
+  background: var(--k);
+  border-color: var(--y);
+  color: var(--y);
 }
 .ss-h::before {
   content: "";
@@ -806,11 +1058,51 @@ onMounted(load);
   font-size: 14px;
   background: var(--card);
 }
+.round-cell.is-done {
+  background: var(--k);
+  border-color: var(--k);
+  color: var(--on-k);
+}
 .round-cell.is-selected {
   background: var(--y);
   border: 2px solid var(--k);
 }
 
+.lockrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.lockrow b {
+  color: var(--k);
+}
+.gap {
+  height: 8px;
+}
+.rest-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  margin-bottom: 10px;
+  background: var(--y);
+  border: 2px solid var(--k);
+  border-radius: var(--r-lg);
+  font-weight: 700;
+}
+.rest-pill span {
+  flex: 1;
+  text-align: left;
+}
+.rest-pill b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .add-ex {
   width: 100%;
   margin-top: 4px;
@@ -823,6 +1115,9 @@ onMounted(load);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.delete.is-discard {
+  color: var(--k);
 }
 
 .actions {

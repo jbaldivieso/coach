@@ -3,13 +3,13 @@ import { pluralize } from "@/utils/format";
 import { MAX_SETS } from "@/utils/plan";
 import Icon from "@/components/ui/Icon.vue";
 
-const props = defineProps<{ count: number; noun: string }>();
+const props = withDefaults(defineProps<{ count: number; noun: string; min?: number }>(), { min: 1 });
 const emit = defineEmits<{ change: [count: number] }>();
 </script>
 
 <template>
   <span class="count">
-    <button type="button" class="mini-pm" :aria-label="`One fewer ${noun}`" :disabled="count <= 1" @click="emit('change', props.count - 1)"><Icon name="minus" size="sm" /></button>
+    <button type="button" class="mini-pm" :aria-label="`One fewer ${noun}`" :disabled="count <= min" @click="emit('change', props.count - 1)"><Icon name="minus" size="sm" /></button>
     <b aria-live="polite">{{ pluralize(count, noun) }}</b>
     <button type="button" class="mini-pm" :aria-label="`One more ${noun}`" :disabled="count >= MAX_SETS" @click="emit('change', props.count + 1)"><Icon name="plus" size="sm" /></button>
   </span>

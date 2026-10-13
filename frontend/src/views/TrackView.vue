@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useActiveSessionStore } from "@/stores/activeSession";
 import { useExerciseHistory } from "@/composables/useExerciseHistory";
+import { useRestAlarm } from "@/composables/useRestAlarm";
 import type { SetValues } from "@/types/lifting";
 import { formatSet, formatClock, formatShortDate } from "@/utils/format";
 import { memberLetter, roundCount, unitTitle } from "@/utils/session";
@@ -16,16 +17,18 @@ import Sheet from "@/components/ui/Sheet.vue";
 import Stepper from "@/components/ui/Stepper.vue";
 import RestTimer from "@/components/RestTimer.vue";
 import AddExerciseSheet from "@/components/track/AddExerciseSheet.vue";
+import ModeSwitch from "@/components/track/ModeSwitch.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useActiveSessionStore();
 const sessionId = computed(() => Number(route.params.id));
 const lastTime = useExerciseHistory({ limit: 1, excludeSession: () => sessionId.value });
+const { now } = useRestAlarm();
 
 const restVisible = ref(false);
 const addOpen = ref(false);
-const noteFor = ref<number | null>(null); // exercise index
+const noteFor = ref<number | "session" | null>(null); // exercise index, or the whole session
 const editing = ref<{ exerciseIndex: number; setIndex: number; values: SetValues }[] | null>(null);
 const logging = ref(false);
 const strip = ref<HTMLElement | null>(null);
@@ -60,6 +63,11 @@ watch(
 const lastOuting = computed(() => (exercise.value ? (lastTime.get(exercise.value.title)?.items[0] ?? null) : null));
 
 const isFinalSet = computed(() => undoneCount.value === 1);
+/** Logging this set finishes the exercise (or superset), so there's no rest before the next one. */
+const isUnitsLastSet = computed(() => {
+  if (!unit.value) return true;
+  return unit.value.items.reduce((n, e) => n + e.sets.filter((s) => !s.done).length, 0) === 1;
+});
 const isLastInRound = computed(() => {
   if (!unit.value || !position.value) return true;
   const round = position.value.round;
@@ -71,7 +79,7 @@ const doneLabel = computed(() => {
   if (!unit.value?.isSuperset) return isFinalSet.value ? `Done · ${values} · finish` : `Done · ${values}`;
   const letter = memberLetter(memberIndex.value);
   if (isFinalSet.value) return `Done ${letter} · finish`;
-  return isLastInRound.value ? `Done ${letter} · start rest` : `Done ${letter} · ${values}`;
+  return isLastInRound.value && !isUnitsLastSet.value ? `Done ${letter} · start rest` : `Done ${letter} · ${values}`;
 });
 
 const subline = computed(() => {
@@ -106,7 +114,7 @@ async function done() {
   clearUndoHistory();
   const { exerciseIndex, round } = position.value;
   const finishing = isFinalSet.value;
-  const startsRest = isLastInRound.value;
+  const startsRest = isLastInRound.value && !isUnitsLastSet.value;
   const restSeconds = rest.value;
   const label = unit.value ? unitTitle(unit.value) : "";
   logging.value = true;
@@ -172,11 +180,18 @@ async function saveEdit() {
 // ---------- Notes ----------
 
 const noteText = computed({
-  get: () => (noteFor.value !== null ? (store.exercises[noteFor.value]?.comments ?? "") : ""),
+  get: () => {
+    if (noteFor.value === "session") return store.session?.comments ?? "";
+    return noteFor.value !== null ? (store.exercises[noteFor.value]?.comments ?? "") : "";
+  },
   set: (text: string) => {
-    if (noteFor.value !== null) store.saveNote(noteFor.value, text);
+    if (noteFor.value === "session") store.saveSessionNote(text);
+    else if (noteFor.value !== null) store.saveNote(noteFor.value, text);
   },
 });
+const noteTitle = computed(() =>
+  noteFor.value === "session" ? "Note on today" : `Note · ${store.exercises[noteFor.value ?? -1]?.title ?? ""}`,
+);
 
 function openNote(index: number | undefined) {
   if (index !== undefined) noteFor.value = index;
@@ -206,12 +221,9 @@ watch(
 
 // ---------- Rest banner while the rest screen is hidden ----------
 
-const now = ref(Date.now());
-let ticker: number | null = null;
 const restLeft = computed(() => formatClock(Math.ceil(store.remaining(now.value))));
 
 onMounted(async () => {
-  ticker = window.setInterval(() => (now.value = Date.now()), 500);
   const session = await store.load(sessionId.value);
   if (!session) return;
   if (session.status === "planned") return router.replace({ name: "plan-edit", params: { id: session.id } });
@@ -221,14 +233,16 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (ticker) clearInterval(ticker);
   store.flushNotes();
 });
 </script>
 
 <template>
   <div class="screen track">
-    <AppBar :title="store.session?.title ?? ''" small back="/">
+    <AppBar :back="false">
+      <template #title>
+        <ModeSwitch :session-id="sessionId" mode="lift" />
+      </template>
       <template #actions>
         <Btn size="small" :to="{ name: 'track-finish', params: { id: sessionId } }">Finish</Btn>
       </template>
@@ -354,6 +368,12 @@ onUnmounted(() => {
             <span v-else>Note on {{ exercise.title }}…</span>
           </button>
         </template>
+
+        <button type="button" class="noterow" :class="{ filled: store.session.comments }" @click="noteFor = 'session'">
+          <Icon name="pencil" size="sm" />
+          <span v-if="store.session.comments"><small>Note on today</small>{{ store.session.comments }}</span>
+          <span v-else>Note on today…</span>
+        </button>
       </template>
     </main>
 
@@ -372,12 +392,15 @@ onUnmounted(() => {
       @note="openNote(position ? position.exerciseIndex : undefined)"
     />
 
-    <Sheet :open="noteFor !== null" :title="`Note · ${store.exercises[noteFor ?? -1]?.title ?? ''}`" @close="noteFor = null">
+    <Sheet :open="noteFor !== null" :title="noteTitle" @close="noteFor = null">
       <label class="text-field">
         <span class="visually-hidden">Note</span>
-        <textarea v-model="noteText" placeholder="How did it feel? Anything to remember next time?" />
+        <textarea
+          v-model="noteText"
+          :placeholder="noteFor === 'session' ? 'How is it going?' : 'How did it feel? Anything to remember next time?'"
+        />
       </label>
-      <p class="small muted sheet-hint">Saves as you type.</p>
+      <p class="small muted sheet-hint">{{ noteFor === "session" ? "Saves as you type. Shows up again on Finish." : "Saves as you type." }}</p>
       <Btn variant="primary" class="sheet-btn" @click="noteFor = null">Done</Btn>
     </Sheet>
 

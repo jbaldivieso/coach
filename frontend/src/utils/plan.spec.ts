@@ -13,6 +13,8 @@ import {
   setRest,
   validatePlan,
   toPayload,
+  minSetCount,
+  draftFromExercise,
   MAX_SETS,
 } from "./plan";
 
@@ -21,7 +23,7 @@ function ex(title: string, sets: [number | null, number][], rest = 90, group: nu
     ...blankExercise(),
     title,
     historyTitle: title,
-    sets: sets.map(([weight, reps]) => ({ weight, reps })),
+    sets: sets.map(([weight, reps]) => ({ weight, reps, done: false })),
     rest_seconds: rest,
     superset_group: group,
   };
@@ -35,10 +37,10 @@ describe("set count", () => {
     const list = [ex("Bench", [[150, 5], [155, 5]])];
     setSetCount(list, 0, 4);
     expect(list[0]!.sets).toEqual([
-      { weight: 150, reps: 5 },
-      { weight: 155, reps: 5 },
-      { weight: 155, reps: 5 },
-      { weight: 155, reps: 5 },
+      { weight: 150, reps: 5, done: false },
+      { weight: 155, reps: 5, done: false },
+      { weight: 155, reps: 5, done: false },
+      { weight: 155, reps: 5, done: false },
     ]);
     list[0]!.sets[3]!.reps = 3;
     expect(list[0]!.sets[2]!.reps).toBe(5); // copies, not shared objects
@@ -47,7 +49,7 @@ describe("set count", () => {
   it("removes from the end and clamps to 1..6", () => {
     const list = [ex("Bench", [[150, 5], [155, 5]])];
     setSetCount(list, 0, 0);
-    expect(list[0]!.sets).toEqual([{ weight: 150, reps: 5 }]);
+    expect(list[0]!.sets).toEqual([{ weight: 150, reps: 5, done: false }]);
     setSetCount(list, 0, 10);
     expect(list[0]!.sets).toHaveLength(MAX_SETS);
   });
@@ -57,12 +59,49 @@ describe("set count", () => {
     setSetCount(list, 1, 3);
     expect(list.map((e) => e.sets.length)).toEqual([3, 3, 1]);
   });
+
+  it("never drops below the done sets, and new sets aren't done", () => {
+    const list = [ex("Bench", [[150, 5], [155, 5], [155, 4]])];
+    list[0]!.sets[0]!.done = true;
+    list[0]!.sets[1]!.done = true;
+    expect(minSetCount(list, 0)).toBe(2);
+    setSetCount(list, 0, 1);
+    expect(list[0]!.sets.map((s) => s.done)).toEqual([true, true]);
+    setSetCount(list, 0, 3);
+    expect(list[0]!.sets.map((s) => s.done)).toEqual([true, true, false]);
+    expect(list[0]!.sets[2]).toEqual({ weight: 155, reps: 5, done: false });
+  });
+
+  it("a superset's floor is its most-done member", () => {
+    const list = [ex("A", [[20, 12], [20, 12], [20, 12]], 90, 1), ex("B", [[30, 12], [30, 12], [30, 12]], 90, 1)];
+    list[1]!.sets[0]!.done = true;
+    list[1]!.sets[1]!.done = true;
+    setSetCount(list, 0, 1);
+    expect(list.map((e) => e.sets.length)).toEqual([2, 2]);
+  });
 });
 
 it("copies set 1 to all", () => {
   const e = ex("Bench", [[150, 5], [155, 4], [160, 3]]);
   copyFirstSetToAll(e);
-  expect(e.sets).toEqual([{ weight: 150, reps: 5 }, { weight: 150, reps: 5 }, { weight: 150, reps: 5 }]);
+  expect(e.sets.map((s) => [s.weight, s.reps])).toEqual([[150, 5], [150, 5], [150, 5]]);
+});
+
+it("copying set 1 to all leaves done sets alone", () => {
+  const e = ex("Bench", [[150, 5], [155, 4], [160, 3]]);
+  e.sets[1]!.done = true;
+  copyFirstSetToAll(e);
+  expect(e.sets).toEqual([
+    { weight: 150, reps: 5, done: false },
+    { weight: 155, reps: 4, done: true },
+    { weight: 150, reps: 5, done: false },
+  ]);
+});
+
+it("a draft of a saved exercise keeps done flags; a copy doesn't", () => {
+  const saved = { id: 3, title: "Bench", sets: [{ weight: 150, reps: 5, done: true }], rest_seconds: 90, comments: "", position: 0, superset_group: null };
+  expect(draftFromExercise(saved, true).sets[0]!.done).toBe(true);
+  expect(draftFromExercise(saved, false).sets[0]!.done).toBe(false);
 });
 
 describe("supersets", () => {
@@ -72,6 +111,14 @@ describe("supersets", () => {
     expect(groups(list)).toEqual([1, 1]);
     expect(list.map((e) => e.rest_seconds)).toEqual([60, 60]);
     expect(list[1]!.sets).toHaveLength(3);
+  });
+
+  it("linking pads with sets that aren't done and keeps the done ones", () => {
+    const list = [ex("Flyes", [[20, 12], [20, 12]]), ex("Lat raises", [[30, 12]])];
+    list[1]!.sets[0]!.done = true;
+    expect(canLinkWithNext(list, 0)).toBe(true);
+    linkWithNext(list, 0);
+    expect(list[1]!.sets.map((s) => s.done)).toEqual([true, false]);
   });
 
   it("only the last member of a unit can link onward", () => {
@@ -154,9 +201,16 @@ describe("validation and payload", () => {
 
   it("marks sets done only for finished sessions and keeps ids", () => {
     const e = { ...ex(" Bench ", [[152.5, 5]]), id: 7 };
-    expect(toPayload([e], false)).toEqual([
+    expect(toPayload([e], "planned")).toEqual([
       { id: 7, title: "Bench", sets: [{ weight: 152.5, reps: 5, done: false }], rest_seconds: 90, comments: "", superset_group: null },
     ]);
-    expect(toPayload([e], true)[0]!.sets[0]!.done).toBe(true);
+    expect(toPayload([e], "done")[0]!.sets[0]!.done).toBe(true);
+  });
+
+  it("keeps each set's own done flag for a live session", () => {
+    const e = ex("Bench", [[150, 5], [155, 5]]);
+    e.sets[0]!.done = true;
+    expect(toPayload([e], "active")[0]!.sets.map((s) => s.done)).toEqual([true, false]);
+    expect(toPayload([e], "new")[0]!.sets.map((s) => s.done)).toEqual([false, false]);
   });
 });

@@ -179,4 +179,46 @@ describe("activeSession store", () => {
       position: 3,
     });
   });
+
+  describe("session note", () => {
+    it("saves once after typing stops", async () => {
+      vi.useFakeTimers();
+      const store = await loaded([exercise(1, "Bench", [false])]);
+      store.saveSessionNote("Shoulder's");
+      store.saveSessionNote("Shoulder's cranky");
+      expect(store.session?.comments).toBe("Shoulder's cranky");
+      await vi.advanceTimersByTimeAsync(700);
+      expect(api.put).toHaveBeenCalledTimes(1);
+      expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Shoulder's cranky" });
+      vi.useRealTimers();
+    });
+
+    it("flushNotes sends a pending note right away, once", async () => {
+      vi.useFakeTimers();
+      const store = await loaded([exercise(1, "Bench", [false])]);
+      store.saveSessionNote("Cranky");
+      await store.flushNotes();
+      expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Cranky" });
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(api.put).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+  });
+
+  it("settle waits for queued saves and sends pending notes", async () => {
+    const store = await loaded([exercise(1, "Bench", [false, false])]);
+    let release: (value: { data: object; error: null }) => void = () => {};
+    vi.mocked(api.put).mockImplementationOnce(() => new Promise((resolve) => (release = resolve)));
+    store.logSet(0, 0, { weight: 100, reps: 5 });
+    store.saveNote(0, "Felt fast");
+    store.saveSessionNote("Good day");
+    let settled = false;
+    const settling = store.settle().then(() => (settled = true));
+    await new Promise((r) => setTimeout(r));
+    expect(settled).toBe(false);
+    release({ data: {}, error: null });
+    await settling;
+    expect(api.put).toHaveBeenCalledWith("/api/lifting/exercises/1/", { comments: "Felt fast" });
+    expect(api.put).toHaveBeenCalledWith("/api/lifting/sessions/1/", { comments: "Good day" });
+  });
 });

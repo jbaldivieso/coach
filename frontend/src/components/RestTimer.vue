@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useActiveSessionStore } from "@/stores/activeSession";
 import { formatClock } from "@/utils/format";
-import { playAlarm, vibrate } from "@/utils/audio";
+import { unlockAudio } from "@/utils/audio";
 import AppBar from "@/components/ui/AppBar.vue";
 import Btn from "@/components/ui/Btn.vue";
 import Icon from "@/components/ui/Icon.vue";
@@ -42,10 +42,9 @@ function tick() {
   now.value = Date.now();
 }
 
+// The alarm itself is useRestAlarm's, so it sounds with this screen hidden too
 watch(isOver, (over) => {
   if (!over) return;
-  playAlarm();
-  vibrate();
   // Flash between yellow and black, ending on black; with reduced motion, just go black
   flashOn.value = true;
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
@@ -62,6 +61,7 @@ watch(isOver, (over) => {
 });
 
 function extend() {
+  unlockAudio(); // +30 after the alarm starts a new countdown
   if (isOver.value) store.startRest(30);
   else store.adjustRest(30);
   flashOn.value = false;
@@ -74,6 +74,7 @@ function adjust(delta: number) {
 }
 
 function togglePause() {
+  unlockAudio();
   store.toggleRestPause();
   tick();
 }
@@ -119,7 +120,7 @@ onUnmounted(() => {
 
 <template>
   <div class="rest" :class="{ 'is-over': isOver && flashOn }" role="timer" :aria-label="`Rest, ${clock} left`">
-    <AppBar :title="props.title" small transparent :back="() => emit('hide')" />
+    <AppBar :title="props.title" transparent :back="() => emit('hide')" />
     <main class="rest-body">
       <div class="clock">
         <b aria-live="off">{{ clock }}</b>

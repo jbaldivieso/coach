@@ -523,6 +523,41 @@ class TestUpdateSessionWithExercises:
         )
         assert response.status_code == 404
 
+    def test_active_session_keeps_done_sets(self, authenticated_client, session):
+        """Edit mid-session: done sets stay done, ids are kept, removed exercises go."""
+        session.status = Session.STATUS_ACTIVE
+        session.save()
+        bench = _ex(session, "Bench", [{"weight": 150, "reps": 5, "done": True}, {"weight": 155, "reps": 5, "done": False}])
+        doomed = _ex(session, "Doomed", [{"weight": 10, "reps": 10, "done": False}], position=1)
+        response = authenticated_client.put(
+            f"/api/lifting/sessions/{session.id}/with-exercises/",
+            data={
+                "title": session.title,
+                "date": str(session.date),
+                "comments": "Shoulder's cranky",
+                "exercises": [
+                    {
+                        "id": bench.id,
+                        "title": "Bench",
+                        "rest_seconds": 180,
+                        "sets": [
+                            {"weight": 150, "reps": 5, "done": True},
+                            {"weight": 150, "reps": 5, "done": False},
+                            {"weight": 150, "reps": 5, "done": False},
+                        ],
+                    },
+                ],
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == Session.STATUS_ACTIVE
+        assert data["comments"] == "Shoulder's cranky"
+        assert [e["id"] for e in data["exercises"]] == [bench.id]
+        assert [s["done"] for s in data["exercises"][0]["sets"]] == [True, False, False]
+        assert not Exercise.objects.filter(id=doomed.id).exists()
+
 
 class TestCreateExerciseInsert:
     def test_insert_at_position_shifts_later(self, authenticated_client, active_session):

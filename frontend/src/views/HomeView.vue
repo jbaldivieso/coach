@@ -98,7 +98,7 @@ onMounted(() => {
 
 <template>
   <div class="screen">
-    <AppBar title="Coach">
+    <AppBar>
       <template #actions>
         <RouterLink to="/search" class="bar-action" aria-label="Search"><Icon name="search" /></RouterLink>
       </template>

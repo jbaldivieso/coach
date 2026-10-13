@@ -54,7 +54,8 @@ A personal, self-hosted tracker shaped around one person's actual training metho
 - Plans set targets (number of sets, and reps/weight per set), but only actuals persist: a set's target is overwritten by what was lifted when it's marked done, and sets never done are dropped when the session finishes. No target-vs-actual record is kept.
 - Supersets: adjacent exercises can be grouped to share one rest; grouped exercises always have the same number of sets.
 - Exercise titles autocomplete from the user's own history.
-- Exercises can be reordered and collapsed while editing.
+- Exercises can be reordered while editing, and folded so the whole plan reads as a list. A live session can be edited mid-workout (Lift / Edit); its done sets stay locked.
+- A session has one note, editable while planning, mid-session, and after.
 - Session type (volume / weight / endurance / recovery) was removed; it proved unhelpful.
 
 ## Brand Commitments
