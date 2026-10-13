@@ -144,6 +144,16 @@ STORAGES = {
     },
 }
 
+
+def _add_static_headers(headers, path, url):
+    # The service worker is served from /static/ but controls the app at /
+    if url.endswith("/sw.js"):
+        headers["Service-Worker-Allowed"] = "/"
+
+
+WHITENOISE_ADD_HEADERS_FUNCTION = _add_static_headers
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 

@@ -4,6 +4,24 @@ import Btn from "@/components/ui/Btn.vue";
 
 const { needRefresh, updateServiceWorker } = useRegisterSW();
 
+// The worker used to be registered under /static/, where it couldn't control
+// the app at /. Drop that copy and its precache now that it has root scope.
+const oldScope = new URL(import.meta.env.BASE_URL, location.origin).href;
+if (import.meta.env.BASE_URL !== "/" && "serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((registrations) => {
+      for (const registration of registrations) {
+        if (registration.scope !== oldScope) continue;
+        registration.unregister();
+        caches.delete(`workbox-precache-v2-${oldScope}`);
+      }
+    })
+    .catch(() => {
+      // Leaving it in place is harmless; it only controls /static/ URLs.
+    });
+}
+
 function update() {
   updateServiceWorker();
 }

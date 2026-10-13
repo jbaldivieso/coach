@@ -1,8 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
+// Django serves the app at /, with only its assets under BASE_URL (/static/).
+// `vite preview` serves the whole app under BASE_URL, so follow it there.
+const base = location.pathname.startsWith(import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : "/";
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(base),
   routes: [
     {
       path: "/",
@@ -98,9 +102,16 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
-  // Check auth status if not yet known
-  if (authStore.user === null && !authStore.loading) {
-    await authStore.checkAuth();
+  if (!authStore.verified && !authStore.loading) {
+    if (authStore.user) {
+      // Signed in last launch: show the app now and let the server confirm
+      // in the background, so a slow server doesn't hold up the first screen.
+      authStore.checkAuth().then(() => {
+        if (!authStore.isAuthenticated) router.replace({ name: "login" });
+      });
+    } else {
+      await authStore.checkAuth();
+    }
   }
 
   // Redirect to login if auth required but not authenticated

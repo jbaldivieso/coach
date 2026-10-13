@@ -9,6 +9,10 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: "prompt",
+      // The worker file is served from /static/ but the app lives at /, so it
+      // has to claim the whole origin. The server allows that with a
+      // Service-Worker-Allowed header on sw.js (nginx config, WhiteNoise hook).
+      scope: "/",
       includeAssets: ["icon.svg"],
       manifest: {
         name: "COACH - Weightlifting Tracker",
@@ -31,6 +35,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,svg}"],
+        // Page loads get the precached index.html, except the parts of the
+        // site that aren't the SPA.
+        navigateFallbackDenylist: [/^\/(api|admin|static)\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -77,6 +84,11 @@ export default defineConfig({
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
       },
+    },
+  },
+  preview: {
+    headers: {
+      "Service-Worker-Allowed": "/",
     },
   },
 });
