@@ -107,8 +107,13 @@ const goLabel = computed(() => {
 
 // ---------- Logging ----------
 
+// The save no longer holds the button, so a double tap mustn't log the next set too
+const DOUBLE_TAP_MS = 500;
+let lastDoneAt = 0;
+
 async function done() {
-  if (!position.value || logging.value) return;
+  if (!position.value || logging.value || Date.now() - lastDoneAt < DOUBLE_TAP_MS) return;
+  lastDoneAt = Date.now();
   // Inside the tap, so iOS lets the rest-over alarm play later
   unlockAudio();
   clearUndoHistory();
@@ -117,15 +122,19 @@ async function done() {
   const startsRest = isLastInRound.value && !isUnitsLastSet.value;
   const restSeconds = rest.value;
   const label = unit.value ? unitTitle(unit.value) : "";
-  logging.value = true;
-  const ok = await store.logSet(exerciseIndex, round, { weight: weight.value, reps: reps.value ?? 0 });
-  logging.value = false;
-  if (finishing && ok) {
-    router.push({ name: "track-finish", params: { id: sessionId.value } });
-  } else if (startsRest && restSeconds > 0) {
+  // The set is marked done at once; the save runs behind the rest screen, and
+  // a failed one comes back in the retry banner
+  const saving = store.logSet(exerciseIndex, round, { weight: weight.value, reps: reps.value ?? 0 });
+  if (startsRest && restSeconds > 0) {
     store.startRest(restSeconds, label);
     restVisible.value = true;
   }
+  // Only Finish waits on the server: it needs the last set saved
+  if (!finishing) return;
+  logging.value = true;
+  const ok = await saving;
+  logging.value = false;
+  if (ok) router.push({ name: "track-finish", params: { id: sessionId.value } });
 }
 
 function endRest() {
