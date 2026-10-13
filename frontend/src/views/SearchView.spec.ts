@@ -7,7 +7,7 @@ import type { SearchResponse } from "@/types/lifting";
 import { toISODate } from "@/utils/format";
 
 vi.mock("@/api/client", () => ({
-  api: { get: vi.fn(), post: vi.fn(), fetchCsrfToken: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn() },
 }));
 
 import { api } from "@/api/client";

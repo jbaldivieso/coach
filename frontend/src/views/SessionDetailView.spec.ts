@@ -6,7 +6,7 @@ import SessionDetailView from "./SessionDetailView.vue";
 import type { Session } from "@/types/lifting";
 
 vi.mock("@/api/client", () => ({
-  api: { get: vi.fn(), delete: vi.fn(), post: vi.fn(), fetchCsrfToken: vi.fn() },
+  api: { get: vi.fn(), delete: vi.fn(), post: vi.fn() },
 }));
 
 import { api } from "@/api/client";

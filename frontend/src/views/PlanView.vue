@@ -345,7 +345,6 @@ async function save(action: "start" | "later" | "save") {
   if (Object.keys(errors.value).length) return scrollToFirstError();
 
   saving.value = action;
-  await api.fetchCsrfToken();
   const today = todayISO();
   const body = {
     title: title.value.trim(),
@@ -386,7 +385,6 @@ async function deleteSession() {
   const what = mode.value === "planned" ? "this plan" : "this session and every set in it";
   if (!sessionId.value || !window.confirm(`Delete ${what}?`)) return;
   saving.value = "delete";
-  await api.fetchCsrfToken();
   const response = await api.delete(`/api/lifting/sessions/${sessionId.value}/`);
   saving.value = null;
   if (response.error) {
@@ -414,7 +412,6 @@ async function saveEdits(): Promise<boolean> {
     return false;
   }
   saving.value = "save";
-  await api.fetchCsrfToken();
   const response = await api.put<Session>(`/api/lifting/sessions/${sessionId.value}/with-exercises/`, {
     title: title.value.trim(),
     date: date.value,

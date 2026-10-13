@@ -9,7 +9,6 @@ vi.mock("@/api/client", () => ({
     post: vi.fn(),
     put: vi.fn(),
     delete: vi.fn(),
-    fetchCsrfToken: vi.fn(),
   },
 }));
 

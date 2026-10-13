@@ -55,7 +55,6 @@ function plannedDetail(session: Session): string {
 
 async function startPlanned(session: Session) {
   startingId.value = session.id;
-  await api.fetchCsrfToken();
   const response = await api.post<Session>(`/api/lifting/sessions/${session.id}/start/`, { date: todayISO() });
   startingId.value = null;
   if (response.data) {

@@ -116,7 +116,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     Object.assign(set, values, { done: true });
     unsaved.value = unsaved.value.filter((u) => !(u.exerciseId === exercise.id && u.setIndex === setIndex));
 
-    await api.fetchCsrfToken();
     const ok = await saveExercise(exercise, { sets: exercise.sets });
     if (!ok) {
       set.done = false;
@@ -145,7 +144,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     const set = exercise?.sets[setIndex];
     if (!exercise || !set) return false;
     Object.assign(set, values);
-    await api.fetchCsrfToken();
     const ok = await saveExercise(exercise, { sets: exercise.sets });
     if (!ok) saveError.value = "Couldn't save that change. Check your connection.";
     return ok;
@@ -155,7 +153,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
   async function addSet(exerciseIndex: number): Promise<void> {
     const unit = units.value.find((u) => exerciseIndex >= u.start && exerciseIndex < u.start + u.items.length);
     if (!unit || roundCount(unit) >= MAX_SETS) return;
-    await api.fetchCsrfToken();
     await Promise.all(
       unit.items.map((exercise) => {
         const last = exercise.sets[exercise.sets.length - 1];
@@ -179,7 +176,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
       exercise.id,
       setTimeout(async () => {
         noteTimers.delete(exercise.id);
-        await api.fetchCsrfToken();
         if (!(await saveExercise(exercise, { comments: exercise.comments }))) {
           saveError.value = "Couldn't save the note. Check your connection.";
         }
@@ -198,7 +194,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
     pendingSessionNote = null;
     if (!note) return sessionNoteSave;
     sessionNoteSave = sessionNoteSave.then(async () => {
-      await api.fetchCsrfToken();
       const response = await api.put<Session>(`/api/lifting/sessions/${note.id}/`, { comments: note.comments });
       if (!response.data) saveError.value = "Couldn't save the note. Check your connection.";
       return response.data !== null;
@@ -251,7 +246,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
   async function addExercise(input: { title: string; sets: SetValues[]; rest_seconds: number }, placement: Placement) {
     const current = session.value;
     if (!current) return false;
-    await api.fetchCsrfToken();
 
     let position: number | undefined;
     let group: number | null = null;
@@ -341,7 +335,6 @@ export const useActiveSessionStore = defineStore("activeSession", () => {
   async function finish(comments: string): Promise<Session | null> {
     if (!session.value) return null;
     await flushNotes();
-    await api.fetchCsrfToken();
     const response = await api.post<Session>(`/api/lifting/sessions/${session.value.id}/finish/`, { comments });
     if (!response.data) {
       saveError.value = response.error || "Couldn't finish the session";

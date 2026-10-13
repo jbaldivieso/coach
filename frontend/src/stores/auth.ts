@@ -67,9 +67,6 @@ export const useAuthStore = defineStore("auth", () => {
     loading.value = true;
     error.value = null;
 
-    // Fetch CSRF token before login
-    await api.fetchCsrfToken();
-
     const response = await api.post<User>("/api/accounts/login/", {
       username,
       password,
@@ -89,9 +86,6 @@ export const useAuthStore = defineStore("auth", () => {
   async function logout(): Promise<boolean> {
     loading.value = true;
     error.value = null;
-
-    // Fetch CSRF token before logout
-    await api.fetchCsrfToken();
 
     const response = await api.post("/api/accounts/logout/");
 

@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
+from django.test import Client
 
 
 class TestHealthEndpoint:
@@ -16,6 +17,30 @@ class TestCSRFEndpoint:
         data = response.json()
         assert "csrf_token" in data
         assert len(data["csrf_token"]) > 0
+
+
+class TestCSRFCookie:
+    """The frontend sends the csrftoken cookie's value as X-CSRFToken on every write."""
+
+    def test_cookie_value_is_accepted_and_follows_login_rotation(self, user):
+        client = Client(enforce_csrf_checks=True)
+        client.get("/api/accounts/csrf/")
+        before = client.cookies["csrftoken"].value
+
+        client.post(
+            "/api/accounts/login/",
+            data={"username": "testuser", "password": "testpass123"},
+            content_type="application/json",
+            headers={"X-CSRFToken": before},
+        )
+        after = client.cookies["csrftoken"].value
+        assert after != before
+
+        stale = client.post("/api/accounts/logout/", headers={"X-CSRFToken": before})
+        assert stale.status_code == 403
+
+        current = client.post("/api/accounts/logout/", headers={"X-CSRFToken": after})
+        assert current.status_code == 200
 
 
 class TestLoginEndpoint:

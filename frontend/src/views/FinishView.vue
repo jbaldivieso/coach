@@ -56,7 +56,6 @@ async function finish() {
 
 async function discard() {
   if (!window.confirm("Throw away this session? Nothing was logged.")) return;
-  await api.fetchCsrfToken();
   const response = await api.delete(`/api/lifting/sessions/${sessionId.value}/`);
   if (response.error) {
     store.saveError = response.error;

@@ -7,7 +7,6 @@ vi.mock("@/api/client", () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),
-    fetchCsrfToken: vi.fn(),
   },
 }));
 
@@ -63,7 +62,6 @@ describe("Auth Store", () => {
     const success = await store.logout();
 
     expect(success).toBe(true);
-    expect(api.fetchCsrfToken).toHaveBeenCalled();
     expect(store.user).toBeNull();
     expect(store.isAuthenticated).toBe(false);
   });

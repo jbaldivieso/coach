@@ -42,7 +42,7 @@ comments stay regular width. Supersets are the only striped (`--hazard`) element
 
 2. **Session Auth:** The app uses Django session authentication (not JWT). Sessions last 2 weeks.
 
-3. **CSRF:** The frontend must fetch a CSRF token before POST/PUT/DELETE requests. The API client handles this.
+3. **CSRF:** The API client sends the `csrftoken` cookie with every POST/PUT/DELETE, and fetches a token itself when there's no cookie or the server refuses one. Callers don't fetch tokens. `api` calls never throw: a network failure comes back as `{ data: null, error }`.
 
 4. **Mobile First:** Design for a 390px-wide phone first. The smallest target device is an iPhone 12 Pro (390×844 CSS px), so layouts don't need to fit anything narrower. Touch targets are at least 44px. The layout centers at `--content` width on larger screens.
 
