@@ -283,6 +283,9 @@ DJANGO_ALLOWED_HOSTS=coach.baldivieso.com
 # For HTTPS (after SSL setup)
 CORS_ALLOWED_ORIGINS=https://coach.baldivieso.com
 CSRF_TRUSTED_ORIGINS=https://coach.baldivieso.com
+
+# Required: the OAuth and MCP metadata advertise this address
+COACH_PUBLIC_URL=https://coach.baldivieso.com
 ```
 
 ### 5. Install the Systemd Service
@@ -455,6 +458,16 @@ sudo tail -f /var/log/nginx/access.log
 
 # Nginx error logs
 sudo tail -f /var/log/nginx/error.log
+```
+
+### Clear Old OAuth Tokens and Clients
+
+Expired and rotated tokens from the Claude connector, and clients registered
+without ever connecting, pile up otherwise. Run both nightly from cron
+(`crontab -e`):
+
+```bash
+15 4 * * * cd /var/www/coach/backend && set -a && . ../deploy/.env && set +a && .venv/bin/python manage.py cleartokens && .venv/bin/python manage.py clearoauthclients
 ```
 
 ### Backup Database

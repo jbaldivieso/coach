@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third party
     "corsheaders",
+    "oauth2_provider",
     # Local apps
     "accounts",
     "lifting",
@@ -163,6 +166,47 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Session settings - 2 weeks duration
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 2 weeks in seconds
 SESSION_SAVE_EVERY_REQUEST = True  # Refresh session on each request
+
+
+# The address the site is reached at, for OAuth and MCP metadata. Set from the
+# environment rather than built from Host headers. In development that's Vite,
+# which proxies the OAuth and MCP paths here and serves the login page.
+COACH_PUBLIC_URL = os.environ.get("COACH_PUBLIC_URL", "http://localhost:5173" if DEBUG else "").rstrip("/")
+if not COACH_PUBLIC_URL:
+    # Otherwise every metadata document advertises localhost and Claude fails
+    # with an opaque error.
+    raise ImproperlyConfigured("Set COACH_PUBLIC_URL, e.g. https://coach.baldivieso.com")
+
+# OAuth for the Claude connector. DOT's authorize view sends anonymous users
+# to the SPA's login page, which returns them here through ?next=.
+LOGIN_URL = "/login"
+OAUTH2_PROVIDER = {
+    "PKCE_REQUIRED": True,
+    "COMPLIANT_BCP_RFC9700_PKCE_METHOD": True,  # S256 only
+    "COMPLIANT_BCP_RFC9700_IMPLICIT_GRANT": True,
+    "COMPLIANT_BCP_RFC9700_PASSWORD_GRANT": True,
+    "SCOPES": {"coach": "Read your lifting history and manage your templates"},
+    "DEFAULT_SCOPES": ["coach"],
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 60,
+    # Long enough that a monthly check-in never finds the connection signed out
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 180,
+    "ROTATE_REFRESH_TOKEN": True,
+    # A retried refresh whose response was lost still works for a couple of
+    # minutes, instead of signing the connector out
+    "REFRESH_TOKEN_GRACE_PERIOD_SECONDS": 120,
+    # Registration is open to anyone, but accounts.oauth only accepts Claude's
+    # callback URLs
+    "DCR_ENABLED": True,
+    "DCR_REGISTRATION_PERMISSION_CLASSES": ("oauth2_provider.dcr.AllowAllDCRPermission",),
+    # Discovery documents. The issuer anchors every endpoint URL in them.
+    "OIDC_ISS_ENDPOINT": COACH_PUBLIC_URL,
+    "OAUTH2_RESPONSE_TYPES_SUPPORTED": ["code"],
+    "OAUTH2_GRANT_TYPES_SUPPORTED": ["authorization_code", "refresh_token"],
+    "OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED": ["none"],
+    # Claude requires this to match the connector URL exactly
+    "OAUTH2_PROTECTED_RESOURCE_IDENTIFIER": f"{COACH_PUBLIC_URL}/mcp",
+    "OAUTH2_PROTECTED_RESOURCE_AUTHORIZATION_SERVERS": [COACH_PUBLIC_URL],
+}
 
 
 # CORS settings

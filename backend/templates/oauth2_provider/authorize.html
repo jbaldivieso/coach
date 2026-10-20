@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Connect Claude · Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@75..100,400..800&display=swap" rel="stylesheet">
+  <style>
+    /* Served by Django, not Vite, so these values are copied from src/styles/tokens.scss */
+    :root {
+      --k: #161616;
+      --concrete: #e9eae7;
+      --card: #ffffff;
+      --muted: #55585a;
+      --rule: #d3d4d0;
+      --on-k: #f4f4f2;
+      --font: "Saira", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --gutter: 16px;
+      --content: 608px;
+      --r: 6px;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--concrete);
+      color: var(--k);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    main {
+      max-width: var(--content);
+      margin: 0 auto;
+      padding: calc(32px + env(safe-area-inset-top)) var(--gutter) 32px;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-stretch: 80%;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: var(--r);
+      padding: 20px var(--gutter);
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    p { margin: 0 0 12px; }
+    .host { color: var(--muted); font-size: 14px; }
+    .host strong { color: var(--k); }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    /* Both black: neither choice is "act now" */
+    button {
+      min-height: 48px;
+      border-radius: var(--r);
+      font: inherit;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-stretch: 80%;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+    }
+    .deny { background: var(--card); color: var(--k); border: 2px solid var(--k); }
+    .allow { background: var(--k); color: var(--on-k); border: 2px solid var(--k); }
+    .error { color: var(--k); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Coach</p>
+    <div class="card">
+      {% if not error %}
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}{% if field.is_hidden %}{{ field }}{% endif %}{% endfor %}
+          <h1>Claude (claude.ai) wants to read your lifting history and manage your templates</h1>
+          <p class="host">You'll be sent back to <strong>{{ redirect_host }}</strong>.</p>
+          {{ form.non_field_errors }}
+          <div class="actions">
+            <button type="submit" class="deny">Deny</button>
+            <button type="submit" class="allow" name="allow" value="Allow">Allow</button>
+          </div>
+        </form>
+      {% else %}
+        <h1>Can't connect</h1>
+        <p class="error">{{ error.error }}: {{ error.description }}</p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

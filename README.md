@@ -153,6 +153,7 @@ The backend supports these environment variables:
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Allowed hosts |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,...` | CORS origins |
 | `CSRF_TRUSTED_ORIGINS` | `http://localhost:5173,...` | CSRF trusted origins |
+| `COACH_PUBLIC_URL` | `http://localhost:5173` in debug, required otherwise | Public address for the OAuth and MCP metadata Claude reads |
 
 **Important:** If `DJANGO_SETTINGS_MODULE` is set in your shell, you must override it or unset it when running Django commands.
 

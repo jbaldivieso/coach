@@ -37,7 +37,9 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,svg}"],
         // Page loads get the precached index.html, except the parts of the
         // site that aren't the SPA.
-        navigateFallbackDenylist: [/^\/(api|admin|static)\//],
+        navigateFallbackDenylist: [
+          /^\/(api\/|admin\/|static\/|oauth\/|mcp(\/|$)|\.well-known\/)/,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -79,12 +81,14 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:8000",
-        changeOrigin: true,
-      },
-    },
+    // Django's parts of the site. In development COACH_PUBLIC_URL is this
+    // server, so the OAuth flow signs in at /login here and comes back.
+    proxy: Object.fromEntries(
+      ["/api", "/oauth", "/.well-known/oauth-", "^/mcp(/|$)"].map((path) => [
+        path,
+        { target: "http://127.0.0.1:8000", changeOrigin: true },
+      ]),
+    ),
   },
   preview: {
     headers: {

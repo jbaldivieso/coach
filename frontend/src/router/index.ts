@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { followNext } from "@/utils/next";
 
 // Django serves the app at /, with only its assets under BASE_URL (/static/).
 // `vite preview` serves the whole app under BASE_URL, so follow it there.
@@ -109,9 +110,10 @@ router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
   if (!authStore.verified && !authStore.loading) {
-    if (authStore.user) {
+    if (authStore.user && !to.meta.guest) {
       // Signed in last launch: show the app now and let the server confirm
       // in the background, so a slow server doesn't hold up the first screen.
+      // Guest pages wait, so an expired session keeps /login?next= intact.
       authStore.checkAuth().then(() => {
         if (!authStore.isAuthenticated) router.replace({ name: "login" });
       });
@@ -126,9 +128,17 @@ router.beforeEach(async (to, _from, next) => {
     return;
   }
 
-  // Redirect to home if guest-only page but authenticated
+  // Already signed in: go on to ?next= (an OAuth sign-in, say), or home.
+  // Only once the server has confirmed it, though: Django would send a
+  // session it doesn't know straight back here, round and round.
   if (to.meta.guest && authStore.isAuthenticated) {
-    next({ name: "home" });
+    if (to.query.next !== undefined && !authStore.verified) {
+      next();
+      return;
+    }
+    const target = followNext(to.query.next);
+    if (target) next(target);
+    else next(false);
     return;
   }
 

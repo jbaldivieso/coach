@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import Btn from "@/components/ui/Btn.vue";
+import { followNext } from "@/utils/next";
 
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -12,9 +14,9 @@ const password = ref("");
 
 async function handleSubmit() {
   const success = await authStore.login(username.value, password.value);
-  if (success) {
-    router.push({ name: "home" });
-  }
+  if (!success) return;
+  const target = followNext(route.query.next);
+  if (target) router.push(target);
 }
 </script>
 
