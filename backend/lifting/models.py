@@ -2,6 +2,41 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Template(models.Model):
+    """A reusable plan to start sessions from. Starting one copies it."""
+
+    title = models.CharField(max_length=100)
+    comments = models.TextField(blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lifting_templates")
+
+    class Meta:
+        ordering = ["-updated_at", "-id"]
+
+    def __str__(self):
+        return self.title
+
+
+class TemplateExercise(models.Model):
+    """An exercise in a template. Same shape as Exercise, but sets are targets."""
+
+    template = models.ForeignKey(Template, on_delete=models.CASCADE, related_name="exercises")
+    title = models.CharField(max_length=100)
+    sets = models.JSONField(default=list)  # [{"weight": float|null, "reps": int|null}]
+    rest_seconds = models.IntegerField()
+    comments = models.TextField(blank=True)
+    position = models.PositiveIntegerField(default=0)
+    superset_group = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position"]
+
+    def __str__(self):
+        return f"{self.title} - {self.template.title}"
+
+
 class Session(models.Model):
     """A lifting session containing multiple exercises."""
 
@@ -21,6 +56,9 @@ class Session(models.Model):
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lifting_sessions")
+    template = models.ForeignKey(
+        Template, on_delete=models.SET_NULL, null=True, blank=True, related_name="sessions"
+    )
 
     class Meta:
         ordering = ["-date", "-id"]

@@ -10,7 +10,8 @@ from ninja.security import django_auth
 
 from accounts.api import MessageSchema
 
-from .models import Exercise, Session
+from . import services
+from .models import Exercise, Session, Template
 
 router = Router()
 
@@ -66,6 +67,7 @@ class SessionSchema(Schema):
     status: str
     started_at: Optional[dt.datetime] = None
     finished_at: Optional[dt.datetime] = None
+    template_id: Optional[int] = None
     exercises: List[ExerciseSchema]
 
 
@@ -88,6 +90,7 @@ class SessionWithExercisesCreateSchema(Schema):
     date: DateType
     comments: str = ""
     status: str = Session.STATUS_DONE
+    template_id: Optional[int] = None
     exercises: List[ExerciseCreateSchema]
 
 
@@ -114,6 +117,50 @@ class PaginatedSessionsSchema(Schema):
     items: List[SessionSchema]
     total: int
     has_more: bool
+
+
+# ============ Template Schemas ============
+
+
+class TemplateSetSchema(Schema):
+    """A target set. Either may be left blank for the lifter to choose on the day."""
+
+    weight: Optional[float] = None
+    reps: Optional[int] = None
+
+
+class TemplateExerciseSchema(Schema):
+    id: int
+    title: str
+    sets: List[TemplateSetSchema]
+    rest_seconds: int
+    comments: str
+    position: int
+    superset_group: Optional[int] = None
+
+
+class TemplateSchema(Schema):
+    id: int
+    title: str
+    comments: str
+    archived_at: Optional[dt.datetime] = None
+    created_at: dt.datetime
+    updated_at: dt.datetime
+    exercises: List[TemplateExerciseSchema]
+
+
+class TemplateExerciseInputSchema(Schema):
+    title: str
+    sets: List[TemplateSetSchema]
+    rest_seconds: int
+    comments: str = ""
+    superset_group: Optional[int] = None
+
+
+class TemplateInputSchema(Schema):
+    title: str
+    comments: str = ""
+    exercises: List[TemplateExerciseInputSchema]
 
 
 # ============ History and Search Schemas ============
@@ -341,14 +388,14 @@ def create_session(request, data: SessionCreateSchema):
 
 @router.post(
     "/sessions/with-exercises/",
-    response={201: SessionSchema, 400: MessageSchema},
+    response={201: SessionSchema, 400: MessageSchema, 404: MessageSchema},
     auth=django_auth,
 )
 def create_session_with_exercises(request, data: SessionWithExercisesCreateSchema):
     """Create a new lifting session with exercises in a single atomic operation.
 
     status may be "planned" (a future date is allowed), "active" (starts it now)
-    or "done".
+    or "done". template_id records the template the session was started from.
     """
     valid_statuses = [choice[0] for choice in Session.STATUS_CHOICES]
     if data.status not in valid_statuses:
@@ -364,6 +411,12 @@ def create_session_with_exercises(request, data: SessionWithExercisesCreateSchem
     if not data.exercises:
         return 400, {"message": "At least one exercise is required"}
 
+    template = None
+    if data.template_id is not None:
+        template = Template.objects.filter(id=data.template_id, user=request.user).first()
+        if not template:
+            return 404, {"message": "Template not found"}
+
     # Use transaction to ensure atomicity
     with transaction.atomic():
         session = Session.objects.create(
@@ -373,6 +426,7 @@ def create_session_with_exercises(request, data: SessionWithExercisesCreateSchem
             comments=data.comments,
             status=data.status,
             started_at=timezone.now() if data.status == Session.STATUS_ACTIVE else None,
+            template=template,
         )
 
         for i, exercise_data in enumerate(data.exercises):
@@ -599,37 +653,7 @@ def exercise_history(
     exclude_session: Optional[int] = None,
 ):
     """Done outings of an exercise (exact title match) in finished sessions, newest first."""
-    queryset = (
-        Exercise.objects.filter(
-            session__user=request.user,
-            session__status=Session.STATUS_DONE,
-            title=title,
-        )
-        .select_related("session")
-        .order_by("-session__date", "-session__id", "position")
-    )
-    if exclude_session is not None:
-        queryset = queryset.exclude(session_id=exclude_session)
-
-    total = queryset.count()
-    items = [
-        {
-            "exercise_id": e.id,
-            "session_id": e.session.id,
-            "session_title": e.session.title,
-            "date": e.session.date,
-            "sets": [s for s in e.sets if s.get("done", True)],
-            "rest_seconds": e.rest_seconds,
-            "comments": e.comments,
-        }
-        for e in queryset[offset : offset + limit]
-    ]
-    return {
-        "title": title,
-        "items": items,
-        "total": total,
-        "has_more": offset + limit < total,
-    }
+    return services.exercise_history(request.user, title, limit, offset, exclude_session)
 
 
 @router.put(
@@ -665,6 +689,36 @@ def delete_exercise(request, exercise_id: int):
         return 404, {"message": "Exercise not found"}
     exercise.delete()
     return 200, {"message": "Exercise deleted"}
+
+
+# ============ Template Endpoints ============
+
+
+@router.get("/templates/", response=List[TemplateSchema], auth=django_auth)
+def list_templates(request):
+    """Templates that aren't archived, newest edit first."""
+    return list(
+        Template.objects.filter(user=request.user, archived_at__isnull=True).prefetch_related(
+            "exercises"
+        )
+    )
+
+
+@router.get(
+    "/templates/{template_id}/",
+    response={200: TemplateSchema, 404: MessageSchema},
+    auth=django_auth,
+)
+def get_template(request, template_id: int):
+    """One template. Archived templates are still readable, so old links keep working."""
+    template = (
+        Template.objects.filter(id=template_id, user=request.user)
+        .prefetch_related("exercises")
+        .first()
+    )
+    if not template:
+        return 404, {"message": "Template not found"}
+    return 200, template
 
 
 # ============ Search Endpoints ============

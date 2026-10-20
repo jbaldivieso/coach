@@ -817,3 +817,300 @@ class TestSearch:
 
     def test_requires_auth(self, client):
         assert client.get("/api/lifting/search/?q=x").status_code == 401
+
+
+# ============ Templates ============
+
+
+def _template(user, title="Upper A", comments="", exercises=None, archived=False):
+    from django.utils import timezone
+    from .models import Template, TemplateExercise
+
+    template = Template.objects.create(
+        user=user,
+        title=title,
+        comments=comments,
+        archived_at=timezone.now() if archived else None,
+    )
+    for i, e in enumerate(exercises or [{"title": "Bench Press", "sets": [{"weight": 155, "reps": 5}]}]):
+        TemplateExercise.objects.create(
+            template=template,
+            title=e["title"],
+            sets=e["sets"],
+            rest_seconds=e.get("rest_seconds", 90),
+            comments=e.get("comments", ""),
+            position=i,
+            superset_group=e.get("superset_group"),
+        )
+    return template
+
+
+class TestTemplateEndpoints:
+    URL = "/api/lifting/templates/"
+
+    def test_requires_auth(self, client):
+        assert client.get(self.URL).status_code == 401
+
+    def test_lists_non_archived_with_exercises(self, authenticated_client, user):
+        _template(user, title="Upper A", comments="Week 1", exercises=[
+            {"title": "Bench Press", "sets": [{"weight": None, "reps": None}], "comments": "RPE 8"},
+            {"title": "Row", "sets": [{"weight": 100, "reps": 8}], "superset_group": 1},
+            {"title": "Face Pull", "sets": [{"weight": 30, "reps": 15}], "superset_group": 1},
+        ])
+        _template(user, title="Old", archived=True)
+        data = authenticated_client.get(self.URL).json()
+        assert [t["title"] for t in data] == ["Upper A"]
+        template = data[0]
+        assert template["comments"] == "Week 1"
+        assert template["archived_at"] is None
+        assert [e["title"] for e in template["exercises"]] == ["Bench Press", "Row", "Face Pull"]
+        assert template["exercises"][0]["sets"] == [{"weight": None, "reps": None}]
+        assert template["exercises"][0]["comments"] == "RPE 8"
+        assert [e["superset_group"] for e in template["exercises"]] == [None, 1, 1]
+
+    def test_newest_updated_first(self, authenticated_client, user):
+        first = _template(user, title="First")
+        _template(user, title="Second")
+        first.title = "First, edited"
+        first.save()
+        data = authenticated_client.get(self.URL).json()
+        assert [t["title"] for t in data] == ["First, edited", "Second"]
+
+    def test_only_own(self, authenticated_client, other_user):
+        _template(other_user)
+        assert authenticated_client.get(self.URL).json() == []
+
+    def test_get_one(self, authenticated_client, user):
+        template = _template(user)
+        response = authenticated_client.get(f"{self.URL}{template.id}/")
+        assert response.status_code == 200
+        assert response.json()["title"] == "Upper A"
+
+    def test_get_archived(self, authenticated_client, user):
+        template = _template(user, archived=True)
+        response = authenticated_client.get(f"{self.URL}{template.id}/")
+        assert response.status_code == 200
+        assert response.json()["archived_at"] is not None
+
+    def test_get_other_users(self, authenticated_client, other_user):
+        template = _template(other_user)
+        assert authenticated_client.get(f"{self.URL}{template.id}/").status_code == 404
+
+
+class TestCreateSessionFromTemplate:
+    URL = "/api/lifting/sessions/with-exercises/"
+
+    def _payload(self, **overrides):
+        payload = {
+            "title": "Upper A",
+            "date": str(dt.date.today()),
+            "status": "active",
+            "exercises": [{"title": "Bench Press", "rest_seconds": 90, "sets": [{"weight": 155, "reps": 5, "done": False}]}],
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_sets_template(self, authenticated_client, user):
+        template = _template(user)
+        response = authenticated_client.post(
+            self.URL, data=self._payload(template_id=template.id), content_type="application/json"
+        )
+        assert response.status_code == 201
+        assert response.json()["template_id"] == template.id
+        assert Session.objects.get(id=response.json()["id"]).template == template
+
+    def test_without_template(self, authenticated_client):
+        response = authenticated_client.post(self.URL, data=self._payload(), content_type="application/json")
+        assert response.status_code == 201
+        assert response.json()["template_id"] is None
+
+    def test_other_users_template(self, authenticated_client, other_user):
+        template = _template(other_user)
+        response = authenticated_client.post(
+            self.URL, data=self._payload(template_id=template.id), content_type="application/json"
+        )
+        assert response.status_code == 404
+        assert not Session.objects.exists()
+
+    def test_deleting_template_clears_link(self, authenticated_client, user):
+        template = _template(user)
+        session_id = authenticated_client.post(
+            self.URL, data=self._payload(template_id=template.id), content_type="application/json"
+        ).json()["id"]
+        template.delete()
+        assert Session.objects.get(id=session_id).template is None
+
+
+class TestSaveTemplate:
+    def _data(self, **overrides):
+        from .api import TemplateInputSchema
+
+        data = {
+            "title": "Lower A",
+            "comments": "Deload week",
+            "exercises": [
+                {"title": "Squat", "rest_seconds": 180, "sets": [{"weight": 225, "reps": 5}], "comments": "Belt"},
+                {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{"weight": 135, "reps": 8}, {}]},
+                {"title": "Plank", "rest_seconds": 90, "superset_group": 1, "sets": [{"reps": 60}, {"reps": 60}]},
+            ],
+        }
+        data.update(overrides)
+        return TemplateInputSchema(**data)
+
+    def _save(self, user, template=None, **overrides):
+        from .services import save_template
+
+        return save_template(user, self._data(**overrides), template)
+
+    def _error(self, user, **overrides):
+        from .services import TemplateError
+
+        with pytest.raises(TemplateError) as exc:
+            self._save(user, **overrides)
+        return str(exc.value)
+
+    def test_creates(self, user):
+        template, _ = self._save(user)
+        assert template.user == user
+        assert template.title == "Lower A"
+        assert template.comments == "Deload week"
+        exercises = list(template.exercises.all())
+        assert [e.title for e in exercises] == ["Squat", "RDL", "Plank"]
+        assert [e.position for e in exercises] == [0, 1, 2]
+        assert [e.superset_group for e in exercises] == [None, 1, 1]
+        assert exercises[0].comments == "Belt"
+        assert exercises[1].sets == [{"weight": 135, "reps": 8}, {"weight": None, "reps": None}]
+
+    def test_replaces_exercises(self, user):
+        template, _ = self._save(user)
+        old_ids = set(template.exercises.values_list("id", flat=True))
+        updated, _ = self._save(
+            user,
+            template,
+            title="Lower B",
+            exercises=[{"title": "Deadlift", "rest_seconds": 180, "sets": [{"weight": 315, "reps": 3}]}],
+        )
+        assert updated.id == template.id
+        assert updated.title == "Lower B"
+        assert [e.title for e in updated.exercises.all()] == ["Deadlift"]
+        assert not set(updated.exercises.values_list("id", flat=True)) & old_ids
+
+    def test_failed_update_changes_nothing(self, user):
+        from .services import TemplateError
+
+        template, _ = self._save(user)
+        with pytest.raises(TemplateError):
+            self._save(user, template, title="Broken", exercises=[
+                {"title": "Squat", "rest_seconds": 90, "sets": [{"reps": 0}]},
+            ])
+        template.refresh_from_db()
+        assert template.title == "Lower A"
+        assert template.exercises.count() == 3
+
+    def test_requires_an_exercise(self, user):
+        assert "exercise" in self._error(user, exercises=[])
+
+    def test_requires_a_set(self, user):
+        assert "Squat" in self._error(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": []}])
+
+    def test_at_most_six_sets(self, user):
+        sets = [{"weight": 100, "reps": 5}] * 7
+        assert "6" in self._error(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": sets}])
+        template, _ = self._save(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": sets[:6]}])
+        assert len(template.exercises.get().sets) == 6
+
+    def test_reps_at_least_one(self, user):
+        assert "reps" in self._error(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": [{"reps": 0}]}])
+
+    def test_weight_not_negative(self, user):
+        assert "weight" in self._error(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": [{"weight": -5}]}])
+
+    def test_zero_weight_allowed(self, user):
+        template, _ = self._save(user, exercises=[{"title": "Squat", "rest_seconds": 90, "sets": [{"weight": 0, "reps": 5}]}])
+        assert template.exercises.get().sets == [{"weight": 0, "reps": 5}]
+
+    def test_rest_not_negative(self, user):
+        assert "rest" in self._error(user, exercises=[{"title": "Squat", "rest_seconds": -1, "sets": [{}]}])
+
+    def test_titles_required(self, user):
+        assert "title" in self._error(user, title="  ")
+        assert "title" in self._error(user, exercises=[{"title": "", "rest_seconds": 90, "sets": [{}]}])
+
+    def test_titles_at_most_100_characters(self, user):
+        assert "100" in self._error(user, title="x" * 101)
+        assert "100" in self._error(user, exercises=[{"title": "x" * 101, "rest_seconds": 90, "sets": [{}]}])
+        template, _ = self._save(user, title="x" * 100)
+        assert len(template.title) == 100
+
+    def test_superset_needs_two_members(self, user):
+        exercises = [
+            {"title": "Squat", "rest_seconds": 90, "sets": [{}]},
+            {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+        ]
+        assert "superset" in self._error(user, exercises=exercises)
+
+    def test_superset_must_be_adjacent(self, user):
+        exercises = [
+            {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+            {"title": "Squat", "rest_seconds": 90, "sets": [{}]},
+            {"title": "Plank", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+        ]
+        assert "adjacent" in self._error(user, exercises=exercises)
+
+    def test_superset_same_set_count(self, user):
+        exercises = [
+            {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{}, {}]},
+            {"title": "Plank", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+        ]
+        assert "sets" in self._error(user, exercises=exercises)
+
+    def test_unknown_title_warnings(self, user, exercise):
+        exercise.session.status = Session.STATUS_DONE
+        exercise.session.save()
+        _, warnings = self._save(user, exercises=[
+            {"title": "Bench Press", "rest_seconds": 90, "sets": [{}]},
+            {"title": "Bench Pres", "rest_seconds": 90, "sets": [{}]},
+        ])
+        assert len(warnings) == 1
+        assert "Bench Pres" in warnings[0]
+        assert '"Bench Press"' in warnings[0]
+
+
+class TestUnknownTitleWarnings:
+    def test_ignores_titles_only_in_unfinished_or_other_users_sessions(self, user, other_session):
+        from .services import unknown_title_warnings
+
+        planned = Session.objects.create(title="P", date="2024-01-01", status="planned", user=user)
+        _ex(planned, "Front Squat", [{"weight": 100, "reps": 5}])
+        _ex(other_session, "Front Squats", [{"weight": 100, "reps": 5}])
+        warnings = unknown_title_warnings(user, ["Front Squat"])
+        assert len(warnings) == 1
+        assert "Front Squat" in warnings[0]
+        assert "Front Squats" not in warnings[0]
+
+    def test_no_warning_for_known_title(self, user, exercise):
+        from .services import unknown_title_warnings
+
+        assert unknown_title_warnings(user, ["Bench Press"]) == []
+
+    def test_one_warning_per_title(self, user):
+        from .services import unknown_title_warnings
+
+        assert len(unknown_title_warnings(user, ["Zercher Squat", "Zercher Squat"])) == 1
+
+
+class TestExerciseHistoryService:
+    def test_matches_endpoint(self, user, exercise):
+        from .services import exercise_history
+
+        data = exercise_history(user, "Bench Press", limit=3, offset=0, exclude_session=None)
+        assert data["total"] == 1
+        assert data["items"][0]["session_id"] == exercise.session.id
+        assert exercise_history(user, "Bench Press", limit=3, offset=0, exclude_session=exercise.session.id)["total"] == 0
+
+    def test_clamps_limit_and_offset(self, user, exercise):
+        from .services import exercise_history
+
+        data = exercise_history(user, "Bench Press", limit=0, offset=-5)
+        assert len(data["items"]) == 1
+        assert exercise_history(user, "Bench Press", limit=10_000, offset=0)["has_more"] is False
