@@ -1,6 +1,7 @@
 """Template and history logic shared by the app API and the MCP tools."""
 
 import difflib
+import math
 
 from django.db import transaction
 
@@ -36,6 +37,8 @@ def _validate_template(data):
         for s in e.sets:
             if s.reps is not None and s.reps < 1:
                 raise TemplateError(f"{e.title}: reps must be at least 1")
+            if s.weight is not None and not math.isfinite(s.weight):
+                raise TemplateError(f"{e.title}: weight must be a number")
             if s.weight is not None and s.weight < 0:
                 raise TemplateError(f"{e.title}: weight can't be negative")
 

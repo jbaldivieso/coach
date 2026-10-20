@@ -13,12 +13,15 @@ from oauth2_provider import urls as oauth2_urls
 from oauth2_provider import views as oauth2_views
 
 from accounts import oauth
+from lifting import mcp
 
 from .api import api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
+    # No trailing slash: the URL must equal the OAuth metadata's resource exactly
+    path("mcp", mcp.mcp_view, name="mcp"),
     # Only these from DOT: its full include also mounts application management
     # (any user could register a client), OIDC and device-flow routes. They
     # stay in DOT's namespace because its metadata view reverses them.

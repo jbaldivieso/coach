@@ -26,6 +26,12 @@ npm run dev
 ## Code Patterns
 
 New API endpoints go in app-specific `backend/<app>/api.py` routers, registered in `backend/config/api.py`.
+The exception is the MCP server for the Claude connector, `backend/lifting/mcp.py`.
+It's a plain Django view routed in `backend/config/urls.py` at `/mcp`, with no
+trailing slash because the URL must equal the OAuth resource identifier exactly.
+It uses OAuth bearer tokens instead of session auth. New MCP tools go in its
+`TOOLS`, and they reuse the schemas in `lifting/api.py` and the logic in
+`lifting/services.py`.
 
 Frontend API calls go through `api` in `src/api/client.ts`.
 

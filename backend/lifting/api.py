@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from django.db import models, transaction
 from django.utils import timezone
-from ninja import Router, Schema
+from ninja import Field, Router, Schema
 from ninja.security import django_auth
 
 from accounts.api import MessageSchema
@@ -149,18 +149,23 @@ class TemplateSchema(Schema):
     exercises: List[TemplateExerciseSchema]
 
 
+# The MCP tools' inputSchema comes from these. The limits are only advertised
+# here, so Claude sees them; services.save_template enforces them with
+# readable messages.
+
+
 class TemplateExerciseInputSchema(Schema):
-    title: str
-    sets: List[TemplateSetSchema]
-    rest_seconds: int
+    title: str = Field(json_schema_extra={"maxLength": services.MAX_TITLE})
+    sets: List[TemplateSetSchema] = Field(json_schema_extra={"minItems": 1, "maxItems": services.MAX_SETS})
+    rest_seconds: int = Field(json_schema_extra={"minimum": 0})
     comments: str = ""
     superset_group: Optional[int] = None
 
 
 class TemplateInputSchema(Schema):
-    title: str
+    title: str = Field(json_schema_extra={"maxLength": services.MAX_TITLE})
     comments: str = ""
-    exercises: List[TemplateExerciseInputSchema]
+    exercises: List[TemplateExerciseInputSchema] = Field(json_schema_extra={"minItems": 1})
 
 
 # ============ History and Search Schemas ============
@@ -264,18 +269,19 @@ def _calendar_month(user, year: int, month: int):
     }
 
 
-def _title_suggestions(queryset, limit: int):
-    """Group a queryset of exercises or sessions by title with use count and last date, newest first."""
+def _title_suggestions(queryset, limit: Optional[int] = None):
+    """Group a queryset of exercises or sessions by title with use count and first and last dates, newest first."""
     date_field = "session__date" if queryset.model is Exercise else "date"
     rows = (
         queryset.values("title")
-        .annotate(count=models.Count("id"), last_date=models.Max(date_field))
+        .annotate(
+            count=models.Count("id"),
+            first_date=models.Min(date_field),
+            last_date=models.Max(date_field),
+        )
         .order_by("-last_date", "title")[:limit]
     )
-    return [
-        {"title": r["title"], "count": r["count"], "last_date": r["last_date"]}
-        for r in rows
-    ]
+    return list(rows)
 
 
 def _validate_date(date: DateType, status: str):
