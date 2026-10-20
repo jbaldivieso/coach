@@ -1,4 +1,4 @@
-import type { Exercise, ExercisePayload, Set } from "@/types/lifting";
+import type { Exercise, ExercisePayload, Set, TemplateExercise } from "@/types/lifting";
 import { groupUnits } from "@/utils/session";
 
 /** No exercise goes past six sets; the set-chip grid assumes it. */
@@ -76,6 +76,23 @@ export function draftFromExercise(exercise: Exercise, keepIds: boolean): DraftEx
       : copySets(exercise.sets),
     rest_seconds: exercise.rest_seconds,
     comments: keepIds ? exercise.comments : "",
+    superset_group: exercise.superset_group,
+  };
+}
+
+/**
+ * Draft from a template exercise. Unlike a copy of a past session, its comments
+ * come along (the lifter deletes them). Missing reps become 0, the blank value,
+ * so the plan asks for them before saving.
+ */
+export function draftFromTemplateExercise(exercise: TemplateExercise): DraftExercise {
+  return {
+    key: nextKey(),
+    title: exercise.title,
+    historyTitle: exercise.title,
+    sets: exercise.sets.slice(0, MAX_SETS).map((s) => ({ weight: s.weight, reps: s.reps ?? 0, done: false })),
+    rest_seconds: exercise.rest_seconds,
+    comments: exercise.comments,
     superset_group: exercise.superset_group,
   };
 }

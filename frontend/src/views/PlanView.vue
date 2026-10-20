@@ -2,7 +2,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { api } from "@/api/client";
-import type { Session, TitleSuggestion, TitleSuggestions } from "@/types/lifting";
+import type { Session, Template, TitleSuggestion, TitleSuggestions } from "@/types/lifting";
 import { todayISO, formatDayDate, formatShortDate, formatClock, parseClock, formatSet, pluralize } from "@/utils/format";
 import { groupUnits, memberLetter, type Unit } from "@/utils/session";
 import {
@@ -10,6 +10,7 @@ import {
   type PlanMode,
   blankExercise,
   draftFromExercise,
+  draftFromTemplateExercise,
   copySets,
   hasOnlyBlankSets,
   resizeSets,
@@ -47,7 +48,7 @@ import ModeSwitch from "@/components/track/ModeSwitch.vue";
 const route = useRoute();
 const router = useRouter();
 
-// "new": a fresh plan (optionally started from a past session)
+// "new": a fresh plan (optionally started from a past session or a template)
 // "planned": editing a plan saved for later
 // "done": editing a finished session
 // "active": Edit mid-session; done sets are locked
@@ -63,6 +64,7 @@ const { now } = useRestAlarm(() => mode.value === "active");
 const restLeft = computed(() => formatClock(Math.ceil(store.remaining(now.value))));
 const sessionId = computed(() => (mode.value === "new" ? null : Number(route.params.id)));
 const fromId = computed(() => (mode.value === "new" && route.query.from ? Number(route.query.from) : null));
+const templateId = computed(() => (mode.value === "new" && route.query.template ? Number(route.query.template) : null));
 
 const title = ref("");
 const date = ref(todayISO());
@@ -136,6 +138,17 @@ async function load() {
     title.value = source.title;
     fromLabel.value = `from ${formatShortDate(source.date)}`;
     exercises.value = source.exercises.map((e) => draftFromExercise(e, false));
+  } else if (templateId.value) {
+    const response = await api.get<Template>(`/api/lifting/templates/${templateId.value}/`);
+    const source = response.data;
+    if (!source) {
+      error.value = response.error || "Couldn't load that template";
+      return finishLoading();
+    }
+    title.value = source.title;
+    comments.value = source.comments;
+    fromLabel.value = "from template";
+    exercises.value = source.exercises.map(draftFromTemplateExercise);
   } else {
     exercises.value = [blankExercise()];
   }
@@ -144,7 +157,7 @@ async function load() {
   const current = mode.value === "active" ? exercises.value.find((e) => e.sets.some((set) => !set.done)) : undefined;
   expandedKey.value = (current ?? exercises.value[0])?.key ?? null;
   finishLoading();
-  if (mode.value === "new" && !fromId.value) {
+  if (mode.value === "new" && !fromId.value && !templateId.value) {
     await nextTick();
     titleInput.value?.focus();
   }
@@ -357,7 +370,11 @@ async function save(action: "start" | "later" | "save") {
   let saved: Session | null = null;
   if (mode.value === "new") {
     const status = action === "start" ? "active" : "planned";
-    const response = await api.post<Session>("/api/lifting/sessions/with-exercises/", { ...body, status });
+    const response = await api.post<Session>("/api/lifting/sessions/with-exercises/", {
+      ...body,
+      status,
+      template_id: templateId.value,
+    });
     saved = response.data;
     if (!saved) error.value = response.error || "Couldn't save";
   } else {

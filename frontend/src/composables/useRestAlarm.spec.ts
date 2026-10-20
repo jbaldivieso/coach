@@ -27,7 +27,7 @@ describe("useRestAlarm", () => {
     vi.clearAllMocks();
     setActivePinia(createPinia());
     const store = useActiveSessionStore();
-    store.session = { id: 1, title: "", date: "", comments: "", status: "active", started_at: null, finished_at: null, exercises: [] };
+    store.session = { id: 1, title: "", date: "", comments: "", status: "active", started_at: null, finished_at: null, template_id: null, exercises: [] };
   });
   afterEach(() => vi.useRealTimers());
 

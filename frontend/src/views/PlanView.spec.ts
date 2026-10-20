@@ -3,7 +3,8 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { createRouter, createMemoryHistory, RouterView } from "vue-router";
 import { createPinia, setActivePinia } from "pinia";
 import PlanView from "./PlanView.vue";
-import type { Session } from "@/types/lifting";
+import { todayISO } from "@/utils/format";
+import type { Session, Template } from "@/types/lifting";
 
 vi.mock("@/api/client", () => ({
   api: {
@@ -24,6 +25,7 @@ const source: Session = {
   status: "done",
   started_at: null,
   finished_at: null,
+  template_id: null,
   exercises: [
     {
       id: 10,
@@ -69,6 +71,38 @@ const live: Session = {
   ],
 };
 
+const template: Template = {
+  id: 7,
+  title: "Week 2 · Lower",
+  comments: "Deload if sleep was bad",
+  archived_at: null,
+  created_at: "2026-10-01T00:00:00Z",
+  updated_at: "2026-10-01T00:00:00Z",
+  exercises: [
+    {
+      id: 70,
+      title: "Squat",
+      sets: [
+        { weight: 225, reps: 5 },
+        { weight: 225, reps: 5 },
+      ],
+      rest_seconds: 180,
+      comments: "Pause at the bottom",
+      position: 0,
+      superset_group: null,
+    },
+    {
+      id: 71,
+      title: "Carry",
+      sets: [{ weight: null, reps: null }],
+      rest_seconds: 90,
+      comments: "",
+      position: 1,
+      superset_group: null,
+    },
+  ],
+};
+
 const placeholder = { template: "<div/>" };
 
 function makeRouter() {
@@ -100,7 +134,7 @@ async function mountFrom(path = "/plan/new?from=1") {
 
 function lastPostBody() {
   const calls = vi.mocked(api.post).mock.calls.filter(([url]) => url.includes("with-exercises"));
-  return calls[calls.length - 1]![1] as { status: string; comments: string; exercises: { title: string; sets: unknown[]; superset_group: number | null; comments: string }[] };
+  return calls[calls.length - 1]![1] as { status: string; date: string; comments: string; template_id?: number | null; exercises: { title: string; sets: unknown[]; superset_group: number | null; comments: string }[] };
 }
 
 describe("PlanView", () => {
@@ -109,6 +143,7 @@ describe("PlanView", () => {
     vi.clearAllMocks();
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url.startsWith("/api/lifting/sessions/1/")) return Promise.resolve({ data: source, error: null });
+      if (url.startsWith("/api/lifting/templates/7/")) return Promise.resolve({ data: template, error: null });
       if (url.startsWith("/api/lifting/sessions/2/")) return Promise.resolve({ data: structuredClone(live), error: null });
       if (url.includes("/exercises/history/"))
         return Promise.resolve({ data: { title: "", items: [], total: 0, has_more: false }, error: null });
@@ -132,6 +167,45 @@ describe("PlanView", () => {
     ]);
     expect(body.exercises[0]!.comments).toBe("");
     wrapper.unmount();
+  });
+
+  describe("from a template", () => {
+    it("seeds the title, note and exercises with their comments", async () => {
+      const { wrapper } = await mountFrom("/plan/new?template=7");
+      expect(wrapper.text()).toContain("from template");
+      expect((wrapper.find('input[aria-label="Session title"]').element as HTMLInputElement).value).toBe("Week 2 · Lower");
+      expect((wrapper.find('textarea[aria-label="Session note"]').element as HTMLTextAreaElement).value).toBe("Deload if sleep was bad");
+      expect(wrapper.find('input[type="date"]').element).toHaveProperty("value", todayISO());
+      expect(wrapper.find('.ex input[placeholder="Note on Squat"]').element).toHaveProperty("value", "Pause at the bottom");
+      wrapper.unmount();
+    });
+
+    it("won't save until blank reps are filled in", async () => {
+      const { wrapper } = await mountFrom("/plan/new?template=7");
+      await wrapper.findAll(".dock button")[0]!.trigger("click");
+      await flushPromises();
+      expect(api.post).not.toHaveBeenCalledWith("/api/lifting/sessions/with-exercises/", expect.anything());
+      expect(wrapper.text()).toContain("Every set needs reps");
+      wrapper.unmount();
+    });
+
+    it("sends template_id and the comments with the new session", async () => {
+      const full = structuredClone(template);
+      full.exercises[1]!.sets = [{ weight: null, reps: 40 }];
+      const get = vi.mocked(api.get).getMockImplementation()!;
+      vi.mocked(api.get).mockImplementation((url: string) =>
+        url.startsWith("/api/lifting/templates/7/") ? Promise.resolve({ data: full, error: null }) : get(url),
+      );
+      const { wrapper } = await mountFrom("/plan/new?template=7");
+      await wrapper.findAll(".dock button")[1]!.trigger("click");
+      await flushPromises();
+      const body = lastPostBody();
+      expect(body.template_id).toBe(7);
+      expect(body.comments).toBe("Deload if sleep was bad");
+      expect(body.exercises.map((e) => e.comments)).toEqual(["Pause at the bottom", ""]);
+      expect(body.exercises[1]!.sets).toEqual([{ weight: null, reps: 40, done: false }]);
+      wrapper.unmount();
+    });
   });
 
   it("save for later creates a planned session", async () => {

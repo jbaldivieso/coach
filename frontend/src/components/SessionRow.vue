@@ -6,7 +6,8 @@ import { parseDate, formatExerciseList } from "@/utils/format";
 const props = withDefaults(
   defineProps<{
     title: string;
-    date: string;
+    /** Left out for rows that aren't dated, such as templates. */
+    date?: string;
     exercises?: { title: string }[];
     to: RouteLocationRaw;
     /** Under the day number: the weekday (Wed) or the month (Jan). */
@@ -16,15 +17,17 @@ const props = withDefaults(
   { dateCaption: "weekday", chevron: false },
 );
 
-const day = computed(() => parseDate(props.date).getDate());
-const caption = computed(() =>
-  parseDate(props.date).toLocaleDateString("en-US", props.dateCaption === "weekday" ? { weekday: "short" } : { month: "short" }),
+const day = computed(() => props.date && parseDate(props.date).getDate());
+const caption = computed(
+  () =>
+    props.date &&
+    parseDate(props.date).toLocaleDateString("en-US", props.dateCaption === "weekday" ? { weekday: "short" } : { month: "short" }),
 );
 </script>
 
 <template>
   <RouterLink :to="to" class="row">
-    <div class="row-date"><b>{{ day }}</b>{{ caption }}</div>
+    <div v-if="date" class="row-date"><b>{{ day }}</b>{{ caption }}</div>
     <div class="row-main">
       <div class="row-title">{{ title }}</div>
       <div v-if="exercises?.length" class="row-sub">{{ formatExerciseList(exercises) }}</div>

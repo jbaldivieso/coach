@@ -19,6 +19,7 @@ const mockSession: Session = {
   status: "done",
   started_at: null,
   finished_at: null,
+  template_id: null,
   exercises: [
     {
       id: 1,

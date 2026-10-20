@@ -41,6 +41,7 @@ function session(exercises: Exercise[]): Session {
     status: "active",
     started_at: "2026-01-23T07:31:00Z",
     finished_at: null,
+    template_id: null,
     exercises,
   };
 }

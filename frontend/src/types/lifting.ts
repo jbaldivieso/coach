@@ -27,6 +27,8 @@ export interface Session {
   status: SessionStatus;
   started_at: string | null;
   finished_at: string | null;
+  /** The template it was started from, if any. */
+  template_id: number | null;
   exercises: Exercise[];
 }
 
@@ -44,6 +46,34 @@ export interface ExercisePayload {
   rest_seconds: number;
   comments: string;
   superset_group: number | null;
+}
+
+// Templates
+
+/** A target set. Either number may be left blank for the lifter to choose on the day. */
+export interface TemplateSet {
+  weight: number | null;
+  reps: number | null;
+}
+
+export interface TemplateExercise {
+  id: number;
+  title: string;
+  sets: TemplateSet[];
+  rest_seconds: number;
+  comments: string;
+  position: number;
+  superset_group: number | null;
+}
+
+export interface Template {
+  id: number;
+  title: string;
+  comments: string;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  exercises: TemplateExercise[];
 }
 
 // History and search

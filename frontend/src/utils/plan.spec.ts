@@ -15,6 +15,7 @@ import {
   toPayload,
   minSetCount,
   draftFromExercise,
+  draftFromTemplateExercise,
   MAX_SETS,
 } from "./plan";
 
@@ -102,6 +103,33 @@ it("a draft of a saved exercise keeps done flags; a copy doesn't", () => {
   const saved = { id: 3, title: "Bench", sets: [{ weight: 150, reps: 5, done: true }], rest_seconds: 90, comments: "", position: 0, superset_group: null };
   expect(draftFromExercise(saved, true).sets[0]!.done).toBe(true);
   expect(draftFromExercise(saved, false).sets[0]!.done).toBe(false);
+});
+
+it("a draft of a template exercise keeps comments, blanks missing reps and caps sets", () => {
+  const sets = [{ weight: 135, reps: 5 }, { weight: null, reps: null }, ...Array(6).fill({ weight: 135, reps: 5 })];
+  const draft = draftFromTemplateExercise({
+    id: 4,
+    title: "Squat",
+    sets,
+    rest_seconds: 180,
+    comments: "RPE 8",
+    position: 0,
+    superset_group: 1,
+  });
+  expect(draft.id).toBeUndefined();
+  expect(draft.title).toBe("Squat");
+  expect(draft.historyTitle).toBe("Squat");
+  expect(draft.comments).toBe("RPE 8");
+  expect(draft.rest_seconds).toBe(180);
+  expect(draft.superset_group).toBe(1);
+  expect(draft.sets).toHaveLength(MAX_SETS);
+  expect(draft.sets.slice(0, 2)).toEqual([
+    { weight: 135, reps: 5, done: false },
+    { weight: null, reps: 0, done: false },
+  ]);
+  expect(validatePlan({ title: "Lower", date: "2026-10-19", exercises: [draft] }, { allowFuture: true, today: "2026-10-19" })).toEqual({
+    [`exercise.${draft.key}.sets`]: "Every set needs reps",
+  });
 });
 
 describe("supersets", () => {

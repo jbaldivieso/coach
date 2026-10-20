@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { api } from "@/api/client";
-import type { Session, PaginatedSessions } from "@/types/lifting";
+import type { Session, PaginatedSessions, Template } from "@/types/lifting";
 import AppBar from "@/components/ui/AppBar.vue";
 import Btn from "@/components/ui/Btn.vue";
 import Icon from "@/components/ui/Icon.vue";
@@ -14,6 +14,7 @@ const sessions = ref<Session[]>([]);
 const hasMore = ref(false);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const templates = ref<Template[]>([]);
 let debounce: ReturnType<typeof setTimeout> | null = null;
 let requestId = 0;
 
@@ -35,12 +36,29 @@ async function fetchSessions(append = false) {
   }
 }
 
+// Few enough to fetch once and filter here
+async function fetchTemplates() {
+  const response = await api.get<Template[]>("/api/lifting/templates/");
+  if (response.data) templates.value = response.data;
+}
+
+const shownTemplates = computed(() => {
+  const q = query.value.trim().toLowerCase();
+  if (!q) return templates.value;
+  return templates.value.filter(
+    (t) => t.title.toLowerCase().includes(q) || t.exercises.some((e) => e.title.toLowerCase().includes(q)),
+  );
+});
+
 watch(query, () => {
   if (debounce) clearTimeout(debounce);
   debounce = setTimeout(() => fetchSessions(), 200);
 });
 
-onMounted(() => fetchSessions());
+onMounted(() => {
+  fetchTemplates();
+  fetchSessions();
+});
 </script>
 
 <template>
@@ -53,6 +71,21 @@ onMounted(() => fetchSessions());
         <input v-model="query" type="search" placeholder="Title or exercise" autocomplete="off" />
       </label>
 
+      <template v-if="shownTemplates.length">
+        <h2 class="eyebrow">Templates</h2>
+        <div class="list templates">
+          <SessionRow
+            v-for="t in shownTemplates"
+            :key="t.id"
+            :title="t.title"
+            :exercises="t.exercises"
+            chevron
+            :to="{ name: 'plan-new', query: { template: t.id } }"
+          />
+        </div>
+        <h2 class="eyebrow">Past sessions</h2>
+      </template>
+
       <div v-if="error" class="notice is-error">
         {{ error }}
         <button class="notice-action" @click="fetchSessions()">Retry</button>
@@ -60,7 +93,9 @@ onMounted(() => fetchSessions());
       <div class="list results">
         <div v-if="loading" class="empty">Loading…</div>
         <div v-else-if="sessions.length === 0" class="empty">
-          {{ query ? `Nothing matches "${query}".` : "No past sessions yet." }}
+          <template v-if="!query">No past sessions yet.</template>
+          <template v-else-if="shownTemplates.length">No past sessions match "{{ query }}".</template>
+          <template v-else>Nothing matches "{{ query }}".</template>
         </div>
         <SessionRow
           v-for="s in sessions"
