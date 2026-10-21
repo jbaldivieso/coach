@@ -189,8 +189,8 @@ class TestTransport:
         def boom(user, args):
             raise RuntimeError("boom")
 
-        description, args, _ = mcp.TOOLS["list_templates"]
-        monkeypatch.setitem(mcp.TOOLS, "list_templates", (description, args, boom))
+        description, args, _, annotations = mcp.TOOLS["list_templates"]
+        monkeypatch.setitem(mcp.TOOLS, "list_templates", (description, args, boom, annotations))
         error = rpc(client, "tools/call", {"name": "list_templates"})["error"]
         assert error == {"code": -32603, "message": "Internal error"}
 
@@ -212,7 +212,7 @@ class TestInitialize:
         assert result["capabilities"] == {"tools": {}}
         assert result["serverInfo"]["name"] == "coach"
         instructions = result["instructions"]
-        for phrase in ["lb", "bodyweight", "superset_group", "list_exercises", "6 sets"]:
+        for phrase in ["lb", "bodyweight", "superset_group", "exactly 2", "rests once", "list_exercises", "6 sets"]:
             assert phrase in instructions
 
 
@@ -239,6 +239,16 @@ class TestToolsList:
             assert tool["description"]
             assert tool["inputSchema"]["type"] == "object"
 
+    def test_annotations(self, client, token):
+        tools = self._tools(client)
+        read = {"list_exercises", "get_sessions", "get_exercise_history", "list_templates", "get_template"}
+        for name, tool in tools.items():
+            assert tool["annotations"]["readOnlyHint"] is (name in read)
+            assert tool["annotations"]["openWorldHint"] is False
+        assert tools["update_template"]["annotations"]["destructiveHint"] is True
+        assert tools["create_template"]["annotations"]["destructiveHint"] is False
+        assert tools["archive_template"]["annotations"]["destructiveHint"] is False
+
     def test_schemas_state_the_limits(self, client, token):
         tools = self._tools(client)
         create = tools["create_template"]["inputSchema"]
@@ -248,6 +258,12 @@ class TestToolsList:
         assert exercise["properties"]["title"]["maxLength"] == 100
         assert exercise["properties"]["rest_seconds"]["minimum"] == 0
         assert exercise["properties"]["sets"]["maxItems"] == 6
+        assert "exactly 2" in exercise["properties"]["superset_group"]["description"]
+        for field in ["title", "sets", "rest_seconds", "comments"]:
+            assert exercise["properties"][field]["description"]
+        target = create["$defs"]["TemplateSetSchema"]["properties"]
+        assert target["reps"]["minimum"] == 1
+        assert target["weight"]["minimum"] == 0
 
         history = tools["get_exercise_history"]["inputSchema"]
         assert history["required"] == ["title"]

@@ -125,8 +125,14 @@ class PaginatedSessionsSchema(Schema):
 class TemplateSetSchema(Schema):
     """A target set. Either may be left blank for the lifter to choose on the day."""
 
-    weight: Optional[float] = None
-    reps: Optional[int] = None
+    weight: Optional[float] = Field(
+        None,
+        description="Target weight in lb. Null leaves it blank: the lifter fills it in, or leaves it for bodyweight",
+        json_schema_extra={"minimum": 0},
+    )
+    reps: Optional[int] = Field(
+        None, description="Target reps. Null leaves it blank for the lifter", json_schema_extra={"minimum": 1}
+    )
 
 
 class TemplateExerciseSchema(Schema):
@@ -155,17 +161,33 @@ class TemplateSchema(Schema):
 
 
 class TemplateExerciseInputSchema(Schema):
-    title: str = Field(json_schema_extra={"maxLength": services.MAX_TITLE})
-    sets: List[TemplateSetSchema] = Field(json_schema_extra={"minItems": 1, "maxItems": services.MAX_SETS})
-    rest_seconds: int = Field(json_schema_extra={"minimum": 0})
-    comments: str = ""
-    superset_group: Optional[int] = None
+    title: str = Field(
+        description="Exact title from list_exercises, so the exercise connects to its history",
+        json_schema_extra={"maxLength": services.MAX_TITLE},
+    )
+    sets: List[TemplateSetSchema] = Field(
+        description="The sets in order, each with its own weight and reps",
+        json_schema_extra={"minItems": 1, "maxItems": services.MAX_SETS},
+    )
+    rest_seconds: int = Field(
+        description="Rest after each set. In a superset, the first exercise's rest is the only one: "
+        "it's taken once, after a set of both exercises",
+        json_schema_extra={"minimum": 0},
+    )
+    comments: str = Field("", description="Notes for the lifter, carried into the session's exercise comments")
+    superset_group: Optional[int] = Field(
+        None,
+        description="The same number on exactly 2 adjacent exercises makes them a superset: one set of "
+        "each back to back, then one rest. Both need the same number of sets. Null for a lone exercise",
+    )
 
 
 class TemplateInputSchema(Schema):
-    title: str = Field(json_schema_extra={"maxLength": services.MAX_TITLE})
-    comments: str = ""
-    exercises: List[TemplateExerciseInputSchema] = Field(json_schema_extra={"minItems": 1})
+    title: str = Field(description="The template's name in the app", json_schema_extra={"maxLength": services.MAX_TITLE})
+    comments: str = Field("", description="Becomes the note on sessions started from it")
+    exercises: List[TemplateExerciseInputSchema] = Field(
+        description="The exercises in the order they're done", json_schema_extra={"minItems": 1}
+    )
 
 
 # ============ History and Search Schemas ============

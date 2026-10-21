@@ -1049,6 +1049,14 @@ class TestSaveTemplate:
         ]
         assert "superset" in self._error(user, exercises=exercises)
 
+    def test_superset_at_most_two_members(self, user):
+        exercises = [
+            {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+            {"title": "Plank", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+            {"title": "Row", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},
+        ]
+        assert "exactly 2" in self._error(user, exercises=exercises)
+
     def test_superset_must_be_adjacent(self, user):
         exercises = [
             {"title": "RDL", "rest_seconds": 90, "superset_group": 1, "sets": [{}]},

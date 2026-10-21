@@ -49,10 +49,10 @@ def _validate_template(data):
     for indexes in groups.values():
         members = [data.exercises[i] for i in indexes]
         names = ", ".join(e.title for e in members)
-        if len(indexes) < 2:
-            raise TemplateError(f"A superset needs at least 2 exercises ({names})")
         if indexes != list(range(indexes[0], indexes[-1] + 1)):
             raise TemplateError(f"Superset exercises must be adjacent ({names})")
+        if len(indexes) != 2:
+            raise TemplateError(f"A superset is exactly 2 exercises ({names})")
         if len({len(e.sets) for e in members}) > 1:
             raise TemplateError(f"Superset exercises need the same number of sets ({names})")
 

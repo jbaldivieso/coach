@@ -49,9 +49,10 @@ under "Start from…", and starting one copies it into a new session.
 
 - Weights are in lb. A null weight means bodyweight.
 - Each set carries its own weight and reps.
-- Adjacent exercises sharing a superset_group are a superset: they share one \
-rest (the first exercise's rest_seconds) and have the same number of sets. An \
-exercise has at most 6 sets.
+- A superset is exactly 2 adjacent exercises sharing a superset_group, with the \
+same number of sets. The lifter does one set of each back to back, then rests \
+once: there's no rest between the two, and only the first exercise's \
+rest_seconds counts. An exercise has at most 6 sets.
 - Exercise titles are the history key. Reuse the exact titles from \
 list_exercises, or the new exercise won't connect to its history.
 - In a template, a set's weight and reps are both optional. Leave them blank, \
@@ -191,12 +192,19 @@ def restore_template(user, args):
     return _set_archived(user, args.id, None)
 
 
+# Tool annotations, which tell the client which tools need the lifter's approval
+READ = {"readOnlyHint": True, "openWorldHint": False}
+CREATE = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False}
+REPLACE = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": True, "openWorldHint": False}
+TOGGLE = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}
+
 TOOLS = {
     "list_exercises": (
         "Every exercise title in the lifter's finished sessions, with how many times it was done "
         "and the first and last dates. Match exercise names against these titles.",
         NoArgs,
         list_exercises,
+        READ,
     ),
     "get_sessions": (
         f"Finished sessions dated start to end (inclusive, at most {MAX_SESSION_DAYS} days), "
@@ -204,41 +212,48 @@ TOOLS = {
         "comments, and the template_id each was started from.",
         GetSessionsArgs,
         get_sessions,
+        READ,
     ),
     "get_exercise_history": (
         "Past outings of one exercise (exact title) in finished sessions, newest first, with "
         "their sets, rest and comments. Page with limit and offset.",
         GetExerciseHistoryArgs,
         get_exercise_history,
+        READ,
     ),
     "list_templates": (
         "The lifter's workout templates with their exercises, most recently edited first. "
         "Archived templates are left out unless include_archived is true.",
         ListTemplatesArgs,
         list_templates,
+        READ,
     ),
-    "get_template": ("One workout template with its exercises.", TemplateIdArgs, get_template),
+    "get_template": ("One workout template with its exercises.", TemplateIdArgs, get_template, READ),
     "create_template": (
         "Create a workout template. Set weight (lb) and reps are optional. Returns the template "
         "and warnings for exercise titles that aren't in the lifter's history.",
         TemplateInputSchema,
         create_template,
+        CREATE,
     ),
     "update_template": (
         "Replace a template's title, comments and exercises in full. Past sessions started from "
         "it don't change. Returns the template and warnings, as create_template does.",
         UpdateTemplateArgs,
         update_template,
+        REPLACE,
     ),
     "archive_template": (
         "Archive a template, which takes it off the app's list. It can be restored.",
         TemplateIdArgs,
         archive_template,
+        TOGGLE,
     ),
     "restore_template": (
         "Restore an archived template to the app's list.",
         TemplateIdArgs,
         restore_template,
+        TOGGLE,
     ),
 }
 
@@ -271,8 +286,13 @@ def _initialize(user, params):
 
 TOOLS_LIST = {
     "tools": [
-        {"name": name, "description": description, "inputSchema": args.model_json_schema()}
-        for name, (description, args, _) in TOOLS.items()
+        {
+            "name": name,
+            "description": description,
+            "inputSchema": args.model_json_schema(),
+            "annotations": annotations,
+        }
+        for name, (description, args, _, annotations) in TOOLS.items()
     ]
 }
 
@@ -289,7 +309,7 @@ def _tools_call(user, params):
     if not isinstance(arguments, dict):
         raise RpcError(INVALID_PARAMS, "arguments must be an object")
 
-    _, args_schema, tool = TOOLS[name]
+    _, args_schema, tool, _ = TOOLS[name]
     try:
         args = args_schema(**arguments)
     except ValidationError as e:
