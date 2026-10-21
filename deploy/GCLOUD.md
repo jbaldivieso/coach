@@ -16,7 +16,8 @@ This guide covers deploying Coach to a GCP Compute Engine e2-micro instance with
 10. [Start Services](#start-services)
 11. [Domain Setup](#domain-setup)
 12. [Maintenance](#maintenance)
-13. [Troubleshooting](#troubleshooting)
+13. [Connect Claude](#connect-claude)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -190,25 +191,15 @@ node --version  # Should show v20.x
 npm --version
 ```
 
-### 2. Install Python 3.12 and uv
+### 2. Install uv
 
 ```bash
-# Install Python 3.12 (Debian 12 has 3.11 by default)
-sudo apt-get install -y software-properties-common
-sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null || true
-
-# On Debian 12, Python 3.11 is available, but we need 3.12
-# Build from source if not available in repos
-sudo apt-get install -y python3.11 python3.11-venv python3-pip
-
-# Install uv (Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.local/bin/env  # Or restart your shell
 ```
 
-**Note:** If Python 3.12 is required and not available, you can either:
-- Use Python 3.11 (modify `pyproject.toml` if needed)
-- Build Python 3.12 from source (see Troubleshooting section)
+The backend needs Python 3.12 and Debian 12 ships 3.11. You don't need to
+install it yourself: `uv sync` reads `backend/.python-version` and downloads 3.12.
 
 ### 3. Create Application Directory
 
@@ -262,31 +253,23 @@ DJANGO_SETTINGS_MODULE=config.settings python manage.py createsuperuser
 ### 4. Configure Environment Variables
 
 ```bash
-# Copy and edit the environment file
+# Copy the environment file
 cp /var/www/coach/deploy/.env.example /var/www/coach/deploy/.env
 
-# Generate a secure secret key
+# Generate a secure secret key and put it in DJANGO_SECRET_KEY
 python3 -c 'import secrets; print(secrets.token_urlsafe(50))'
-
-# Edit the environment file
 nano /var/www/coach/deploy/.env
 ```
 
-Update `.env` with your domain (replace `yourdomain.com`):
+`.env.example` is already set up for `coach.baldivieso.com`. On another domain,
+change the host in `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`,
+`CSRF_TRUSTED_ORIGINS` and `COACH_PUBLIC_URL`. `COACH_PUBLIC_URL` is required:
+the OAuth and MCP metadata advertise it, and with `DJANGO_DEBUG=False` the
+server won't start without it.
 
-```bash
-DJANGO_SETTINGS_MODULE=config.settings
-DJANGO_DEBUG=False
-DJANGO_SECRET_KEY=YOUR_GENERATED_SECRET_KEY
-DJANGO_ALLOWED_HOSTS=coach.baldivieso.com
-
-# For HTTPS (after SSL setup)
-CORS_ALLOWED_ORIGINS=https://coach.baldivieso.com
-CSRF_TRUSTED_ORIGINS=https://coach.baldivieso.com
-
-# Required: the OAuth and MCP metadata advertise this address
-COACH_PUBLIC_URL=https://coach.baldivieso.com
-```
+Only systemd and the cron job below read `.env`. The `manage.py` commands in
+this guide run in your shell with the development defaults, which use the same
+database.
 
 ### 5. Install the Systemd Service
 
@@ -314,10 +297,17 @@ Use the initial (HTTP-only) config first, then add SSL with Certbot:
 # Copy the initial HTTP-only config
 sudo cp /var/www/coach/deploy/nginx-coach-initial.conf /etc/nginx/sites-available/coach
 
-# Edit the config to set your domain
+# On a domain other than coach.baldivieso.com, change server_name
 sudo nano /etc/nginx/sites-available/coach
-# Replace 'yourdomain.com' with your actual domain
 ```
+
+Besides proxying to Gunicorn and serving `/static/`, the config does two things
+the Claude connector needs. The `location ^~ /.well-known/oauth-` block lets the
+OAuth discovery documents through. The `^~` modifier is what matters: it stops
+nginx from checking regex locations, so the `location ~ /\.` dotfile rule can't
+answer them with a 403. A plain prefix location wouldn't work, wherever it sits.
+`/oauth/register/` is unauthenticated and every valid POST creates a client row,
+so it gets a `limit_req` rate limit.
 
 ### 2. Enable the Site
 
@@ -355,7 +345,7 @@ Before requesting an SSL certificate, your domain must point to your server's IP
 Wait for DNS propagation (can take minutes to hours):
 ```bash
 # Check if DNS is resolving
-dig +short yourdomain.com
+dig +short coach.baldivieso.com
 ```
 
 ### 2. Obtain SSL Certificate
@@ -369,6 +359,11 @@ sudo certbot --nginx -d coach.baldivieso.com
 # - Agree to terms of service
 # - Choose whether to redirect HTTP to HTTPS (recommended: yes)
 ```
+
+Certbot rewrites `/etc/nginx/sites-available/coach` to add the certificate and
+the HTTP-to-HTTPS redirect. `deploy/nginx-coach-server.conf` is a copy of that
+result for `coach.baldivieso.com`. When you change the nginx config, change that
+file and copy it to the server (see Deploy Updates).
 
 ### 3. Verify Auto-Renewal
 
@@ -395,7 +390,8 @@ sudo systemctl status coach
 sudo journalctl -u coach -f
 ```
 
-Your app should now be accessible at `https://yourdomain.com`!
+Your app should now be accessible at `https://coach.baldivieso.com`, or at
+your own domain.
 
 ---
 
@@ -427,23 +423,46 @@ Your app should now be accessible at `https://yourdomain.com`!
 
 ### Deploy Updates
 
+`deploy/deploy-gcp.sh` does the whole update. It pulls, then stops before
+building anything if `.env` is missing a setting that `.env.example` has, so a
+new required setting can't leave the service crash-looping. Then it builds the
+frontend, runs `uv sync`, `migrate` and `collectstatic`, and restarts the service.
+
+```bash
+/var/www/coach/deploy/deploy-gcp.sh
+```
+
+`git pull` doesn't touch the files systemd and nginx read, so check whether the
+update changed any of them:
+
+```bash
+cd /var/www/coach && git diff --stat HEAD@{1} -- deploy/
+```
+
+- **`nginx-coach-server.conf` changed:** copy it over and reload nginx.
+  ```bash
+  sudo cp /var/www/coach/deploy/nginx-coach-server.conf /etc/nginx/sites-available/coach
+  sudo nginx -t && sudo systemctl reload nginx
+  ```
+- **`coach-gcp.service` changed:** copy it over, keeping any edits you made to
+  the installed copy, then run `sudo systemctl daemon-reload && sudo systemctl restart coach`.
+- **The cron line below changed:** update it with `crontab -e`.
+
+The same steps by hand:
+
 ```bash
 cd /var/www/coach
-
-# Pull latest changes
 git pull
 
-# Rebuild frontend
-cd frontend && npm ci && npm run build
+# Compare .env with .env.example and add anything new
+diff <(grep -oE '^[A-Z_]+=' deploy/.env.example | sort) <(grep -oE '^[A-Z_]+=' deploy/.env | sort)
 
-# Update backend
+cd frontend && npm ci && npm run build
 cd ../backend
 uv sync --frozen
 source .venv/bin/activate
 DJANGO_SETTINGS_MODULE=config.settings python manage.py migrate
 DJANGO_SETTINGS_MODULE=config.settings python manage.py collectstatic --noinput
-
-# Restart service
 sudo systemctl restart coach
 ```
 
@@ -493,6 +512,10 @@ sudo systemctl restart nginx
 
 # View service logs
 sudo journalctl -u coach --since "1 hour ago"
+
+# Django shell
+cd /var/www/coach/backend && source .venv/bin/activate
+DJANGO_SETTINGS_MODULE=config.settings python manage.py shell
 ```
 
 ### Update SSL Certificate
@@ -503,6 +526,32 @@ Certbot handles automatic renewals, but you can manually renew:
 sudo certbot renew
 sudo systemctl reload nginx
 ```
+
+---
+
+## Connect Claude
+
+The MCP server lives at `<COACH_PUBLIC_URL>/mcp`. In claude.ai, go to Settings →
+Connectors → Add custom connector, paste `https://coach.baldivieso.com/mcp`, and
+sign in with your Coach account. Each person connects with their own account and
+sees only their own data.
+
+This needs the nginx config with the `/.well-known/oauth-` block (see Configure
+Nginx). To check it's live, this should return JSON, not a 403:
+
+```bash
+curl -s https://coach.baldivieso.com/.well-known/oauth-protected-resource/mcp
+```
+
+If a phone has the PWA installed from before the connector existed, open the app
+and tap Update first. The old service worker answers `/oauth/authorize/` with the
+app instead of the sign-in page.
+
+Before connecting, you can test the server on your dev machine. Make an access token in the admin with scope `coach` and
+resource `["<COACH_PUBLIC_URL>/mcp"]` (in debug that's
+`["http://localhost:5173/mcp"]`). A token with no resource gets a 401. Then run
+`npx @modelcontextprotocol/inspector` against `http://localhost:8000/mcp` with it
+as the bearer token.
 
 ---
 
@@ -554,31 +603,18 @@ sudo certbot renew --force-renewal
 sudo nginx -t
 ```
 
-### Python 3.12 Not Available
+### Service Won't Start
 
-If Python 3.12 isn't available in your distribution:
+If `journalctl -u coach` shows `ImproperlyConfigured: Set COACH_PUBLIC_URL`,
+add it to `/var/www/coach/deploy/.env` (see Configure Environment Variables) and
+restart.
 
-```bash
-# Option 1: Use pyenv
-curl https://pyenv.run | bash
-# Follow the output instructions to add to ~/.bashrc
-exec "$SHELL"
-pyenv install 3.12.0
-pyenv global 3.12.0
+### Claude Can't Connect
 
-# Option 2: Build from source
-sudo apt-get install -y build-essential zlib1g-dev libncurses5-dev \
-  libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev \
-  libsqlite3-dev wget libbz2-dev
-
-cd /tmp
-wget https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
-tar -xf Python-3.12.0.tgz
-cd Python-3.12.0
-./configure --enable-optimizations
-make -j $(nproc)
-sudo make altinstall
-```
+Check the discovery documents first (see Connect Claude). A 403 means the
+installed nginx config predates the `/.well-known/oauth-` block, so copy
+`deploy/nginx-coach-server.conf` over and reload. If they load but show the wrong
+host, fix `COACH_PUBLIC_URL`.
 
 ### Memory Issues on e2-micro
 
@@ -594,12 +630,9 @@ sudo swapon /swapfile
 # Make permanent
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-# Reduce Gunicorn workers in coach.service to 1
-sudo nano /etc/systemd/system/coach.service
-# Change --workers 2 to --workers 1
-sudo systemctl daemon-reload
-sudo systemctl restart coach
 ```
+
+`coach-gcp.service` already runs a single Gunicorn worker, so don't add more.
 
 ### Static Files Not Loading
 

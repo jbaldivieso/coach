@@ -13,6 +13,17 @@ export interface ChangeGroup {
 /** Newest first. The first group drives the unread dot on the ⋯ menu. */
 export const changelog: ChangeGroup[] = [
   {
+    date: "2026-10-19",
+    teaser: "Templates, and Claude as your coach",
+    changes: [
+      {
+        title: "Templates, and a coach who reads your log",
+        description:
+          "\"Start from…\" now has Templates up top: tap one and it's your plan for today, notes and all, so delete the notes once you've read them. Coach still won't tell you what to lift. Claude can, if you invite it: in claude.ai, go to Settings → Connectors → Add custom connector, paste https://coach.baldivieso.com/mcp, and sign in. It can read your finished sessions and write templates for you. It can't touch your sessions.",
+      },
+    ],
+  },
+  {
     date: "2026-10-09",
     teaser: "Edit mid-session, fold, notes, COACH",
     changes: [

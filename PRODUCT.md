@@ -34,12 +34,12 @@ A personal, self-hosted tracker shaped around one person's actual training metho
 
 - **Fits the method:** sets carry their own weight and reps (weight can change set to set), exercises and sessions take free-text comments, supersets share one rest, and the data model follows how the owner trains.
 - **History at the point of decision:** while planning, each exercise shows its last three outings (sets and comments) drawn from real data, so progression is a judgment the lifter makes, not a rule the app imposes.
-- **No bloat:** no social feed, no gamification, no upsells, no streaks, no prescriptive programming.
+- **No bloat:** no social feed, no gamification, no upsells, no streaks. The app itself never prescribes; prescription is opt-in, through templates the lifter (or Claude, through the connector) writes.
 - **Owned:** the owner's own server and data, changed whenever they want.
 
 ## Operating Context
 
-- Core loop: home (calendar + recent sessions) → start a session blank or from any past session → plan (each exercise shows its last three outings) → track (one exercise or superset at a time; marking a set done starts the rest timer; every set saves immediately) → history.
+- Core loop: home (calendar + recent sessions) → start a session blank, from any past session, or from a template → plan (each exercise shows its last three outings) → track (one exercise or superset at a time; marking a set done starts the rest timer; every set saves immediately) → history.
 - Session titles are free text and only loosely predictable. Don't infer rotations, "next workout", or lineage from them. Exercise titles are the reliable key for history.
 - The home calendar is used to decide whether to work out on a given day; it stays on home.
 - Rest timer relies on Screen Wake Lock and audio cues; both are more reliable when installed as a PWA on iOS.
@@ -50,7 +50,8 @@ A personal, self-hosted tracker shaped around one person's actual training metho
 ## Capabilities and Constraints
 
 - Stack: Django 6 + Django Ninja API, Vue 3 + TypeScript + Vite with the app's own design tokens and components, SQLite, deployed to the owner's own server (GCP). Session auth.
-- Data model: Session (title, date, comments, status planned/active/done) → ordered Exercises (title, sets `[{weight, reps, done}]`, rest seconds, comments, superset group). Weight may be null (bodyweight) and may be fractional (152.5).
+- Data model: Session (title, date, comments, status planned/active/done, template) → ordered Exercises (title, sets `[{weight, reps, done}]`, rest seconds, comments, superset group). Weight may be null (bodyweight) and may be fractional (152.5).
+- Templates have the same shape, but each set's weight and reps are optional. Starting a session from one copies it and records the template on the session, so later template edits never change past sessions. In the app templates are read-only; Claude creates, edits and archives them through the connector.
 - Plans set targets (number of sets, and reps/weight per set), but only actuals persist: a set's target is overwritten by what was lifted when it's marked done, and sets never done are dropped when the session finishes. No target-vs-actual record is kept.
 - Supersets: adjacent exercises can be grouped to share one rest; grouped exercises always have the same number of sets.
 - Exercise titles autocomplete from the user's own history.

@@ -63,3 +63,5 @@ comments stay regular width. Supersets are the only striped (`--hazard`) element
 | Rest screen (wake lock), rest alarm on Lift and Edit | `frontend/src/components/RestTimer.vue`, `src/composables/useRestAlarm.ts`, `src/utils/audio.ts` |
 | Exercise history cache | `frontend/src/composables/useExerciseHistory.ts` |
 | What's New entries | `frontend/src/data/changelog.ts` |
+| Templates (validation and saving shared by the API and MCP, the "Start from…" list) | `backend/lifting/services.py`, `frontend/src/views/StartFromView.vue` |
+| MCP server for the Claude connector, and the OAuth it signs in with | `backend/lifting/mcp.py`, `backend/accounts/oauth.py` |

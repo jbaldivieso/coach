@@ -10,6 +10,15 @@ echo "==> Pulling latest changes..."
 cd "$COACH_DIR"
 git pull
 
+echo "==> Checking .env against .env.example..."
+missing=$(comm -23 <(grep -oE '^[A-Z_]+=' deploy/.env.example | tr -d = | sort) \
+                   <(grep -oE '^[A-Z_]+=' deploy/.env | tr -d = | sort))
+if [ -n "$missing" ]; then
+    echo "deploy/.env is missing: $missing"
+    echo "Add them (see deploy/.env.example), then run this again."
+    exit 1
+fi
+
 echo "==> Building frontend..."
 cd "$COACH_DIR/frontend"
 npm ci
