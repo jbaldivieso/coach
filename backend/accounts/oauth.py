@@ -10,6 +10,7 @@ but only Claude can receive the codes.
 import json
 from urllib.parse import urlparse
 
+from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from django.http import JsonResponse
 from oauth2_provider.views import AuthorizationView as BaseAuthorizationView
 from oauth2_provider.views.dynamic_client_registration import (
@@ -45,6 +46,19 @@ def refuse_other_redirect_uris(body):
         {"error": "invalid_redirect_uri", "error_description": "Only Claude's callback URLs can be registered."},
         status=400,
     )
+
+
+class ClientSecretHasher(PBKDF2PasswordHasher):
+    """PBKDF2 with one iteration, for client secrets only.
+
+    Stretching protects guessable passwords. Client secrets are 128 random
+    characters, so it adds nothing, and the default 1.2M iterations take long
+    enough on the e2-micro that Claude gives up on registration. DOT hashes a
+    secret for every client, public ones included.
+    """
+
+    algorithm = "pbkdf2_sha256_client_secret"
+    iterations = 1
 
 
 class RegistrationView(DynamicClientRegistrationView):

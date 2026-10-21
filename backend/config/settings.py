@@ -114,6 +114,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Django's defaults, plus the fast hasher for OAuth client secrets. It's last,
+# so it never hashes a user's password.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+    "accounts.oauth.ClientSecretHasher",
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -197,6 +208,9 @@ OAUTH2_PROVIDER = {
     # Registration is open to anyone, but accounts.oauth only accepts Claude's
     # callback URLs
     "DCR_ENABLED": True,
+    # Registration hashes a random client secret even for public clients. The
+    # default hasher makes that too slow for Claude; see accounts.oauth.
+    "CLIENT_SECRET_HASHER": "pbkdf2_sha256_client_secret",
     "DCR_REGISTRATION_PERMISSION_CLASSES": ("oauth2_provider.dcr.AllowAllDCRPermission",),
     # Discovery documents. The issuer anchors every endpoint URL in them.
     "OIDC_ISS_ENDPOINT": COACH_PUBLIC_URL,

@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.conf import settings
+from django.contrib.auth.hashers import check_password
 from django.core.management import call_command
 from django.utils import timezone
 from oauth2_provider.models import Application, Grant, RefreshToken
@@ -91,6 +92,15 @@ class TestRegistration:
         assert app.authorization_grant_type == Application.GRANT_AUTHORIZATION_CODE
         assert app.redirect_uris == uri
         assert app.user is None
+        # The default hasher is too slow on the server
+        assert app.client_secret.startswith("pbkdf2_sha256_client_secret$1$")
+
+    def test_confidential_client_secret_still_checks(self, client):
+        data = register(client, token_endpoint_auth_method="client_secret_basic").json()
+        app = Application.objects.get(client_id=data["client_id"])
+        assert check_password(data["client_secret"], app.client_secret)
+        assert not check_password("", app.client_secret)
+        assert not check_password("wrong", app.client_secret)
 
     @pytest.mark.parametrize(
         "uris",
